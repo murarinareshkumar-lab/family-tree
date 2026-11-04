@@ -1,0 +1,22 @@
+{
+  "name": "family-tree",
+  "version": "1.0.0",
+  "description": "Family Tree - Google Sheets Powered Monorepo with React and Serverless API",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node dev-server.js",
+    "build": "npm --prefix client install && npm --prefix client run build",
+    "test": "node --test tests/*.test.js",
+    "start": "node dev-server.js",
+    "seed": "node scripts/seed-mock.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.7",
+    "googleapis": "^144.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^6.10.0",
+    "zod": "^3.24.2"
+  }
+}
