@@ -31,7 +31,7 @@ export default function InteractiveTree({ treeData, onRefresh }) {
   const roots = treeData.members.filter(m => !m.father_person_id && !m.mother_person_id);
 
   const getChildrenOf = (personId) => {
-    return treeData.members.filter(m => 
+    return treeData.members.filter(m =>
       m.father_person_id === personId || m.mother_person_id === personId
     );
   };
@@ -98,7 +98,7 @@ export default function InteractiveTree({ treeData, onRefresh }) {
 
       {/* Visual Canvas Area */}
       <div className="bg-slate-900/5 rounded-2xl border border-slate-200 p-6 overflow-x-auto min-h-[450px] flex justify-center items-start shadow-inner">
-        <div 
+        <div
           className="transition-transform duration-200 ease-out origin-top flex flex-col items-center space-y-12"
           style={{ transform: `scale(${zoomLevel})` }}
         >
@@ -140,9 +140,8 @@ export default function InteractiveTree({ treeData, onRefresh }) {
         {selectedMember && (
           <div className="space-y-4">
             <div className="flex items-center space-x-3 p-3 bg-emerald-50 rounded-xl border border-emerald-100">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg ${
-                selectedMember.gender === 'Female' ? 'bg-pink-100 text-pink-700' : 'bg-emerald-100 text-emerald-700'
-              }`}>
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg ${selectedMember.gender === 'Female' ? 'bg-pink-100 text-pink-700' : 'bg-emerald-100 text-emerald-700'
+                }`}>
                 {selectedMember.full_name?.charAt(0)}
               </div>
               <div>
@@ -164,7 +163,7 @@ export default function InteractiveTree({ treeData, onRefresh }) {
             {/* Calculated Relatives */}
             <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50 space-y-2 text-sm">
               <h5 className="text-xs font-bold uppercase tracking-wider text-slate-500">Family Relations</h5>
-              
+
               {selectedMember.calculated_relatives ? (
                 <div className="space-y-1.5 text-xs">
                   {selectedMember.calculated_relatives.father && (
@@ -228,9 +227,9 @@ function TreeNode({ member, memberMap, getChildrenOf, getSpousesOf, onSelectMemb
     <div className="flex flex-col items-center">
       {/* Node Card with Spouse */}
       <div className="flex items-center space-x-3 relative z-10">
-        <MemberCard 
-          member={member} 
-          onClick={() => onSelectMember(member)} 
+        <MemberCard
+          member={member}
+          onClick={() => onSelectMember(member)}
           highlight={searchTerm && member.full_name.toLowerCase().includes(searchTerm.toLowerCase())}
         />
 
@@ -239,8 +238,8 @@ function TreeNode({ member, memberMap, getChildrenOf, getSpousesOf, onSelectMemb
             <div className="flex items-center justify-center -mx-1 text-rose-500">
               <Heart className="w-4 h-4 fill-rose-500 animate-pulse" />
             </div>
-            <MemberCard 
-              member={spouse} 
+            <MemberCard
+              member={spouse}
               onClick={() => onSelectMember(spouse)}
               highlight={searchTerm && spouse.full_name.toLowerCase().includes(searchTerm.toLowerCase())}
             />
@@ -257,11 +256,11 @@ function TreeNode({ member, memberMap, getChildrenOf, getSpousesOf, onSelectMemb
           {/* Children container */}
           <div className="relative pt-6">
             {children.length > 1 && (
-              <div 
-                className="absolute top-0 h-0.5 bg-slate-300" 
-                style={{ 
-                  left: `${(1 / (children.length * 2)) * 100}%`, 
-                  right: `${(1 / (children.length * 2)) * 100}%` 
+              <div
+                className="absolute top-0 h-0.5 bg-slate-300"
+                style={{
+                  left: `${(1 / (children.length * 2)) * 100}%`,
+                  right: `${(1 / (children.length * 2)) * 100}%`
                 }}
               />
             )}
@@ -295,16 +294,14 @@ function MemberCard({ member, onClick, highlight }) {
   return (
     <button
       onClick={onClick}
-      className={`group relative text-left bg-white border rounded-2xl p-3 shadow-sm hover:shadow-md transition-all w-44 hover:-translate-y-0.5 ${
-        highlight
-          ? 'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-50/20'
-          : 'border-slate-200 hover:border-emerald-300'
-      }`}
+      className={`group relative text-left bg-white border rounded-2xl p-3 shadow-sm hover:shadow-md transition-all w-44 hover:-translate-y-0.5 ${highlight
+        ? 'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-50/20'
+        : 'border-slate-200 hover:border-emerald-300'
+        }`}
     >
       <div className="flex items-center space-x-2.5">
-        <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
-          isFemale ? 'bg-pink-100 text-pink-700' : 'bg-emerald-100 text-emerald-800'
-        }`}>
+        <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${isFemale ? 'bg-pink-100 text-pink-700' : 'bg-emerald-100 text-emerald-800'
+          }`}>
           <User className="w-4 h-4" />
         </div>
         <div className="min-w-0 flex-1">
@@ -324,3 +321,4 @@ function MemberCard({ member, onClick, highlight }) {
     </button>
   );
 }
+

@@ -94,3 +94,4 @@ export default function AdminLoginPage({ onLoginSuccess }) {
     </div>
   );
 }
+

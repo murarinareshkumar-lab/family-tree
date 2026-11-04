@@ -191,3 +191,4 @@ To perform daily offsite backups of all 6 Google Sheets tabs, run a scheduled cr
 curl -s -H "Authorization: Bearer <ADMIN_JWT>" "https://your-domain.vercel.app/api/admin/export?format=json" > "backup-$(date +%F).json"
 ```
 Or download the JSON / CSV export directly from the Admin Dashboard **Export Backup** tab.
+

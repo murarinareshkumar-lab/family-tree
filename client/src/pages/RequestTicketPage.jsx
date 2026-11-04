@@ -285,3 +285,4 @@ export default function RequestTicketPage({ onNavigate }) {
     </div>
   );
 }
+

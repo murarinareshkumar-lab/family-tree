@@ -98,9 +98,8 @@ export default function TicketStatusPage() {
               </div>
               <div>
                 <span className="text-slate-400 block mb-0.5">Email Authentication (DKIM/SPF)</span>
-                <span className={`inline-flex items-center space-x-1 font-semibold ${
-                  ticket.mail_verified ? 'text-emerald-700' : 'text-amber-700'
-                }`}>
+                <span className={`inline-flex items-center space-x-1 font-semibold ${ticket.mail_verified ? 'text-emerald-700' : 'text-amber-700'
+                  }`}>
                   <Mail className="w-3.5 h-3.5" />
                   <span>{ticket.mail_verified ? 'Verified by Admin' : 'Awaiting Email Check'}</span>
                 </span>
@@ -132,3 +131,4 @@ export default function TicketStatusPage() {
     </div>
   );
 }
+

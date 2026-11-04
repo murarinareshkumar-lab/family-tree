@@ -417,3 +417,4 @@ export default function AddMemberPage({ onNavigate }) {
     </div>
   );
 }
+

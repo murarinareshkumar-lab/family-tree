@@ -5,7 +5,7 @@ import { PlusCircle, ShieldCheck, Mail, CheckCircle2, AlertCircle, ArrowRight, U
 
 export default function OnboardSurnamePage({ onNavigate }) {
   const [surnameName, setSurnameName] = useState('');
-  
+
   // Husband details
   const [husbandName, setHusbandName] = useState('');
   const [husbandEmail, setHusbandEmail] = useState('');
@@ -311,3 +311,4 @@ export default function OnboardSurnamePage({ onNavigate }) {
     </div>
   );
 }
+

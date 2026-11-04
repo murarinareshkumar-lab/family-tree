@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../../utils/api';
 import StatusBadge from '../../components/StatusBadge';
 import Modal from '../../components/Modal';
-import { 
-  Shield, Users, GitBranch, AlertTriangle, CheckCircle2, XCircle, 
-  RefreshCw, LogOut, Download, GitMerge, FileText, Search, Mail, ExternalLink 
+import {
+  Shield, Users, GitBranch, AlertTriangle, CheckCircle2, XCircle,
+  RefreshCw, LogOut, Download, GitMerge, FileText, Search, Mail, ExternalLink
 } from 'lucide-react';
 
 export default function AdminDashboardPage({ onLogout }) {
@@ -194,7 +194,7 @@ export default function AdminDashboardPage({ onLogout }) {
 
   // Filter members for directory
   const filteredMembers = members.filter(m => {
-    const matchesSearch = 
+    const matchesSearch =
       (m.full_name && m.full_name.toLowerCase().includes(memberSearch.toLowerCase())) ||
       (m.member_ref_id && m.member_ref_id.toLowerCase().includes(memberSearch.toLowerCase())) ||
       (m.email && m.email.toLowerCase().includes(memberSearch.toLowerCase())) ||
@@ -293,17 +293,15 @@ export default function AdminDashboardPage({ onLogout }) {
           <button
             key={t.id}
             onClick={() => setActiveTab(t.id)}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center space-x-1.5 ${
-              activeTab === t.id
-                ? 'bg-emerald-600 text-white shadow-sm'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-            }`}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center space-x-1.5 ${activeTab === t.id
+              ? 'bg-emerald-600 text-white shadow-sm'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              }`}
           >
             <span>{t.label}</span>
             {t.count !== undefined && (
-              <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                activeTab === t.id ? 'bg-emerald-700 text-emerald-100' : 'bg-slate-200 text-slate-700'
-              }`}>
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${activeTab === t.id ? 'bg-emerald-700 text-emerald-100' : 'bg-slate-200 text-slate-700'
+                }`}>
                 {t.count}
               </span>
             )}
@@ -325,7 +323,7 @@ export default function AdminDashboardPage({ onLogout }) {
               let parsedPayload = {};
               try {
                 parsedPayload = typeof req.payload_json === 'string' ? JSON.parse(req.payload_json) : req.payload_json;
-              } catch (_) {}
+              } catch (_) { }
 
               return (
                 <div key={req.ticket_id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
@@ -348,7 +346,7 @@ export default function AdminDashboardPage({ onLogout }) {
                     <div>
                       <span className="text-slate-400 font-semibold block mb-1">Requester Contact</span>
                       <p className="font-bold text-slate-800">{req.requester_email || 'None'}</p>
-                      
+
                       <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-100 font-mono text-[11px] max-h-36 overflow-y-auto">
                         <pre className="whitespace-pre-wrap">{JSON.stringify(parsedPayload, null, 2)}</pre>
                       </div>
@@ -384,11 +382,10 @@ export default function AdminDashboardPage({ onLogout }) {
                           <button
                             onClick={() => handleApprove(req)}
                             disabled={actionLoading || !mv.verified}
-                            className={`flex-1 py-2 rounded-xl text-xs font-bold text-white transition-all flex items-center justify-center space-x-1 ${
-                              mv.verified 
-                                ? 'bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20' 
-                                : 'bg-slate-300 cursor-not-allowed'
-                            }`}
+                            className={`flex-1 py-2 rounded-xl text-xs font-bold text-white transition-all flex items-center justify-center space-x-1 ${mv.verified
+                              ? 'bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20'
+                              : 'bg-slate-300 cursor-not-allowed'
+                              }`}
                           >
                             <CheckCircle2 className="w-4 h-4" />
                             <span>Approve & Generate ID</span>
@@ -733,3 +730,4 @@ export default function AdminDashboardPage({ onLogout }) {
     </div>
   );
 }
+

@@ -43,3 +43,4 @@ export default function CaptchaWidget({ onVerify, verified }) {
     </div>
   );
 }
+
