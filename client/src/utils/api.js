@@ -31,7 +31,20 @@ export async function apiRequest(endpoint, options = {}) {
   }
 
   if (!response.ok) {
-    const errorMsg = (data && data.error) ? data.error : (typeof data === 'string' ? data : 'Request failed');
+    let errorMsg = (data && data.error) ? data.error : (typeof data === 'string' ? data : 'Request failed');
+    // Sanitize technical errors (e.g. Vercel NOT_FOUND, HTML crash pages, function invocation errors)
+    if (
+      typeof errorMsg === 'string' &&
+      (errorMsg.includes('NOT_FOUND') ||
+       errorMsg.includes('The page could not be found') ||
+       errorMsg.includes('FUNCTION_INVOCATION_FAILED') ||
+       errorMsg.includes('<html') ||
+       errorMsg.includes('<!DOCTYPE') ||
+       response.status === 404 ||
+       response.status >= 500)
+    ) {
+      errorMsg = (data && data.error) ? data.error : 'Service is temporarily unavailable, please try again.';
+    }
     const err = new Error(errorMsg);
     err.status = response.status;
     err.data = data;

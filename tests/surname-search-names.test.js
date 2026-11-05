@@ -8,7 +8,7 @@ import {
   parseAndValidateDob
 } from '../lib/validation.js';
 import { generateSurnameRefId, computeNextBranchNo } from '../lib/id-generator.js';
-import { performSurnameSearch } from '../api/surnames/search.js';
+import { performSurnameSearch } from '../server/routes/surnames.js';
 import { TABS } from '../lib/schema.js';
 
 test('Name Validation Rules - Unicode, single spaces, reject digits and symbols', () => {

@@ -1,16 +1,20 @@
-import { getSheetsClient } from '../lib/sheets.js';
-import { sendJson, sendError } from '../lib/api-helper.js';
+import express from 'express';
+import { getSheetsClient } from '../../lib/sheets.js';
 
-export default async function handler(req, res) {
+const router = express.Router();
+
+router.get('/', async (req, res, next) => {
   try {
     const sheetsClient = getSheetsClient();
     await sheetsClient.ensureTabsAndHeaders();
-    sendJson(res, 200, {
+    res.json({
       status: 'healthy',
       database: sheetsClient.isMock ? 'In-Memory Google Sheets Mock (Dev/Testing)' : 'Live Google Sheets API',
       timestamp: new Date().toISOString()
     });
   } catch (err) {
-    sendError(res, 500, 'Health check failed: unable to connect to database', err.message);
+    next(err);
   }
-}
+});
+
+export default router;

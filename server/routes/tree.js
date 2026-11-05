@@ -1,16 +1,19 @@
-import { getSheetsClient } from '../lib/sheets.js';
-import { TABS } from '../lib/schema.js';
-import { whitelistPublicMember } from '../lib/security.js';
-import { computeRelationshipLabel } from '../lib/relationships.js';
-import { sendJson, sendError, parseQuery, applyRateLimit } from '../lib/api-helper.js';
+import express from 'express';
+import { getSheetsClient } from '../../lib/sheets.js';
+import { TABS } from '../../lib/schema.js';
+import { whitelistPublicMember } from '../../lib/security.js';
+import { computeRelationshipLabel } from '../../lib/relationships.js';
 
-export default async function handler(req, res) {
-  if (!applyRateLimit(req, res, 60)) return;
-  const query = parseQuery(req);
-  const surnameRefId = (query.surname || query.surname_ref_id || query.ref || '').toUpperCase().trim();
-  if (!surnameRefId) return sendError(res, 400, 'Query parameter "ref" or "surname" is required');
+const router = express.Router();
 
-  const showConnected = String(query.show_connected).toLowerCase() === 'true';
+// GET /api/tree?surname_ref_id=...&show_connected=...
+router.get('/', async (req, res, next) => {
+  const surnameRefId = (req.query.surname || req.query.surname_ref_id || req.query.ref || '').toUpperCase().trim();
+  if (!surnameRefId) {
+    return res.status(400).json({ error: 'Query parameter "ref" or "surname_ref_id" is required' });
+  }
+
+  const showConnected = String(req.query.show_connected).toLowerCase() === 'true';
 
   try {
     const sheetsClient = getSheetsClient();
@@ -22,7 +25,9 @@ export default async function handler(req, res) {
     ]);
 
     const surnameRow = allSurnames.find(s => s.surname_ref_id === surnameRefId && s.status === 'Approved');
-    if (!surnameRow) return sendError(res, 404, `Family "${surnameRefId}" not found or not approved`);
+    if (!surnameRow) {
+      return res.status(404).json({ error: `Family "${surnameRefId}" not found or not approved` });
+    }
 
     const familyPersons = allPersons.filter(p => p.surname_ref_id === surnameRefId && p.status === 'Approved');
     const personMap = new Map(familyPersons.map(p => [p.person_id, p]));
@@ -63,7 +68,6 @@ export default async function handler(req, res) {
         };
       });
 
-      // Find any connection badge for this specific person
       const personLinks = connectedFamilies.filter(c => c.person_a_id === p.person_id || c.person_b_id === p.person_id);
 
       return {
@@ -73,8 +77,7 @@ export default async function handler(req, res) {
       };
     });
 
-    // Determine root nodes:
-    // Root = topmost ancestor couple in that family (people with no parent record in family)
+    // Root nodes
     const childSet = new Set(
       approvedRels
         .filter(r => r.type === 'PARENT_OF' && personMap.has(r.person_b_id) && personMap.has(r.person_a_id))
@@ -83,17 +86,13 @@ export default async function handler(req, res) {
 
     let rootPersons = familyPersons.filter(p => !childSet.has(p.person_id));
 
-    // Prefer male/husband or earliest DOB among roots so couples anchor from one spouse
     rootPersons.sort((a, b) => {
-      // Founding husband first
       if (a.founding_role === 'HUSBAND') return -1;
       if (b.founding_role === 'HUSBAND') return 1;
-      // Earliest DOB if known
       if (a.dob && b.dob) return a.dob.localeCompare(b.dob);
       return 0;
     });
 
-    // If both husband and wife are in rootPersons, filter out wife as root if husband is already present (she appears as spouse)
     const rootSpouseSet = new Set();
     const filteredRoots = [];
     for (const rp of rootPersons) {
@@ -138,7 +137,6 @@ export default async function handler(req, res) {
 
     const tree = filteredRoots.map(r => buildSubtree(r.person_id, 0, 4)).filter(Boolean);
 
-    // If show_connected is enabled, attach connected trees (limit 2 levels, cycle prevention)
     let connectedTrees = [];
     if (showConnected && connectedFamilies.length > 0) {
       for (const conn of connectedFamilies.slice(0, 2)) {
@@ -177,7 +175,7 @@ export default async function handler(req, res) {
       }
     }
 
-    sendJson(res, 200, {
+    res.json({
       surname: {
         surname_ref_id: surnameRow.surname_ref_id,
         surname_name: surnameRow.surname_name,
@@ -190,6 +188,8 @@ export default async function handler(req, res) {
       tree
     });
   } catch (err) {
-    sendError(res, 500, 'Failed to fetch family tree', err.message);
+    next(err);
   }
-}
+});
+
+export default router;

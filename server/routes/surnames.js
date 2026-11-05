@@ -1,7 +1,9 @@
+import express from 'express';
 import { getSheetsClient } from '../../lib/sheets.js';
 import { TABS } from '../../lib/schema.js';
 import { normalizeSurnameLetters } from '../../lib/id-generator.js';
-import { sendJson, sendError, parseQuery, applyRateLimit } from '../../lib/api-helper.js';
+
+const router = express.Router();
 
 export async function performSurnameSearch(q, sheetsClient) {
   const normQ = normalizeSurnameLetters(q);
@@ -82,25 +84,57 @@ export async function performSurnameSearch(q, sheetsClient) {
   };
 }
 
-export default async function handler(req, res) {
-  if (req.method !== 'GET') return sendError(res, 405, 'Method not allowed. Use GET.');
-  if (!applyRateLimit(req, res, 60)) return;
-
-  const queryParams = parseQuery(req);
-  const q = String(queryParams.q || queryParams.search || '').trim();
-
+// GET /api/surnames/search?q=...
+router.get('/search', async (req, res, next) => {
+  const q = String(req.query.q || req.query.search || '').trim();
   if (q.length < 3) {
-    return sendError(res, 400, 'Minimum 3 characters required to search surnames');
+    return res.status(400).json({ error: 'Minimum 3 characters required to search surnames' });
   }
 
   try {
     const sheetsClient = getSheetsClient();
     const result = await performSurnameSearch(q, sheetsClient);
     if (result.error) {
-      return sendError(res, 400, result.error);
+      return res.status(400).json({ error: result.error });
     }
-    sendJson(res, 200, result);
+    res.json(result);
   } catch (err) {
-    sendError(res, 500, 'Failed to perform surname search', err.message);
+    next(err);
   }
-}
+});
+
+// GET /api/surnames (handles search fallback as well if q is passed)
+router.get('/', async (req, res, next) => {
+  const q = String(req.query.q || req.query.search || '').trim();
+  if (q) {
+    if (q.length < 3) {
+      return res.status(400).json({ error: 'Minimum 3 characters required to search surnames' });
+    }
+    try {
+      const sheetsClient = getSheetsClient();
+      const result = await performSurnameSearch(q, sheetsClient);
+      if (result.error) return res.status(400).json({ error: result.error });
+      return res.json(result);
+    } catch (err) {
+      return next(err);
+    }
+  }
+
+  try {
+    const sheetsClient = getSheetsClient();
+    const rows = await sheetsClient.getRows(TABS.SURNAMES);
+    const approvedSurnames = rows
+      .filter(r => r.status === 'Approved')
+      .map(r => ({
+        surname_ref_id: r.surname_ref_id,
+        surname_name: r.surname_name,
+        branch_no: r.branch_no || '1',
+        created_at: r.created_at
+      }));
+    res.json({ surnames: approvedSurnames });
+  } catch (err) {
+    next(err);
+  }
+});
+
+export default router;
