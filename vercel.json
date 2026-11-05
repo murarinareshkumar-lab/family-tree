@@ -1,9 +1,16 @@
 {
-  "version": 2,
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/((?!api/|api$).*)",
+      "source": "/api/surnames/search",
+      "destination": "/api/surnames/search"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]

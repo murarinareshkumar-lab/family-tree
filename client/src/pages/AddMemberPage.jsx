@@ -1,24 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../utils/api';
 import CaptchaWidget from '../components/CaptchaWidget';
+import {
+  validateName,
+  validateEmail,
+  validatePhone,
+  formatDobMask,
+  parseAndValidateDob
+} from '../utils/validation';
 import { UserPlus, ShieldCheck, Mail, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
 
 export default function AddMemberPage({ onNavigate }) {
   const [surnames, setSurnames] = useState([]);
   const [selectedSurnameId, setSelectedSurnameId] = useState('');
   const [familyMembers, setFamilyMembers] = useState([]);
-  
+
   // Person fields
   const [firstName, setFirstName] = useState('');
   const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');
   const [lastNameManuallyEdited, setLastNameManuallyEdited] = useState(false);
   const [gender, setGender] = useState('Male');
-  const [dob, setDob] = useState('');
+  const [dob, setDob] = useState(''); // DD/MM/YYYY text field
   const [isDeceased, setIsDeceased] = useState(false);
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  
+
+  // Touched state for displaying inline errors
+  const [touched, setTouched] = useState({});
+
   // Relationship
   const [targetPersonId, setTargetPersonId] = useState('');
   const [relationshipType, setRelationshipType] = useState('SON'); // FATHER, MOTHER, SPOUSE, SON, DAUGHTER
@@ -32,6 +42,10 @@ export default function AddMemberPage({ onNavigate }) {
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [error, setError] = useState(null);
   const [ticketResult, setTicketResult] = useState(null);
+
+  const markTouched = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+  };
 
   // Load surnames on mount
   useEffect(() => {
@@ -79,73 +93,78 @@ export default function AddMemberPage({ onNavigate }) {
     loadFamilyMembers(id);
   };
 
-  // Determine if minor (under 18)
-  const isMinor = () => {
-    if (!dob) return false;
-    const birthYear = new Date(dob).getFullYear();
-    const currentYear = new Date().getFullYear();
-    return (currentYear - birthYear) < 18;
-  };
+  // Validation
+  const firstVal = validateName(firstName, true);
+  const midVal = validateName(middleName, false);
+  const lastVal = validateName(lastName, true);
+  const dobVal = parseAndValidateDob(dob);
 
-  const isAdultAndAlive = !isDeceased && !isMinor();
+  const isAdult = dobVal.valid && dobVal.age >= 18;
+  const isAdultAndAlive = !isDeceased && isAdult;
+
+  const emailVal = validateEmail(email, isAdultAndAlive);
+  const phoneVal = validatePhone(phone, isAdultAndAlive);
+
+  const isFormValid =
+    Boolean(selectedSurnameId) &&
+    firstVal.valid &&
+    midVal.valid &&
+    lastVal.valid &&
+    dobVal.valid &&
+    Boolean(targetPersonId) &&
+    (isAdultAndAlive ? (emailVal.valid && phoneVal.valid) : true);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isFormValid) {
+      setError('Please correct the validation errors in the form.');
+      return;
+    }
+
     if (!captchaVerified) {
       setError('Please complete the anti-bot verification check.');
-      return;
-    }
-
-    if (isAdultAndAlive && (!email || !phone)) {
-      setError('Adult living members must provide a verified Email and Phone number.');
-      return;
-    }
-
-    if (!targetPersonId) {
-      setError('Please select an existing family member to connect this person to.');
       return;
     }
 
     setLoading(true);
     setError(null);
 
-    const composedFullName = [firstName, middleName, lastName]
-      .map(s => s?.trim())
+    const composedFullName = [firstVal.value, midVal.value, lastVal.value]
       .filter(Boolean)
       .join(' ');
 
     const payload = {
       type: 'ADD_MEMBER',
-      requester_email: email || 'family-guardian@local',
+      requester_email: isAdultAndAlive ? emailVal.value : (email || 'family-guardian@local'),
       captcha_token: 'valid',
       payload: {
         surname_ref_id: selectedSurnameId,
-        first_name: firstName.trim(),
-        middle_name: middleName.trim(),
-        last_name: lastName.trim(),
+        first_name: firstVal.value,
+        middle_name: midVal.value,
+        last_name: lastVal.value,
         full_name: composedFullName,
         person: {
-          first_name: firstName.trim(),
-          middle_name: middleName.trim(),
-          last_name: lastName.trim(),
+          first_name: firstVal.value,
+          middle_name: midVal.value,
+          last_name: lastVal.value,
           full_name: composedFullName,
           gender,
-          dob,
+          dob: dobVal.value, // YYYY-MM-DD
           is_deceased: isDeceased,
-          email: email.trim(),
-          phone: phone.trim(),
+          email: emailVal.valid ? emailVal.value : '',
+          phone: phoneVal.valid ? phoneVal.value : '',
           father_person_id: fatherPersonId || null,
           mother_person_id: motherPersonId || null
         },
         gender,
-        dob,
+        dob: dobVal.value,
         is_deceased: isDeceased,
-        email: email.trim(),
-        phone: phone.trim(),
+        email: emailVal.valid ? emailVal.value : '',
+        phone: phoneVal.valid ? phoneVal.value : '',
         father_person_id: fatherPersonId || null,
         mother_person_id: motherPersonId || null,
         relationship: {
-          type: relationshipType, // FATHER, MOTHER, SPOUSE, SON, DAUGHTER
+          type: relationshipType,
           target_person_id: targetPersonId
         }
       }
@@ -172,7 +191,7 @@ export default function AddMemberPage({ onNavigate }) {
         </div>
         <h2 className="text-2xl font-bold text-center text-slate-900">Member Request Submitted!</h2>
         <p className="text-center text-sm text-slate-600 mt-2">
-          Your request to add <strong>{fullName}</strong> has been logged. Sequence ID will be assigned safely upon Admin approval.
+          Your request to add <strong>{firstName} {lastName}</strong> has been created. Permanent Ref ID will be assigned upon Administrator approval.
         </p>
 
         <div className="mt-6 p-4 bg-slate-50 rounded-2xl border border-slate-200 text-center">
@@ -185,16 +204,16 @@ export default function AddMemberPage({ onNavigate }) {
         <div className="mt-6 p-5 bg-amber-50/70 border border-amber-200 rounded-2xl text-xs sm:text-sm text-amber-900 space-y-2">
           <div className="flex items-center space-x-2 font-bold text-amber-800">
             <Mail className="w-4 h-4" />
-            <span>Email Authentication Step</span>
+            <span>Identity Verification Step</span>
           </div>
           <p>
-            Please email <strong className="font-mono bg-white px-2 py-0.5 rounded border border-amber-200">support@familytree.local</strong> with the subject:
+            Please send an email from {isAdultAndAlive ? <strong>{email}</strong> : 'your registered family guardian address'} to support:
           </p>
           <p className="font-mono bg-white p-2 rounded-lg border border-amber-200 text-slate-800 font-semibold select-all">
-            Verify Ticket: {ticketResult.ticket_id}
+            support@familytree.local
           </p>
-          <p className="text-xs text-amber-700">
-            {isAdultAndAlive ? 'Send from the member\'s registered email.' : 'Send from the registered guardian or parent\'s email.'}
+          <p>
+            With the subject: <strong className="font-mono select-all">Verify Ticket: {ticketResult.ticket_id}</strong>
           </p>
         </div>
 
@@ -217,7 +236,7 @@ export default function AddMemberPage({ onNavigate }) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-3xl mx-auto">
       <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm">
         <div className="flex items-center space-x-3 mb-6">
           <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center">
@@ -226,7 +245,7 @@ export default function AddMemberPage({ onNavigate }) {
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Add Family Member</h1>
             <p className="text-xs sm:text-sm text-slate-500">
-              Connect a child, spouse, or parent to an existing family lineage
+              Submit a request to add a new relative to an existing verified lineage.
             </p>
           </div>
         </div>
@@ -267,9 +286,15 @@ export default function AddMemberPage({ onNavigate }) {
                   required
                   placeholder="e.g. Anand"
                   value={firstName}
+                  onBlur={() => markTouched('firstName')}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                  className={`w-full px-3.5 py-2.5 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 ${
+                    touched.firstName && !firstVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                  }`}
                 />
+                {touched.firstName && !firstVal.valid && (
+                  <p className="text-[11px] text-rose-600 mt-1">{firstVal.error}</p>
+                )}
               </div>
 
               <div>
@@ -278,9 +303,15 @@ export default function AddMemberPage({ onNavigate }) {
                   type="text"
                   placeholder="e.g. Kumar (optional)"
                   value={middleName}
+                  onBlur={() => markTouched('middleName')}
                   onChange={(e) => setMiddleName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                  className={`w-full px-3.5 py-2.5 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 ${
+                    touched.middleName && !midVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                  }`}
                 />
+                {touched.middleName && !midVal.valid && (
+                  <p className="text-[11px] text-rose-600 mt-1">{midVal.error}</p>
+                )}
               </div>
 
               <div>
@@ -290,12 +321,18 @@ export default function AddMemberPage({ onNavigate }) {
                   required
                   placeholder="e.g. Patil"
                   value={lastName}
+                  onBlur={() => markTouched('lastName')}
                   onChange={(e) => {
                     setLastName(e.target.value);
                     setLastNameManuallyEdited(true);
                   }}
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                  className={`w-full px-3.5 py-2.5 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 ${
+                    touched.lastName && !lastVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                  }`}
                 />
+                {touched.lastName && !lastVal.valid && (
+                  <p className="text-[11px] text-rose-600 mt-1">{lastVal.error}</p>
+                )}
               </div>
             </div>
 
@@ -313,14 +350,22 @@ export default function AddMemberPage({ onNavigate }) {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Date of Birth *</label>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Date of Birth (DD/MM/YYYY) *</label>
               <input
-                type="date"
+                type="text"
                 required
+                placeholder="DD/MM/YYYY (e.g. 01011985)"
+                maxLength={10}
                 value={dob}
-                onChange={(e) => setDob(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                onBlur={() => markTouched('dob')}
+                onChange={(e) => setDob(formatDobMask(e.target.value))}
+                className={`w-full px-3.5 py-2.5 bg-white border rounded-xl text-sm font-mono focus:outline-none focus:border-emerald-500 ${
+                  touched.dob && !dobVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                }`}
               />
+              {touched.dob && !dobVal.valid && (
+                <p className="text-[11px] text-rose-600 mt-1">{dobVal.error}</p>
+              )}
             </div>
 
             <div className="sm:col-span-2 flex items-center space-x-2 pt-1">
@@ -354,20 +399,33 @@ export default function AddMemberPage({ onNavigate }) {
                     required
                     placeholder="member@example.com"
                     value={email}
+                    onBlur={() => markTouched('email')}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                    className={`w-full px-3.5 py-2 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 ${
+                      touched.email && !emailVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                    }`}
                   />
+                  {touched.email && !emailVal.valid && (
+                    <p className="text-[11px] text-rose-600 mt-1">{emailVal.error}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Phone Number *</label>
                   <input
                     type="tel"
                     required
-                    placeholder="+91 9876543210"
+                    placeholder="9876543210"
+                    maxLength={14}
                     value={phone}
+                    onBlur={() => markTouched('phone')}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                    className={`w-full px-3.5 py-2 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 font-mono ${
+                      touched.phone && !phoneVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                    }`}
                   />
+                  {touched.phone && !phoneVal.valid && (
+                    <p className="text-[11px] text-rose-600 mt-1">{phoneVal.error}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -460,8 +518,8 @@ export default function AddMemberPage({ onNavigate }) {
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-emerald-600/20 disabled:opacity-50 flex items-center justify-center space-x-2"
+            disabled={!isFormValid || !captchaVerified || loading}
+            className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-emerald-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
           >
             {loading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -477,4 +535,3 @@ export default function AddMemberPage({ onNavigate }) {
     </div>
   );
 }
-
