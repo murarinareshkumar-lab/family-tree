@@ -3,8 +3,16 @@ import fs from 'fs';
 
 console.log('--- Building Family Tree Portal ---');
 
-console.log('1. Installing client dependencies...');
-execSync('npm --prefix client install', { stdio: 'inherit' });
+if (!fs.existsSync('client/node_modules')) {
+  console.log('1. Installing client dependencies...');
+  try {
+    execSync('npm --prefix client install --no-audit --no-fund', { stdio: 'inherit' });
+  } catch (e) {
+    console.warn('npm install warning:', e.message);
+  }
+} else {
+  console.log('1. Client dependencies already installed.');
+}
 
 console.log('2. Compiling Vite React app...');
 execSync('npm --prefix client run build', { stdio: 'inherit' });
@@ -26,4 +34,3 @@ console.log('--- Verification ---');
 console.log('dist exists:', fs.existsSync('dist/index.html'));
 console.log('client/dist exists:', fs.existsSync('client/dist/index.html'));
 console.log('--- Build Succeeded! ---');
-

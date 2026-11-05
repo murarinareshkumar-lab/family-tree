@@ -68,6 +68,7 @@ export default async function handler(req, res) {
             const wId = randomUUID();
             await sheetsClient.appendRow(TABS.PERSONS, {
               person_id: hId, member_ref_id: formatMemberRefId(surnameRefId, 1), surname_ref_id: surnameRefId,
+              first_name: husband.first_name || '', middle_name: husband.middle_name || '', last_name: husband.last_name || '',
               full_name: husband.full_name, name_norm: normalizeName(husband.full_name), gender: 'MALE',
               dob: husband.dob || '', is_deceased: String(Boolean(husband.is_deceased)), email: husband.email || '',
               email_norm: normalizeEmail(husband.email), phone: husband.phone || '', phone_norm: normalizePhone(husband.phone),
@@ -75,6 +76,7 @@ export default async function handler(req, res) {
             });
             await sheetsClient.appendRow(TABS.PERSONS, {
               person_id: wId, member_ref_id: formatMemberRefId(surnameRefId, 2), surname_ref_id: surnameRefId,
+              first_name: wife.first_name || '', middle_name: wife.middle_name || '', last_name: wife.last_name || '',
               full_name: wife.full_name, name_norm: normalizeName(wife.full_name), gender: 'FEMALE',
               dob: wife.dob || '', is_deceased: String(Boolean(wife.is_deceased)), email: wife.email || '',
               email_norm: normalizeEmail(wife.email), phone: wife.phone || '', phone_norm: normalizePhone(wife.phone),
@@ -100,7 +102,9 @@ export default async function handler(req, res) {
             const newId = randomUUID();
 
             await sheetsClient.appendRow(TABS.PERSONS, {
-              person_id: newId, member_ref_id: newMemRefId, surname_ref_id, full_name: person.full_name,
+              person_id: newId, member_ref_id: newMemRefId, surname_ref_id,
+              first_name: person.first_name || '', middle_name: person.middle_name || '', last_name: person.last_name || '',
+              full_name: person.full_name,
               name_norm: normalizeName(person.full_name), gender: person.gender || '', dob: person.dob || '',
               is_deceased: String(Boolean(person.is_deceased)), email: person.email || '', email_norm: normalizeEmail(person.email),
               phone: person.phone || '', phone_norm: normalizePhone(person.phone), status: 'Approved', verified_by_admin: 'true', created_at: now

@@ -11,6 +11,7 @@ import { GitBranch } from 'lucide-react';
 
 export default function App() {
   const [activePage, setActivePage] = useState('tree');
+  const [pageParams, setPageParams] = useState({});
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [adminUser, setAdminUser] = useState(null);
 
@@ -46,8 +47,9 @@ export default function App() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  const handlePageChange = (page) => {
+  const handlePageChange = (page, params = {}) => {
     setActivePage(page);
+    setPageParams(params);
     window.location.hash = page;
   };
 
@@ -91,7 +93,7 @@ export default function App() {
         {activePage === 'tree' && <HomePage onNavigate={handlePageChange} />}
         {activePage === 'onboard' && <OnboardSurnamePage onNavigate={handlePageChange} />}
         {activePage === 'add-member' && <AddMemberPage onNavigate={handlePageChange} />}
-        {activePage === 'request' && <RequestTicketPage onNavigate={handlePageChange} />}
+        {activePage === 'request' && <RequestTicketPage onNavigate={handlePageChange} initialParams={pageParams} />}
         {activePage === 'ticket-status' && <TicketStatusPage />}
         {activePage === 'admin-dashboard' && (
           isAdminLoggedIn ? (

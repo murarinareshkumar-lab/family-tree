@@ -7,8 +7,9 @@ dotenv.config();
 const routeMap = {
   '/api/health': () => import('./api/health.js'),
   '/api/surnames': () => import('./api/surnames.js'),
+  '/api/surnames/search': () => import('./api/surnames/search.js'),
   '/api/tree': () => import('./api/tree.js'),
-  '/api/requests': () => import('./api/requests/index.js'),
+  '/api/requests': () => import('./api/requests.js'),
   '/api/requests/status': () => import('./api/requests/status.js'),
   '/api/admin/login': () => import('./api/admin/login.js'),
   '/api/admin/logout': () => import('./api/admin/logout.js'),
@@ -26,7 +27,7 @@ const PORT = process.env.API_PORT || 3001;
 const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-idempotency-key');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-idempotency-key, x-admin-key');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   if (req.method === 'OPTIONS') { res.statusCode = 204; return res.end(); }
 

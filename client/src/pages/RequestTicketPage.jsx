@@ -3,16 +3,30 @@ import { apiRequest } from '../utils/api';
 import CaptchaWidget from '../components/CaptchaWidget';
 import { FileText, Mail, CheckCircle2, AlertCircle, ArrowRight, GitMerge, UserCheck, Edit3 } from 'lucide-react';
 
-export default function RequestTicketPage({ onNavigate }) {
-  const [requestType, setRequestType] = useState('EDIT_MEMBER'); // EDIT_MEMBER, LINK_MEMBERS, MERGE_MEMBERS, EMAIL_CHANGE
+export default function RequestTicketPage({ onNavigate, initialParams = {} }) {
+  const [requestType, setRequestType] = useState(initialParams?.type || 'EDIT_MEMBER'); // EDIT_MEMBER, LINK_MEMBERS, MERGE_MEMBERS, EMAIL_CHANGE
   const [requesterEmail, setRequesterEmail] = useState('');
   const [memberRefId, setMemberRefId] = useState('');
   
   // Specific payloads
   const [secondaryEmail, setSecondaryEmail] = useState('');
-  const [secondaryMemberRefId, setSecondaryMemberRefId] = useState('');
+  const [secondaryMemberRefId, setSecondaryMemberRefId] = useState(initialParams?.secondary_member_ref_id || initialParams?.member_ref_id || '');
   const [newEmail, setNewEmail] = useState('');
-  const [changeDetails, setChangeDetails] = useState('');
+  const [changeDetails, setChangeDetails] = useState(
+    initialParams?.display_name ? `Request to link with family member ${initialParams.display_name} (${initialParams.member_ref_id || ''})` : ''
+  );
+
+  React.useEffect(() => {
+    if (initialParams?.type) {
+      setRequestType(initialParams.type);
+    }
+    if (initialParams?.secondary_member_ref_id || initialParams?.member_ref_id) {
+      setSecondaryMemberRefId(initialParams.secondary_member_ref_id || initialParams.member_ref_id);
+    }
+    if (initialParams?.display_name) {
+      setChangeDetails(`Request to link with family member ${initialParams.display_name} (${initialParams.member_ref_id || ''})`);
+    }
+  }, [initialParams]);
 
   const [captchaVerified, setCaptchaVerified] = useState(false);
   const [loading, setLoading] = useState(false);

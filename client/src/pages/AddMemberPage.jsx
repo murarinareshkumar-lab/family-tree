@@ -9,7 +9,10 @@ export default function AddMemberPage({ onNavigate }) {
   const [familyMembers, setFamilyMembers] = useState([]);
   
   // Person fields
-  const [fullName, setFullName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [middleName, setMiddleName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [lastNameManuallyEdited, setLastNameManuallyEdited] = useState(false);
   const [gender, setGender] = useState('Male');
   const [dob, setDob] = useState('');
   const [isDeceased, setIsDeceased] = useState(false);
@@ -37,8 +40,12 @@ export default function AddMemberPage({ onNavigate }) {
         const list = res.surnames || [];
         setSurnames(list);
         if (list.length > 0) {
-          setSelectedSurnameId(list[0].surname_ref_id);
-          loadFamilyMembers(list[0].surname_ref_id);
+          const first = list[0];
+          setSelectedSurnameId(first.surname_ref_id);
+          if (!lastNameManuallyEdited && first.surname_name) {
+            setLastName(first.surname_name);
+          }
+          loadFamilyMembers(first.surname_ref_id);
         }
       })
       .catch(err => setError(err.message || 'Failed to load lineages'));
@@ -65,6 +72,10 @@ export default function AddMemberPage({ onNavigate }) {
 
   const handleSurnameSelect = (id) => {
     setSelectedSurnameId(id);
+    const found = surnames.find(s => s.surname_ref_id === id);
+    if (found && !lastNameManuallyEdited && found.surname_name) {
+      setLastName(found.surname_name);
+    }
     loadFamilyMembers(id);
   };
 
@@ -98,13 +109,34 @@ export default function AddMemberPage({ onNavigate }) {
     setLoading(true);
     setError(null);
 
+    const composedFullName = [firstName, middleName, lastName]
+      .map(s => s?.trim())
+      .filter(Boolean)
+      .join(' ');
+
     const payload = {
       type: 'ADD_MEMBER',
       requester_email: email || 'family-guardian@local',
       captcha_token: 'valid',
       payload: {
         surname_ref_id: selectedSurnameId,
-        full_name: fullName.trim(),
+        first_name: firstName.trim(),
+        middle_name: middleName.trim(),
+        last_name: lastName.trim(),
+        full_name: composedFullName,
+        person: {
+          first_name: firstName.trim(),
+          middle_name: middleName.trim(),
+          last_name: lastName.trim(),
+          full_name: composedFullName,
+          gender,
+          dob,
+          is_deceased: isDeceased,
+          email: email.trim(),
+          phone: phone.trim(),
+          father_person_id: fatherPersonId || null,
+          mother_person_id: motherPersonId || null
+        },
         gender,
         dob,
         is_deceased: isDeceased,
@@ -227,16 +259,44 @@ export default function AddMemberPage({ onNavigate }) {
 
           {/* Member Details */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-medium text-slate-600 mb-1">Full Name *</label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. Anand Patil"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
-              />
+            <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">First Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Anand"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Middle Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Kumar (optional)"
+                  value={middleName}
+                  onChange={(e) => setMiddleName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Last Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Patil"
+                  value={lastName}
+                  onChange={(e) => {
+                    setLastName(e.target.value);
+                    setLastNameManuallyEdited(true);
+                  }}
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                />
+              </div>
             </div>
 
             <div>

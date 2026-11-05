@@ -3,6 +3,7 @@ import { getSheetsClient } from '../lib/sheets.js';
 import { TABS } from '../lib/schema.js';
 import { checkDuplicates, normalizeEmail, normalizePhone, isMinor } from '../lib/duplicates.js';
 import { logAuditEvent } from '../lib/audit.js';
+import { composeFullName } from '../lib/security.js';
 import { sendJson, sendError, parseBody, applyRateLimit } from '../lib/api-helper.js';
 
 export default async function handler(req, res) {
@@ -23,10 +24,18 @@ export default async function handler(req, res) {
 
     if (type === 'ONBOARD_SURNAME') {
       const surname = payload.surname || payload.surname_name;
-      const husband = payload.husband;
-      const wife = payload.wife;
+      const husband = payload.husband || {};
+      const wife = payload.wife || {};
 
-      if (!surname || !husband?.full_name || !wife?.full_name) {
+      // Compose full_name if not already present or if first/last are provided
+      if (!husband.full_name && (husband.first_name || husband.last_name)) {
+        husband.full_name = composeFullName(husband.first_name, husband.middle_name, husband.last_name);
+      }
+      if (!wife.full_name && (wife.first_name || wife.last_name)) {
+        wife.full_name = composeFullName(wife.first_name, wife.middle_name, wife.last_name);
+      }
+
+      if (!surname || !husband.full_name || !wife.full_name) {
         return sendError(res, 400, 'Surname, Husband, and Wife details required');
       }
       if (!husband.email || !husband.phone || !wife.email || !wife.phone) {
@@ -43,6 +52,9 @@ export default async function handler(req, res) {
     } else if (type === 'ADD_MEMBER') {
       const surname_ref_id = payload.surname_ref_id;
       const person = payload.person || {
+        first_name: payload.first_name,
+        middle_name: payload.middle_name,
+        last_name: payload.last_name,
         full_name: payload.full_name,
         gender: payload.gender,
         dob: payload.dob,
@@ -52,6 +64,11 @@ export default async function handler(req, res) {
         father_person_id: payload.father_person_id,
         mother_person_id: payload.mother_person_id
       };
+
+      if (!person.full_name && (person.first_name || person.last_name)) {
+        person.full_name = composeFullName(person.first_name, person.middle_name, person.last_name);
+      }
+
       const relationship = payload.relationship || {};
       const relative_person_id = payload.relative_person_id || relationship.target_person_id;
       const relationship_type = payload.relationship_type || relationship.type;
