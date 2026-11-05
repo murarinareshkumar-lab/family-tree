@@ -26,3 +26,4 @@ console.log('--- Verification ---');
 console.log('dist exists:', fs.existsSync('dist/index.html'));
 console.log('client/dist exists:', fs.existsSync('client/dist/index.html'));
 console.log('--- Build Succeeded! ---');
+
