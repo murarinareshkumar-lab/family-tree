@@ -10,20 +10,32 @@ export default function RequestTicketPage({ onNavigate, initialParams = {} }) {
   
   // Specific payloads
   const [secondaryEmail, setSecondaryEmail] = useState('');
-  const [secondaryMemberRefId, setSecondaryMemberRefId] = useState(initialParams?.secondary_member_ref_id || initialParams?.member_ref_id || '');
+  const [secondaryMemberRefId, setSecondaryMemberRefId] = useState(
+    initialParams?.husband_ref_id || initialParams?.secondary_member_ref_id || initialParams?.member_ref_id || ''
+  );
   const [newEmail, setNewEmail] = useState('');
+  const [targetSurnameRefId, setTargetSurnameRefId] = useState(initialParams?.surname_ref_id || '');
   const [changeDetails, setChangeDetails] = useState(
-    initialParams?.display_name ? `Request to link with family member ${initialParams.display_name} (${initialParams.member_ref_id || ''})` : ''
+    initialParams?.surname_ref_id
+      ? `Request link to existing family branch ${initialParams.surname_ref_id}. Founding Husband: ${initialParams.husband_ref_id || 'N/A'}, Founding Wife: ${initialParams.wife_ref_id || 'N/A'}`
+      : initialParams?.display_name
+      ? `Request to link with family member ${initialParams.display_name} (${initialParams.member_ref_id || ''})`
+      : ''
   );
 
   React.useEffect(() => {
     if (initialParams?.type) {
       setRequestType(initialParams.type);
     }
-    if (initialParams?.secondary_member_ref_id || initialParams?.member_ref_id) {
-      setSecondaryMemberRefId(initialParams.secondary_member_ref_id || initialParams.member_ref_id);
+    if (initialParams?.husband_ref_id || initialParams?.secondary_member_ref_id || initialParams?.member_ref_id) {
+      setSecondaryMemberRefId(initialParams.husband_ref_id || initialParams.secondary_member_ref_id || initialParams.member_ref_id);
     }
-    if (initialParams?.display_name) {
+    if (initialParams?.surname_ref_id) {
+      setTargetSurnameRefId(initialParams.surname_ref_id);
+      setChangeDetails(
+        `Request link to existing family branch ${initialParams.surname_ref_id}. Founding Husband: ${initialParams.husband_ref_id || 'N/A'}, Founding Wife: ${initialParams.wife_ref_id || 'N/A'}`
+      );
+    } else if (initialParams?.display_name) {
       setChangeDetails(`Request to link with family member ${initialParams.display_name} (${initialParams.member_ref_id || ''})`);
     }
   }, [initialParams]);

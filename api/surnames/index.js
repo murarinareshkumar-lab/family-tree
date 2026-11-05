@@ -1,7 +1,7 @@
-import { getSheetsClient } from '../lib/sheets.js';
-import { TABS } from '../lib/schema.js';
-import { sendJson, sendError, parseQuery, applyRateLimit } from '../lib/api-helper.js';
-import { performSurnameSearch } from './surnames/search.js';
+import { getSheetsClient } from '../../lib/sheets.js';
+import { TABS } from '../../lib/schema.js';
+import { sendJson, sendError, parseQuery, applyRateLimit } from '../../lib/api-helper.js';
+import { performSurnameSearch } from './search.js';
 
 export default async function handler(req, res) {
   if (!applyRateLimit(req, res, 60)) return;

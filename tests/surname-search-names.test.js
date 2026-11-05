@@ -1,14 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { composeFullName, whitelistPublicSearchResult } from '../lib/security.js';
+import { composeFullName } from '../lib/security.js';
 import {
   validateName,
   validateEmail,
   validatePhone,
-  parseAndValidateDob,
-  cleanPhone
+  parseAndValidateDob
 } from '../lib/validation.js';
+import { generateSurnameRefId } from '../lib/id-generator.js';
 import { performSurnameSearch } from '../api/surnames/search.js';
+import { TABS } from '../lib/schema.js';
 
 test('Name Validation Rules - Unicode, single spaces, reject digits and symbols', () => {
   // 1. English valid
@@ -72,7 +73,6 @@ test('Email Validation Rules - Format, lowercase, max 254 chars', () => {
 });
 
 test('Phone Validation Rules - 10 digits starting with 6-9, stripped +91 and spaces', () => {
-  // Valid Indian mobile numbers
   const p1 = validatePhone('9876543210', true);
   assert.equal(p1.valid, true);
   assert.equal(p1.value, '9876543210');
@@ -96,155 +96,199 @@ test('Phone Validation Rules - 10 digits starting with 6-9, stripped +91 and spa
   assert.equal(validatePhone('5123456789', true).valid, false);
   assert.equal(validatePhone('0987654321', true).valid, false);
 
-  // Invalid length (< 10 or > 10 digits)
+  // Invalid length
   assert.equal(validatePhone('987654321', true).valid, false);
   assert.equal(validatePhone('98765432100', true).valid, false);
 
-  // Invalid: Non-digits
+  // Invalid non-digits
   assert.equal(validatePhone('98765ABCD0', true).valid, false);
 });
 
 test('Date of Birth Rules - DDMMYYYY, calendar validity, leap years, 18+ check, and YYYY-MM-DD output', () => {
-  // 1. Valid DDMMYYYY
   const d1 = parseAndValidateDob('01011980');
   assert.equal(d1.valid, true);
   assert.equal(d1.value, '1980-01-01');
   assert.equal(d1.display, '01/01/1980');
 
-  // 2. Valid DD/MM/YYYY
   const d2 = parseAndValidateDob('15/08/1947');
   assert.equal(d2.valid, true);
   assert.equal(d2.value, '1947-08-15');
 
-  // 3. Leap year check: Feb 29 on leap year (2000, 2024) is valid
-  const leapValid = parseAndValidateDob('29022000');
-  assert.equal(leapValid.valid, true);
-  assert.equal(leapValid.value, '2000-02-29');
+  // Leap year check
+  assert.equal(parseAndValidateDob('29022000').valid, true);
+  assert.equal(parseAndValidateDob('29021999').valid, false);
 
-  // 4. Leap year check: Feb 29 on non-leap year (1999, 2023) is invalid
-  const leapInvalid = parseAndValidateDob('29021999');
-  assert.equal(leapInvalid.valid, false);
-
-  // 5. Invalid days per month (April 31 is invalid)
+  // Invalid day for month
   assert.equal(parseAndValidateDob('31041990').valid, false);
 
-  // 6. Year before 1900 is rejected
+  // Year before 1900
   assert.equal(parseAndValidateDob('01011899').valid, false);
 
-  // 7. Future date is rejected
+  // Future date
   const futureYear = new Date().getFullYear() + 2;
   assert.equal(parseAndValidateDob(`0101${futureYear}`).valid, false);
 
-  // 8. 18+ check for founding members
+  // 18+ check
   const currentYear = new Date().getFullYear();
-  const minorDob = `0101${currentYear - 10}`; // 10 years old
-  const adultDob = `0101${currentYear - 25}`; // 25 years old
-
-  assert.equal(parseAndValidateDob(minorDob, { minAge: 18 }).valid, false);
-  assert.equal(parseAndValidateDob(adultDob, { minAge: 18 }).valid, true);
+  assert.equal(parseAndValidateDob(`0101${currentYear - 10}`, { minAge: 18 }).valid, false);
+  assert.equal(parseAndValidateDob(`0101${currentYear - 25}`, { minAge: 18 }).valid, true);
 });
 
-test('Surname Search Match & Whitelist - Founding husband and wife first, zero private fields leak', async () => {
+test('Name Composition - Full name build with and without middle name', () => {
+  assert.equal(composeFullName('Gurubheema', '', 'Murari'), 'Gurubheema Murari');
+  assert.equal(composeFullName('Neeraja', 'Kumari', 'Murari'), 'Neeraja Kumari Murari');
+  assert.equal(composeFullName('  Anil  ', '  Kumar  ', '  Patil  '), 'Anil Kumar Patil');
+});
+
+test('Surname Search API - No match returns clean empty structure', async () => {
+  const mockSheetsClient = {
+    getRows: async () => []
+  };
+
+  const res = await performSurnameSearch('Murari', mockSheetsClient);
+  assert.equal(res.ok, true);
+  assert.equal(res.found, false);
+  assert.equal(res.pending, false);
+  assert.deepEqual(res.families, []);
+});
+
+test('Surname Search API - Matches 1 family and 2 families sharing same surname, strict whitelist', async () => {
   const mockSurnames = [
-    { surname_ref_id: 'MURFT', surname_name: 'Murari', status: 'Approved', last_seq: '3' }
+    { surname_ref_id: 'MURFT', surname_name: 'Murari', surname_norm: 'MURARI', status: 'Approved' },
+    { surname_ref_id: 'MURAFT', surname_name: 'Murari', surname_norm: 'MURARI', status: 'Approved' }
   ];
 
   const mockPersons = [
+    // Family 1: MURFT
     {
-      person_id: 'p-3',
-      member_ref_id: 'MURFT-0003',
+      person_id: 'p-1',
+      member_ref_id: 'MURFT-0001',
       surname_ref_id: 'MURFT',
-      full_name: 'Anand Murari',
-      gender: 'MALE',
-      dob: '1985-05-05',
-      email: 'anand.secret@example.com',
-      phone: '9876543299',
-      father_person_id: 'p-1',
-      mother_person_id: 'p-2',
-      status: 'Approved'
+      full_name: 'Gurubheema Murari',
+      founding_role: 'HUSBAND',
+      status: 'Approved',
+      dob: '1950-01-01',
+      email: 'secret.guru@example.com',
+      phone: '9449980208'
     },
     {
       person_id: 'p-2',
       member_ref_id: 'MURFT-0002',
       surname_ref_id: 'MURFT',
       full_name: 'Neeraja Kumari Murari',
-      gender: 'FEMALE',
+      founding_role: 'WIFE',
+      status: 'Approved',
       dob: '1960-01-01',
-      email: 'neeraja.secret@example.com',
-      phone: '9876543211',
-      status: 'Approved'
+      email: 'secret.neeraja@example.com',
+      phone: '9876543210'
     },
     {
-      person_id: 'p-1',
-      member_ref_id: 'MURFT-0001',
+      person_id: 'p-3',
+      member_ref_id: 'MURFT-0003',
       surname_ref_id: 'MURFT',
-      full_name: 'Gurubheema Murari',
-      gender: 'MALE',
-      dob: '1950-01-01',
-      email: 'guru.secret@example.com',
-      phone: '9876543210',
-      status: 'Approved'
+      full_name: 'Child Murari',
+      founding_role: '',
+      status: 'Approved',
+      dob: '1985-01-01'
+    },
+    // Family 2: MURAFT
+    {
+      person_id: 'p-4',
+      member_ref_id: 'MURAFT-0001',
+      surname_ref_id: 'MURAFT',
+      full_name: 'Venkatesh Murari',
+      founding_role: 'HUSBAND',
+      status: 'Approved',
+      dob: '1965-01-01',
+      email: 'secret.venkat@example.com',
+      phone: '9845012345'
+    },
+    {
+      person_id: 'p-5',
+      member_ref_id: 'MURAFT-0002',
+      surname_ref_id: 'MURAFT',
+      full_name: 'Lakshmi Murari',
+      founding_role: 'WIFE',
+      status: 'Approved',
+      dob: '1970-01-01',
+      email: 'secret.lakshmi@example.com',
+      phone: '9845098765'
     }
   ];
 
-  const mockRelationships = [
-    { rel_id: 'r-1', person_a_id: 'p-1', person_b_id: 'p-2', type: 'SPOUSE_OF', status: 'Approved' },
-    { rel_id: 'r-2', person_a_id: 'p-1', person_b_id: 'p-3', type: 'PARENT_OF', status: 'Approved' },
-    { rel_id: 'r-3', person_a_id: 'p-2', person_b_id: 'p-3', type: 'PARENT_OF', status: 'Approved' }
-  ];
-
-  const mockRequests = [];
-
   const mockSheetsClient = {
     getRows: async (tab) => {
-      if (tab === 'FT_Surname_Details') return mockSurnames;
-      if (tab === 'FT_User_Details') return mockPersons;
-      if (tab === 'FT_Relationships') return mockRelationships;
-      if (tab === 'FT_Requests') return mockRequests;
+      if (tab === TABS.SURNAMES || tab === 'FT_Surname_Details' || tab === 'Surnames') return mockSurnames;
+      if (tab === TABS.PERSONS || tab === 'FT_User_Details' || tab === 'Persons') return mockPersons;
       return [];
     }
   };
 
-  const searchRes = await performSurnameSearch('Murari', mockSheetsClient);
+  const res = await performSurnameSearch('Murari', mockSheetsClient);
+  assert.equal(res.ok, true);
+  assert.equal(res.found, true);
+  assert.equal(res.pending, false);
+  assert.equal(res.families.length, 2);
 
-  assert.equal(searchRes.count, 3);
-  assert.equal(searchRes.results.length, 3);
+  // Family 1
+  const fam1 = res.families[0];
+  assert.equal(fam1.surname_ref_id, 'MURFT');
+  assert.deepEqual(fam1.husband, { name: 'Gurubheema Murari', member_ref_id: 'MURFT-0001' });
+  assert.deepEqual(fam1.wife, { name: 'Neeraja Kumari Murari', member_ref_id: 'MURFT-0002' });
 
-  // 1. Order check: Founding husband first, Founding wife second, then Member
-  assert.equal(searchRes.results[0].role, 'Founding husband');
-  assert.equal(searchRes.results[0].display_name, 'Gurubheema Murari');
-  assert.equal(searchRes.results[0].member_ref_id, 'MURFT-0001');
+  // Family 2
+  const fam2 = res.families[1];
+  assert.equal(fam2.surname_ref_id, 'MURAFT');
+  assert.deepEqual(fam2.husband, { name: 'Venkatesh Murari', member_ref_id: 'MURAFT-0001' });
+  assert.deepEqual(fam2.wife, { name: 'Lakshmi Murari', member_ref_id: 'MURAFT-0002' });
 
-  assert.equal(searchRes.results[1].role, 'Founding wife');
-  assert.equal(searchRes.results[1].display_name, 'Neeraja Kumari Murari');
-  assert.equal(searchRes.results[1].member_ref_id, 'MURFT-0002');
+  // Strict Whitelist Check: NEVER return DOB, email, phone, parent IDs, or child members
+  for (const fam of res.families) {
+    const keys = Object.keys(fam).sort();
+    assert.deepEqual(keys, ['husband', 'surname_ref_id', 'wife']);
 
-  assert.equal(searchRes.results[2].role, 'Member');
-  assert.equal(searchRes.results[2].display_name, 'Anand Murari');
-  assert.equal(searchRes.results[2].member_ref_id, 'MURFT-0003');
-
-  // 2. Strict Whitelist Check: ZERO private fields leak
-  for (const item of searchRes.results) {
-    const keys = Object.keys(item).sort();
-    assert.deepEqual(keys, ['display_name', 'member_ref_id', 'role']);
-
-    assert.equal(item.dob, undefined, 'DOB must never leak in search results');
-    assert.equal(item.email, undefined, 'Email must never leak in search results');
-    assert.equal(item.phone, undefined, 'Phone must never leak in search results');
-    assert.equal(item.father_person_id, undefined, 'Parent IDs must never leak in search results');
-    assert.equal(item.mother_person_id, undefined, 'Parent IDs must never leak in search results');
-    assert.equal(item.person_id, undefined, 'Internal person_id must never leak');
+    assert.equal(fam.dob, undefined);
+    assert.equal(fam.email, undefined);
+    assert.equal(fam.phone, undefined);
+    assert.equal(fam.husband.dob, undefined);
+    assert.equal(fam.husband.email, undefined);
+    assert.equal(fam.husband.phone, undefined);
+    assert.equal(fam.wife.dob, undefined);
+    assert.equal(fam.wife.email, undefined);
+    assert.equal(fam.wife.phone, undefined);
   }
 });
 
-test('Surname Search No Match - Returns clean empty results', async () => {
+test('Surname Search API - pending=true when ONBOARD_SURNAME request is awaiting approval', async () => {
   const mockSheetsClient = {
-    getRows: async () => []
+    getRows: async (tab) => {
+      if (tab === TABS.REQUESTS || tab === 'FT_Requests' || tab === 'Requests') {
+        return [
+          {
+            ticket_id: 'TKT-1234',
+            type: 'ONBOARD_SURNAME',
+            status: 'Pending',
+            payload_json: JSON.stringify({ surname: 'Murari', husband: {}, wife: {} })
+          }
+        ];
+      }
+      return [];
+    }
   };
 
-  const noMatchRes = await performSurnameSearch('NonExistentSurname', mockSheetsClient);
+  const res = await performSurnameSearch('Murari', mockSheetsClient);
+  assert.equal(res.ok, true);
+  assert.equal(res.pending, true);
+  assert.equal(res.found, false);
+  assert.deepEqual(res.families, []);
+});
 
-  assert.equal(noMatchRes.count, 0);
-  assert.deepEqual(noMatchRes.results, []);
-  assert.equal(noMatchRes.has_pending_request, false);
+test('Surname ID Generation - Second same-surname family gets extension and numeric fallback', () => {
+  const existing = new Set(['MURFT']);
+  const id2 = generateSurnameRefId('Murari', existing);
+  assert.equal(id2, 'MURAFT');
+
+  const existing2 = new Set(['MURFT', 'MURAFT', 'MURARFT', 'MURARIFT']);
+  const idFallback = generateSurnameRefId('Murari', existing2);
+  assert.equal(idFallback, 'MURARIFT2');
 });

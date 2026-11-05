@@ -1,27 +1,22 @@
 import { getSheetsClient } from '../../lib/sheets.js';
 import { TABS } from '../../lib/schema.js';
-import { normalizeUnicode, whitelistPublicSearchResult } from '../../lib/security.js';
+import { normalizeSurnameLetters } from '../../lib/id-generator.js';
 import { sendJson, sendError, parseQuery, applyRateLimit } from '../../lib/api-helper.js';
 
-export function normalizeForSearch(raw) {
-  if (!raw) return '';
-  const norm = normalizeUnicode(raw).toUpperCase();
-  return norm.replace(/[^\p{L}\p{M}]/gu, '');
-}
-
 export async function performSurnameSearch(q, sheetsClient) {
-  const normQ = normalizeForSearch(q);
-  if (!normQ) return { error: 'Search term must contain letters' };
+  const normQ = normalizeSurnameLetters(q);
+  if (!normQ || normQ.length < 3) {
+    return { error: 'Search term must contain at least 3 letters' };
+  }
 
-  const [surnames, persons, relationships, requests] = await Promise.all([
+  const [surnames, persons, requests] = await Promise.all([
     sheetsClient.getRows(TABS.SURNAMES),
     sheetsClient.getRows(TABS.PERSONS),
-    sheetsClient.getRows(TABS.RELATIONSHIPS),
     sheetsClient.getRows(TABS.REQUESTS)
   ]);
 
-  // 1. Check if a request for the same surname is currently Pending
-  let hasPendingRequest = false;
+  // 1. Check if an ONBOARD_SURNAME request for the same surname is pending
+  let isPending = false;
   for (const reqRow of requests) {
     if (reqRow.status === 'Pending' && reqRow.type === 'ONBOARD_SURNAME') {
       let payload = {};
@@ -29,92 +24,54 @@ export async function performSurnameSearch(q, sheetsClient) {
         payload = typeof reqRow.payload_json === 'string' ? JSON.parse(reqRow.payload_json) : reqRow.payload_json;
       } catch (_) {}
       const pendingSurname = payload.surname || payload.surname_name || '';
-      if (normalizeForSearch(pendingSurname) === normQ) {
-        hasPendingRequest = true;
+      if (normalizeSurnameLetters(pendingSurname) === normQ) {
+        isPending = true;
         break;
       }
     }
   }
 
-  // 2. Find Approved matching surnames
-  const matchingSurnameIds = new Set();
+  // 2. Find Approved matching surnames (exact match on normalized letters)
+  const approvedMatchingSurnames = [];
   for (const s of surnames) {
     if (s.status === 'Approved') {
-      const normSurname = normalizeForSearch(s.surname_name);
-      if (normSurname.includes(normQ) || normQ.includes(normSurname)) {
-        matchingSurnameIds.add(s.surname_ref_id);
+      const sNorm = s.surname_norm ? normalizeSurnameLetters(s.surname_norm) : normalizeSurnameLetters(s.surname_name);
+      if (sNorm === normQ) {
+        approvedMatchingSurnames.push(s);
+        if (approvedMatchingSurnames.length >= 10) break; // At most 10 families
       }
     }
   }
 
-  if (matchingSurnameIds.size === 0) {
-    return {
-      query: q,
-      count: 0,
-      results: [],
-      has_pending_request: hasPendingRequest,
-      pending_message: hasPendingRequest ? 'A request for this surname is awaiting approval' : null
-    };
+  // 3. For each approved family, find founding husband and wife only
+  const families = [];
+  for (const s of approvedMatchingSurnames) {
+    const familyPersons = persons.filter(
+      p => p.surname_ref_id === s.surname_ref_id && p.status === 'Approved'
+    );
+
+    // Look by founding_role (HUSBAND / WIFE) with fallback to member number -0001 and -0002
+    let husband = familyPersons.find(
+      p => String(p.founding_role).toUpperCase() === 'HUSBAND' || String(p.member_ref_id).endsWith('-0001') || String(p.member_ref_id).endsWith('-1')
+    );
+    let wife = familyPersons.find(
+      p => String(p.founding_role).toUpperCase() === 'WIFE' || String(p.member_ref_id).endsWith('-0002') || String(p.member_ref_id).endsWith('-2')
+    );
+
+    // Strict whitelist: name and member_ref_id only
+    families.push({
+      surname_ref_id: s.surname_ref_id,
+      husband: husband ? { name: husband.full_name || '', member_ref_id: husband.member_ref_id || '' } : null,
+      wife: wife ? { name: wife.full_name || '', member_ref_id: wife.member_ref_id || '' } : null
+    });
   }
 
-  // 3. Find Approved members for matching surnames
-  const approvedPersons = persons.filter(
-    p => matchingSurnameIds.has(p.surname_ref_id) && p.status === 'Approved'
-  );
-
-  const approvedRels = relationships.filter(r => r.status === 'Approved');
-
-  // Map parents from relationships
-  const childSet = new Set(
-    approvedRels
-      .filter(r => r.type === 'PARENT_OF')
-      .map(r => r.person_b_id)
-  );
-
-  // Derive roles
-  const classifiedMembers = approvedPersons.map(p => {
-    const isRoot = !childSet.has(p.person_id);
-    const gender = (p.gender || '').toUpperCase();
-    const refId = String(p.member_ref_id || '');
-
-    let role = 'Member';
-    let sortPriority = 2;
-
-    if (refId.endsWith('-0001') || refId.endsWith('-1') || (isRoot && gender === 'MALE')) {
-      role = 'Founding husband';
-      sortPriority = 0;
-    } else if (refId.endsWith('-0002') || refId.endsWith('-2') || (isRoot && gender === 'FEMALE')) {
-      role = 'Founding wife';
-      sortPriority = 1;
-    }
-
-    return {
-      ...whitelistPublicSearchResult(p, role),
-      sortPriority
-    };
-  });
-
-  // Sort: Founding husband first (0), Founding wife second (1), then other members (2)
-  classifiedMembers.sort((a, b) => {
-    if (a.sortPriority !== b.sortPriority) {
-      return a.sortPriority - b.sortPriority;
-    }
-    return String(a.member_ref_id).localeCompare(String(b.member_ref_id));
-  });
-
-  // Clean sortPriority from public response
-  const results = classifiedMembers.map(({ display_name, member_ref_id, role }) => ({
-    display_name,
-    member_ref_id,
-    role
-  })).slice(0, 20); // Cap at 20
-
   return {
+    ok: true,
     query: q,
-    count: results.length,
-    results,
-    has_pending_request: hasPendingRequest,
-    pending_message: hasPendingRequest ? 'A request for this surname is awaiting approval' : null
+    found: families.length > 0,
+    pending: isPending,
+    families
   };
 }
 

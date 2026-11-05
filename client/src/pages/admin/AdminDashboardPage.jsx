@@ -24,6 +24,9 @@ export default function AdminDashboardPage({ onLogout }) {
   // Mail verification inputs per ticket: { [ticket_id]: { verified: bool, note: string } }
   const [mailVerifications, setMailVerifications] = useState({});
 
+  // Admin confirmation for different family branch on ONBOARD_SURNAME
+  const [adminConfirmedDiffFamily, setAdminConfirmedDiffFamily] = useState({});
+
   // Reject modal state
   const [rejectModalTicket, setRejectModalTicket] = useState(null);
   const [rejectRemarks, setRejectRemarks] = useState('');
@@ -102,6 +105,11 @@ export default function AdminDashboardPage({ onLogout }) {
       return;
     }
 
+    if (ticket.type === 'ONBOARD_SURNAME' && ticket.existing_families?.length > 0 && !adminConfirmedDiffFamily[ticket.ticket_id]) {
+      setError(`Cannot approve: Existing families found with this surname. Admin must check "different family branch" first.`);
+      return;
+    }
+
     setActionLoading(true);
     setError(null);
     setSuccessMsg(null);
@@ -113,10 +121,11 @@ export default function AdminDashboardPage({ onLogout }) {
           ticket_id: ticket.ticket_id,
           action: 'approve',
           mail_verified: true,
-          mail_verified_note: mv.note || 'SPF/DKIM/DMARC passed. Verified by admin.'
+          mail_verified_note: mv.note || 'SPF/DKIM/DMARC passed. Verified by admin.',
+          admin_confirmed_different_family: Boolean(adminConfirmedDiffFamily[ticket.ticket_id])
         })
       });
-      setSuccessMsg(`Approved ticket ${ticket.ticket_id} successfully! Reference ID: ${res.assigned_id || 'Done'}`);
+      setSuccessMsg(`Approved ticket ${ticket.ticket_id} successfully! Reference ID: ${res.surname_ref_id || res.assigned_id || 'Done'}`);
       await loadAllData();
     } catch (err) {
       setError(err.message || 'Approval failed');
@@ -350,6 +359,40 @@ export default function AdminDashboardPage({ onLogout }) {
                       <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-100 font-mono text-[11px] max-h-36 overflow-y-auto">
                         <pre className="whitespace-pre-wrap">{JSON.stringify(parsedPayload, null, 2)}</pre>
                       </div>
+
+                      {/* Existing Families Sharing this Surname */}
+                      {req.type === 'ONBOARD_SURNAME' && req.existing_families?.length > 0 && (
+                        <div className="mt-3 p-3 bg-amber-50/90 border border-amber-200 rounded-xl space-y-2">
+                          <div className="flex items-center space-x-1.5 text-amber-900 font-bold text-xs">
+                            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                            <span>Existing Families with Surname "{parsedPayload.surname_name || parsedPayload.surname}" ({req.existing_families.length})</span>
+                          </div>
+                          <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                            {req.existing_families.map(f => (
+                              <div key={f.surname_ref_id} className="p-2 bg-white rounded-lg border border-amber-100 text-[11px] space-y-0.5">
+                                <span className="font-mono font-bold text-emerald-700 block">{f.surname_ref_id}</span>
+                                <div className="text-slate-700">
+                                  <strong>Husband:</strong> {f.husband?.name || 'N/A'} ({f.husband?.member_ref_id || 'N/A'})
+                                </div>
+                                <div className="text-slate-700">
+                                  <strong>Wife:</strong> {f.wife?.name || 'N/A'} ({f.wife?.member_ref_id || 'N/A'})
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          {isPending && (
+                            <label className="flex items-start space-x-2 pt-1 text-xs font-bold text-amber-950 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={Boolean(adminConfirmedDiffFamily[req.ticket_id])}
+                                onChange={(e) => setAdminConfirmedDiffFamily(prev => ({ ...prev, [req.ticket_id]: e.target.checked }))}
+                                className="w-4 h-4 text-emerald-600 rounded border-amber-300 focus:ring-emerald-500 mt-0.5"
+                              />
+                              <span>Admin Confirm: This is a DIFFERENT family branch with the same surname (required to approve)</span>
+                            </label>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Email Verification Box & Actions */}
@@ -393,7 +436,12 @@ export default function AdminDashboardPage({ onLogout }) {
                           <button
                             onClick={() => {
                               setRejectModalTicket(req);
-                              setRejectRemarks('');
+                              const defFamily = req.existing_families?.[0]?.surname_ref_id;
+                              setRejectRemarks(
+                                defFamily
+                                  ? `Existing family branch (${defFamily}) already exists with this surname. Please submit a LINK_MEMBERS ticket to link your record to this family.`
+                                  : ''
+                              );
                             }}
                             disabled={actionLoading}
                             className="px-4 py-2 rounded-xl text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors"
