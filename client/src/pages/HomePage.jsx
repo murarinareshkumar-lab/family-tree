@@ -3,9 +3,10 @@ import { apiRequest } from '../utils/api';
 import InteractiveTree from '../components/InteractiveTree';
 import { GitBranch, Shield, Users, RefreshCw, AlertCircle } from 'lucide-react';
 
-export default function HomePage({ onNavigate }) {
+export default function HomePage({ onNavigate, initialParams = {} }) {
   const [surnames, setSurnames] = useState([]);
   const [selectedSurnameId, setSelectedSurnameId] = useState('');
+  const [showConnected, setShowConnected] = useState(false);
   const [treeData, setTreeData] = useState(null);
   const [loadingSurnames, setLoadingSurnames] = useState(true);
   const [loadingTree, setLoadingTree] = useState(false);
@@ -23,9 +24,10 @@ export default function HomePage({ onNavigate }) {
       const res = await apiRequest('/surnames');
       const list = res.surnames || [];
       setSurnames(list);
-      if (list.length > 0 && !selectedSurnameId) {
-        setSelectedSurnameId(list[0].surname_ref_id);
-        loadTree(list[0].surname_ref_id);
+      if (list.length > 0) {
+        const targetId = initialParams?.surname_ref_id || list[0].surname_ref_id;
+        setSelectedSurnameId(targetId);
+        loadTree(targetId, showConnected);
       }
     } catch (err) {
       setError(err.message || 'Failed to load family surnames');
@@ -34,12 +36,13 @@ export default function HomePage({ onNavigate }) {
     }
   };
 
-  const loadTree = async (surnameRefId) => {
+  const loadTree = async (surnameRefId, connected = showConnected) => {
     if (!surnameRefId) return;
     setLoadingTree(true);
     setError(null);
     try {
-      const res = await apiRequest(`/tree?surname_ref_id=${encodeURIComponent(surnameRefId)}`);
+      const connParam = connected ? '&show_connected=true' : '';
+      const res = await apiRequest(`/tree?surname_ref_id=${encodeURIComponent(surnameRefId)}${connParam}`);
       setTreeData(res);
     } catch (err) {
       setError(err.message || 'Failed to load family tree');
@@ -50,7 +53,13 @@ export default function HomePage({ onNavigate }) {
 
   const handleSurnameChange = (id) => {
     setSelectedSurnameId(id);
-    loadTree(id);
+    loadTree(id, showConnected);
+  };
+
+  const handleToggleConnected = () => {
+    const nextState = !showConnected;
+    setShowConnected(nextState);
+    loadTree(selectedSurnameId, nextState);
   };
 
   const selectedSurnameObj = surnames.find(s => s.surname_ref_id === selectedSurnameId);
@@ -120,9 +129,9 @@ export default function HomePage({ onNavigate }) {
                 onChange={(e) => handleSurnameChange(e.target.value)}
                 className="bg-slate-50 border border-slate-200 text-slate-800 text-xs sm:text-sm font-semibold rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-none cursor-pointer"
               >
-                {surnames.map((s) => (
+                {surnames.map((s, idx) => (
                   <option key={s.surname_ref_id} value={s.surname_ref_id}>
-                    {s.surname_name} ({s.surname_ref_id})
+                    {s.surname_name} - Family {s.branch_no || (idx + 1)} ({s.surname_ref_id})
                   </option>
                 ))}
               </select>
@@ -158,7 +167,9 @@ export default function HomePage({ onNavigate }) {
       ) : (
         <InteractiveTree 
           treeData={treeData} 
-          onRefresh={() => loadTree(selectedSurnameId)} 
+          onRefresh={() => loadTree(selectedSurnameId)}
+          showConnected={showConnected}
+          onToggleConnected={handleToggleConnected}
         />
       )}
     </div>

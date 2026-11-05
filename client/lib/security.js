@@ -36,12 +36,19 @@ export function composeFullName(firstName = '', middleName = '', lastName = '') 
 
 export function whitelistPublicMember(person) {
   if (!person) return null;
+  const former = person.former_name ? String(person.former_name).trim() : '';
+  const baseName = person.full_name || '';
+  const displayName = former ? `${baseName} (née ${former})` : baseName;
+
   return {
     person_id: person.person_id || '',
     member_ref_id: person.member_ref_id || '',
     surname_ref_id: person.surname_ref_id || '',
-    display_name: person.full_name || '',
+    full_name: displayName,
+    display_name: displayName,
+    former_name: former,
     gender: person.gender || '',
+    founding_role: person.founding_role || '',
     is_deceased: String(person.is_deceased).toLowerCase() === 'true',
     status: person.status || 'Approved'
   };

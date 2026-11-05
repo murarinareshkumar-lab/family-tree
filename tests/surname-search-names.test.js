@@ -7,7 +7,7 @@ import {
   validatePhone,
   parseAndValidateDob
 } from '../lib/validation.js';
-import { generateSurnameRefId } from '../lib/id-generator.js';
+import { generateSurnameRefId, computeNextBranchNo } from '../lib/id-generator.js';
 import { performSurnameSearch } from '../api/surnames/search.js';
 import { TABS } from '../lib/schema.js';
 
@@ -245,7 +245,7 @@ test('Surname Search API - Matches 1 family and 2 families sharing same surname,
   // Strict Whitelist Check: NEVER return DOB, email, phone, parent IDs, or child members
   for (const fam of res.families) {
     const keys = Object.keys(fam).sort();
-    assert.deepEqual(keys, ['husband', 'surname_ref_id', 'wife']);
+    assert.deepEqual(keys, ['branch_no', 'husband', 'surname_ref_id', 'wife']);
 
     assert.equal(fam.dob, undefined);
     assert.equal(fam.email, undefined);
@@ -283,12 +283,11 @@ test('Surname Search API - pending=true when ONBOARD_SURNAME request is awaiting
   assert.deepEqual(res.families, []);
 });
 
-test('Surname ID Generation - Second same-surname family gets extension and numeric fallback', () => {
-  const existing = new Set(['MURFT']);
-  const id2 = generateSurnameRefId('Murari', existing);
-  assert.equal(id2, 'MURAFT');
-
-  const existing2 = new Set(['MURFT', 'MURAFT', 'MURARFT', 'MURARIFT']);
-  const idFallback = generateSurnameRefId('Murari', existing2);
-  assert.equal(idFallback, 'MURARIFT2');
+test('Surname Family Branches - Branch numbering across multiple approved families', () => {
+  const families = [
+    { surname_ref_id: 'FT-AAAAAA', surname_name: 'Murari', surname_norm: 'MURARI', branch_no: '1', status: 'Approved' },
+    { surname_ref_id: 'FT-BBBBBB', surname_name: 'Murari', surname_norm: 'MURARI', branch_no: '2', status: 'Approved' }
+  ];
+  const nextBranch = computeNextBranchNo('Murari', families);
+  assert.equal(nextBranch, 3);
 });

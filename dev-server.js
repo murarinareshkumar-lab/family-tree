@@ -8,6 +8,7 @@ const routeMap = {
   '/api/health': () => import('./api/health.js'),
   '/api/surnames': () => import('./api/surnames/index.js'),
   '/api/surnames/search': () => import('./api/surnames/search.js'),
+  '/api/families/members': () => import('./api/families/members.js'),
   '/api/tree': () => import('./api/tree.js'),
   '/api/requests': () => import('./api/requests/index.js'),
   '/api/requests/status': () => import('./api/requests/status.js'),

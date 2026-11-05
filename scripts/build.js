@@ -4,13 +4,13 @@ import fs from 'fs';
 console.log('--- Building Family Tree Portal ---');
 
 // Sync api and lib into client so both root deployment and client-subfolder deployment work identically on Vercel
-if (fs.existsSync('api') && !fs.existsSync('client/api')) {
-  fs.cpSync('api', 'client/api', { recursive: true });
+if (fs.existsSync('api')) {
+  fs.cpSync('api', 'client/api', { recursive: true, force: true });
 }
-if (fs.existsSync('lib') && !fs.existsSync('client/lib')) {
-  fs.cpSync('lib', 'client/lib', { recursive: true });
+if (fs.existsSync('lib')) {
+  fs.cpSync('lib', 'client/lib', { recursive: true, force: true });
 }
-if (fs.existsSync('vercel.json') && !fs.existsSync('client/vercel.json')) {
+if (fs.existsSync('vercel.json')) {
   fs.copyFileSync('vercel.json', 'client/vercel.json');
 }
 

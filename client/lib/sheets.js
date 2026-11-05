@@ -17,13 +17,18 @@ class InMemorySheetsProvider {
   }
   async appendRow(tab, obj) {
     const s = this.sheets[tab];
+    if (!s) {
+      this.sheets[tab] = { headers: HEADERS[tab] || Object.keys(obj), rows: [] };
+    }
+    const targetSheet = this.sheets[tab];
     const sanitized = {};
     for (const [k, v] of Object.entries(obj)) sanitized[k] = sanitizeFormula(v);
-    s.rows.push(sanitized);
-    return { ...sanitized, __rowIndex: s.rows.length + 1 };
+    targetSheet.rows.push(sanitized);
+    return { ...sanitized, __rowIndex: targetSheet.rows.length + 1 };
   }
   async updateRow(tab, rowIndex, obj) {
     const s = this.sheets[tab];
+    if (!s) return null;
     const idx = rowIndex - 2;
     const sanitized = {};
     for (const [k, v] of Object.entries(obj)) sanitized[k] = sanitizeFormula(v);
@@ -61,7 +66,7 @@ class GoogleSheetsProvider {
     if (tab === TABS.PERSONS || tab === TABS.RELATIONSHIPS) {
       return process.env.GOOGLE_SHEET_ID_USER || this.spreadsheetId;
     }
-    if (tab === TABS.REQUESTS || tab === TABS.AUDIT_LOG || tab === TABS.META) {
+    if (tab === TABS.REQUESTS || tab === TABS.AUDIT_LOG || tab === TABS.META || tab === TABS.FAMILY_LINKS) {
       return process.env.GOOGLE_SHEET_ID_ADMIN || this.spreadsheetId;
     }
     return this.spreadsheetId;
@@ -77,6 +82,7 @@ class GoogleSheetsProvider {
       [TABS.PERSONS]: ['Persons', 'FT_User_Details', 'Members', 'People'],
       [TABS.RELATIONSHIPS]: ['Relationships', 'FT_Relationships', 'Rels'],
       [TABS.REQUESTS]: ['Requests', 'FT_Requests', 'Tickets'],
+      [TABS.FAMILY_LINKS]: ['FamilyLinks', 'Family_Links', 'FT_FamilyLinks', 'Links'],
       [TABS.AUDIT_LOG]: ['AuditLog', 'Audit_Log', 'FT_Admin', 'Audit'],
       [TABS.META]: ['Meta', 'FT_Admin_Meta', 'Config']
     };
@@ -84,14 +90,14 @@ class GoogleSheetsProvider {
     try {
       const meta = await this.sheetsApi.spreadsheets.get({ spreadsheetId: sheetId });
       const titles = (meta.data.sheets || []).map(s => s.properties?.title);
-      
+
       // If exact tab name exists, use it
       if (titles.includes(tab)) {
         this.tabNameResolutions.set(cacheKey, tab);
         return tab;
       }
 
-      // Check known aliases (e.g. 'Surnames', 'Persons', 'Requests', etc.)
+      // Check known aliases
       const aliases = TAB_ALIASES[tab] || [];
       for (const alias of aliases) {
         if (titles.includes(alias)) {
@@ -165,10 +171,18 @@ class GoogleSheetsProvider {
       const resolvedTab = await this.resolveActualTabName(tab);
       const res = await this.sheetsApi.spreadsheets.values.get({ spreadsheetId: sheetId, range: `'${resolvedTab}'!1:1` });
       let headers = res.data.values?.[0] ? [...res.data.values[0]] : [...(HEADERS[tab] || [])];
+      let updatedHeaders = false;
 
-      // If Persons tab is missing founding_role, create it in the header row
-      if (tab === TABS.PERSONS && !headers.includes('founding_role')) {
-        headers.push('founding_role');
+      // Auto-append missing columns
+      const required = HEADERS[tab] || [];
+      for (const col of required) {
+        if (!headers.includes(col)) {
+          headers.push(col);
+          updatedHeaders = true;
+        }
+      }
+
+      if (updatedHeaders) {
         try {
           await this.sheetsApi.spreadsheets.values.update({
             spreadsheetId: sheetId,
@@ -193,7 +207,7 @@ class GoogleSheetsProvider {
     const sheetId = this.getSpreadsheetId(tab);
     const resolvedTab = await this.resolveActualTabName(tab);
     const map = await this.getHeaderMap(tab);
-    const res = await this.sheetsApi.spreadsheets.values.get({ spreadsheetId: sheetId, range: `'${resolvedTab}'!A:Z` });
+    const res = await this.sheetsApi.spreadsheets.values.get({ spreadsheetId: sheetId, range: `'${resolvedTab}'!A:ZZ` });
     const values = res.data.values || [];
     if (values.length <= 1) return [];
     const rows = [];

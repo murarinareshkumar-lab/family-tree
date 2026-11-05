@@ -1,51 +1,78 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { generateSurnameRefId, formatMemberRefId } from '../lib/id-generator.js';
+import {
+  ID_ALPHABET,
+  generateFamilyRefId,
+  generateMemberRefId,
+  computeNextBranchNo,
+  normalizeSurnameLetters
+} from '../lib/id-generator.js';
 
-test('Surname ID Generation - Standard Case', () => {
-  const id = generateSurnameRefId('Patil', new Set());
-  assert.strictEqual(id, 'PATFT');
+test('ID Alphabet - Exactly 31 characters, excludes 0, O, 1, I', () => {
+  assert.strictEqual(ID_ALPHABET.length, 31);
+  assert.strictEqual(ID_ALPHABET.includes('0'), false);
+  assert.strictEqual(ID_ALPHABET.includes('O'), false);
+  assert.strictEqual(ID_ALPHABET.includes('1'), false);
+  assert.strictEqual(ID_ALPHABET.includes('I'), false);
+  // Verify all uppercase letters and digits 2-9
+  assert.match(ID_ALPHABET, /^[A-Z2-9]+$/);
 });
 
-test('Surname ID Generation - Conflict Resolution with Increasing N', () => {
-  const existing = new Set(['PATFT']);
-  const id2 = generateSurnameRefId('Patil', existing);
-  assert.strictEqual(id2, 'PATIFT');
+test('Family Reference ID - Random, permanent FT-XXXXXX format', () => {
+  const id1 = generateFamilyRefId();
+  assert.match(id1, /^FT-[A-HJ-NP-Z2-9]{6}$/);
+  assert.strictEqual(id1.length, 9);
 
-  const existing2 = new Set(['PATFT', 'PATIFT']);
-  const id3 = generateSurnameRefId('Patil', existing2);
-  assert.strictEqual(id3, 'PATILFT');
+  const id2 = generateFamilyRefId();
+  assert.match(id2, /^FT-[A-HJ-NP-Z2-9]{6}$/);
+  assert.notStrictEqual(id1, id2);
 });
 
-test('Surname ID Generation - Short Surname (< 3 letters) padded with X', () => {
-  const raId = generateSurnameRefId('Ra', new Set());
-  assert.strictEqual(raId, 'RAXFT');
-  const oId = generateSurnameRefId('O', new Set());
-  assert.strictEqual(oId, 'OXXFT');
-  const raExisting = new Set(['RAXFT']);
-  const raId2 = generateSurnameRefId('Ra', raExisting);
-  assert.strictEqual(raId2, 'RAXFT2');
+test('Family Reference ID - Collision avoidance against existing IDs (including Merged & Rejected)', () => {
+  const existing = new Set(['FT-ABCDEF', 'FT-GHJKMN']);
+  const generated = generateFamilyRefId(existing);
+  assert.strictEqual(existing.has(generated), true); // Generator adds to set
+  assert.notStrictEqual(generated, 'FT-ABCDEF');
+  assert.notStrictEqual(generated, 'FT-GHJKMN');
 });
 
-test('Surname ID Generation - Numeric Fallback when all candidates up to full length conflict', () => {
-  const existing = new Set(['PATFT', 'PATIFT', 'PATILFT']);
-  const id = generateSurnameRefId('Patil', existing);
-  assert.strictEqual(id, 'PATILFT2');
-  const existingWith2 = new Set(['PATFT', 'PATIFT', 'PATILFT', 'PATILFT2']);
-  const id2 = generateSurnameRefId('Patil', existingWith2);
-  assert.strictEqual(id2, 'PATILFT3');
+test('Member Reference ID - Random, permanent FM-XXXXXXXX format', () => {
+  const id1 = generateMemberRefId();
+  assert.match(id1, /^FM-[A-HJ-NP-Z2-9]{8}$/);
+  assert.strictEqual(id1.length, 11);
+
+  // Does not contain family prefix and never reuses
+  assert.strictEqual(id1.startsWith('FT-'), false);
+
+  const id2 = generateMemberRefId();
+  assert.notStrictEqual(id1, id2);
 });
 
-test('Surname ID Generation - Handles Special Characters & Apostrophes', () => {
-  const id = generateSurnameRefId("O'Connor", new Set());
-  assert.strictEqual(id, 'OCOFT');
-  const id2 = generateSurnameRefId('De Souza', new Set());
-  assert.strictEqual(id2, 'DESFT');
+test('Member Reference ID - Collision avoidance against existing member IDs', () => {
+  const existing = new Set(['FM-AAAAAAAA', 'FM-BBBBBBBB']);
+  const generated = generateMemberRefId(existing);
+  assert.strictEqual(existing.has(generated), true);
+  assert.notStrictEqual(generated, 'FM-AAAAAAAA');
+  assert.notStrictEqual(generated, 'FM-BBBBBBBB');
 });
 
-test('Member ID Format - Sequential per surname', () => {
-  assert.strictEqual(formatMemberRefId('PATFT', 1), 'PATFT-0001');
-  assert.strictEqual(formatMemberRefId('PATFT', 42), 'PATFT-0042');
-  assert.strictEqual(formatMemberRefId('RAXFT', 999), 'RAXFT-0999');
-  assert.strictEqual(formatMemberRefId('PATILFT2', 1000), 'PATILFT2-1000');
+test('Branch Number Calculation - Increments for same surname_norm among Approved/Merged', () => {
+  const allSurnames = [
+    { surname_ref_id: 'FT-AAAAAA', surname_name: 'Murari', surname_norm: 'MURARI', branch_no: '1', status: 'Approved' },
+    { surname_ref_id: 'FT-BBBBBB', surname_name: 'Murari', surname_norm: 'MURARI', branch_no: '2', status: 'Merged' },
+    { surname_ref_id: 'FT-CCCCCC', surname_name: 'Murari', surname_norm: 'MURARI', branch_no: '3', status: 'Rejected' }, // Rejected ignored
+    { surname_ref_id: 'FT-DDDDDD', surname_name: 'Patil', surname_norm: 'PATIL', branch_no: '1', status: 'Approved' } // Different surname
+  ];
+
+  // For Murari, highest approved/merged branch is 2 -> next is 3
+  const nextMurari = computeNextBranchNo('Murari', allSurnames);
+  assert.strictEqual(nextMurari, 3);
+
+  // For Patil, highest is 1 -> next is 2
+  const nextPatil = computeNextBranchNo('Patil', allSurnames);
+  assert.strictEqual(nextPatil, 2);
+
+  // For completely new surname, returns 1
+  const nextSharma = computeNextBranchNo('Sharma', allSurnames);
+  assert.strictEqual(nextSharma, 1);
 });

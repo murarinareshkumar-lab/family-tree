@@ -90,9 +90,9 @@ export default function App() {
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {activePage === 'tree' && <HomePage onNavigate={handlePageChange} />}
-        {activePage === 'onboard' && <OnboardSurnamePage onNavigate={handlePageChange} />}
-        {activePage === 'add-member' && <AddMemberPage onNavigate={handlePageChange} />}
+        {activePage === 'tree' && <HomePage onNavigate={handlePageChange} initialParams={pageParams} />}
+        {activePage === 'onboard' && <OnboardSurnamePage onNavigate={handlePageChange} initialParams={pageParams} />}
+        {activePage === 'add-member' && <AddMemberPage onNavigate={handlePageChange} initialParams={pageParams} />}
         {activePage === 'request' && <RequestTicketPage onNavigate={handlePageChange} initialParams={pageParams} />}
         {activePage === 'ticket-status' && <TicketStatusPage />}
         {activePage === 'admin-dashboard' && (

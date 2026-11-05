@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { User, Users, Heart, Search, ZoomIn, ZoomOut, RotateCcw, Info } from 'lucide-react';
+import { User, Users, Heart, Search, ZoomIn, ZoomOut, RotateCcw, Info, GitBranch } from 'lucide-react';
 import Modal from './Modal';
 
-export default function InteractiveTree({ treeData, onRefresh }) {
+export default function InteractiveTree({ treeData, onRefresh, showConnected = false, onToggleConnected }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [zoomLevel, setZoomLevel] = useState(1);
   const [selectedMember, setSelectedMember] = useState(null);
@@ -28,7 +28,7 @@ export default function InteractiveTree({ treeData, onRefresh }) {
   // Group members into hierarchy: Roots (no known parents in list) and Children
   const memberMap = new Map(treeData.members.map(m => [m.person_id, m]));
 
-  const roots = treeData.members.filter(m => !m.father_person_id && !m.mother_person_id);
+  const allRoots = treeData.members.filter(m => !m.father_person_id && !m.mother_person_id);
 
   const getChildrenOf = (personId) => {
     return treeData.members.filter(m =>
@@ -44,12 +44,62 @@ export default function InteractiveTree({ treeData, onRefresh }) {
       .filter(Boolean);
   };
 
+  // Sort roots: Founding husband first, then founding wife, then earliest DOB
+  allRoots.sort((a, b) => {
+    const aRole = String(a.founding_role || '').toUpperCase();
+    const bRole = String(b.founding_role || '').toUpperCase();
+    if (aRole === 'HUSBAND') return -1;
+    if (bRole === 'HUSBAND') return 1;
+    if (aRole === 'WIFE') return -1;
+    if (bRole === 'WIFE') return 1;
+    return (a.dob || '').localeCompare(b.dob || '');
+  });
+
+  // Exclude root wives who are already rendered side-by-side beside their root husband
+  const spouseOfRoots = new Set();
+  allRoots.forEach(r => {
+    getSpousesOf(r).forEach(s => spouseOfRoots.add(s.person_id));
+  });
+  const roots = allRoots.filter(r => !spouseOfRoots.has(r.person_id));
+
   const handleZoom = (delta) => {
     setZoomLevel(prev => Math.min(Math.max(0.6, prev + delta), 1.6));
   };
 
   return (
     <div className="space-y-4">
+      {/* Connected Families Banner with Dashed Connector Badge & Toggle */}
+      {treeData.connected_families && treeData.connected_families.length > 0 && (
+        <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-bold text-slate-700">Family Connections:</span>
+            {treeData.connected_families.map(cf => (
+              <span
+                key={cf.link_id}
+                className="inline-flex items-center space-x-1.5 px-3 py-1 bg-white border-2 border-dashed border-emerald-500 text-emerald-800 rounded-xl text-xs font-bold shadow-sm"
+              >
+                <GitBranch className="w-3.5 h-3.5 text-emerald-600" />
+                <span>{cf.badge || `Connected: Family ${cf.connected_branch_no} (${cf.connected_surname_name})`}</span>
+              </span>
+            ))}
+          </div>
+
+          {onToggleConnected && (
+            <button
+              type="button"
+              onClick={onToggleConnected}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                showConnected
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
+              }`}
+            >
+              {showConnected ? 'Hide Connected Tree' : 'Show Connected Tree'}
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Controls Bar */}
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
         <div className="relative flex-1 max-w-sm">
@@ -290,6 +340,9 @@ function TreeNode({ member, memberMap, getChildrenOf, getSpousesOf, onSelectMemb
 
 function MemberCard({ member, onClick, highlight }) {
   const isFemale = member.gender === 'Female';
+  const displayName = member.former_name && !member.full_name?.includes('(née')
+    ? `${member.full_name} (née ${member.former_name})`
+    : member.full_name;
 
   return (
     <button
@@ -305,8 +358,8 @@ function MemberCard({ member, onClick, highlight }) {
           <User className="w-4 h-4" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-bold text-slate-800 truncate group-hover:text-emerald-700 transition-colors">
-            {member.full_name}
+          <p className="text-xs font-bold text-slate-800 truncate group-hover:text-emerald-700 transition-colors" title={displayName}>
+            {displayName}
           </p>
           <p className="text-[10px] font-mono font-medium text-emerald-700 truncate">
             {member.member_ref_id || 'PENDING'}

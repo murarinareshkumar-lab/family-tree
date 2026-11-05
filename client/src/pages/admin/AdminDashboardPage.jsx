@@ -72,8 +72,10 @@ export default function AdminDashboardPage({ onLogout }) {
       const mVer = {};
       (reqRes.requests || []).forEach(r => {
         mVer[r.ticket_id] = {
-          verified: Boolean(r.mail_verified),
-          note: r.mail_verified_note || ''
+          verified: Boolean(r.mail_verified === true || r.mail_verified === 'true'),
+          note: r.mail_verified_note || '',
+          second_verified: Boolean(r.second_party_mail_verified === true || r.second_party_mail_verified === 'true'),
+          second_note: r.second_party_mail_note || ''
         };
       });
       setMailVerifications(mVer);
@@ -99,9 +101,15 @@ export default function AdminDashboardPage({ onLogout }) {
   };
 
   const handleApprove = async (ticket) => {
-    const mv = mailVerifications[ticket.ticket_id];
-    if (!mv || !mv.verified) {
-      setError(`Cannot approve ticket ${ticket.ticket_id}: Email ownership must be verified first!`);
+    const mv = mailVerifications[ticket.ticket_id] || {};
+    if (!mv.verified) {
+      setError(`Cannot approve ticket ${ticket.ticket_id}: Primary party email ownership must be verified first!`);
+      return;
+    }
+
+    const isDual = ticket.type === 'LINK_FAMILIES' || ticket.type === 'MERGE_FAMILIES';
+    if (isDual && !mv.second_verified) {
+      setError(`Cannot approve ticket ${ticket.ticket_id}: Second party email ownership must also be verified first!`);
       return;
     }
 
@@ -122,13 +130,38 @@ export default function AdminDashboardPage({ onLogout }) {
           action: 'approve',
           mail_verified: true,
           mail_verified_note: mv.note || 'SPF/DKIM/DMARC passed. Verified by admin.',
+          second_party_mail_verified: Boolean(mv.second_verified),
+          second_party_mail_note: mv.second_note || 'SPF/DKIM/DMARC passed. Verified by admin.',
           admin_confirmed_different_family: Boolean(adminConfirmedDiffFamily[ticket.ticket_id])
         })
       });
-      setSuccessMsg(`Approved ticket ${ticket.ticket_id} successfully! Reference ID: ${res.surname_ref_id || res.assigned_id || 'Done'}`);
+      setSuccessMsg(`Approved ticket ${ticket.ticket_id} successfully! Reference ID: ${res.surname_ref_id || res.member_ref_id || 'Done'}`);
       await loadAllData();
     } catch (err) {
       setError(err.message || 'Approval failed');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleUndoMerge = async (ticketId) => {
+    if (!window.confirm(`Are you sure you want to reverse the merge performed in ticket ${ticketId}? This will restore the original person records and relationships.`)) {
+      return;
+    }
+    setActionLoading(true);
+    setError(null);
+    try {
+      await apiRequest('/admin/requests', {
+        method: 'POST',
+        body: JSON.stringify({
+          ticket_id: ticketId,
+          action: 'UNDO_MERGE'
+        })
+      });
+      setSuccessMsg(`Merge from ticket ${ticketId} reversed successfully.`);
+      await loadAllData();
+    } catch (err) {
+      setError(err.message || 'Undo merge failed');
     } finally {
       setActionLoading(false);
     }
@@ -360,6 +393,34 @@ export default function AdminDashboardPage({ onLogout }) {
                         <pre className="whitespace-pre-wrap">{JSON.stringify(parsedPayload, null, 2)}</pre>
                       </div>
 
+                      {/* Side-by-Side Comparison for LINK_FAMILIES / MERGE_FAMILIES / DELINK_FAMILIES */}
+                      {(req.type === 'LINK_FAMILIES' || req.type === 'MERGE_FAMILIES' || req.type === 'DELINK_FAMILIES') && (
+                        <div className="mt-3 p-3 bg-blue-50/70 border border-blue-200 rounded-xl space-y-2 text-xs">
+                          <span className="font-bold text-blue-900 block">Link Comparison ({parsedPayload.link_type || req.type})</span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div className="p-2 bg-white rounded-lg border border-blue-100">
+                              <span className="font-bold text-slate-800 block">Family A</span>
+                              <p className="font-mono text-emerald-700 font-bold">{req.family_a_details?.surname_name || parsedPayload.family_a_ref_id} ({parsedPayload.family_a_ref_id})</p>
+                              {req.person_a_details && (
+                                <p className="text-slate-600">Person A: <strong>{req.person_a_details.name}</strong> ({req.person_a_details.member_ref_id})</p>
+                              )}
+                              <p className="text-[11px] text-slate-500">Registered: {req.requester_email || parsedPayload.party_a_email || 'Entered'}</p>
+                            </div>
+                            <div className="p-2 bg-white rounded-lg border border-blue-100">
+                              <span className="font-bold text-slate-800 block">Family B</span>
+                              <p className="font-mono text-emerald-700 font-bold">{req.family_b_details?.surname_name || parsedPayload.family_b_ref_id} ({parsedPayload.family_b_ref_id})</p>
+                              {req.person_b_details && (
+                                <p className="text-slate-600">Person B: <strong>{req.person_b_details.name}</strong> ({req.person_b_details.member_ref_id})</p>
+                              )}
+                              <p className="text-[11px] text-slate-500">Registered: {req.second_party_email || parsedPayload.party_b_email || 'Entered'}</p>
+                            </div>
+                          </div>
+                          {parsedPayload.relation_note && (
+                            <p className="text-slate-700 italic">Note: "{parsedPayload.relation_note}"</p>
+                          )}
+                        </div>
+                      )}
+
                       {/* Existing Families Sharing this Surname */}
                       {req.type === 'ONBOARD_SURNAME' && req.existing_families?.length > 0 && (
                         <div className="mt-3 p-3 bg-amber-50/90 border border-amber-200 rounded-xl space-y-2">
@@ -397,6 +458,7 @@ export default function AdminDashboardPage({ onLogout }) {
 
                     {/* Email Verification Box & Actions */}
                     <div className="flex flex-col justify-between border-t md:border-t-0 md:border-l border-slate-100 pt-3 md:pt-0 md:pl-4 space-y-3">
+                      {/* Dual Email Verification when LINK or MERGE */}
                       <div className="bg-amber-50/60 border border-amber-200 rounded-xl p-3 space-y-2">
                         <div className="flex items-center justify-between">
                           <label className="flex items-center space-x-2 cursor-pointer">
@@ -407,27 +469,55 @@ export default function AdminDashboardPage({ onLogout }) {
                               onChange={(e) => handleMailVerifyChange(req.ticket_id, 'verified', e.target.checked)}
                               className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
                             />
-                            <span className="font-bold text-slate-900 text-xs">Mail verified (SPF/DKIM/DMARC pass)</span>
+                            <span className="font-bold text-slate-900 text-xs">
+                              {req.type === 'LINK_FAMILIES' || req.type === 'MERGE_FAMILIES' ? 'Party A Mail Verified (SPF/DKIM/DMARC)' : 'Mail verified (SPF/DKIM/DMARC pass)'}
+                            </span>
                           </label>
                         </div>
                         <input
                           type="text"
                           disabled={!isPending}
-                          placeholder="Verification note (e.g. Received email from user, SPF/DKIM ok)"
+                          placeholder="Party A Verification note"
                           value={mv.note}
                           onChange={(e) => handleMailVerifyChange(req.ticket_id, 'note', e.target.value)}
                           className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500"
                         />
+
+                        {(req.type === 'LINK_FAMILIES' || req.type === 'MERGE_FAMILIES') && (
+                          <div className="pt-2 border-t border-amber-200/60 space-y-2">
+                            <label className="flex items-center space-x-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                disabled={!isPending}
+                                checked={mv.second_verified}
+                                onChange={(e) => handleMailVerifyChange(req.ticket_id, 'second_verified', e.target.checked)}
+                                className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                              />
+                              <span className="font-bold text-slate-900 text-xs">
+                                Party B Mail Verified (SPF/DKIM/DMARC)
+                              </span>
+                            </label>
+                            <input
+                              type="text"
+                              disabled={!isPending}
+                              placeholder="Party B Verification note"
+                              value={mv.second_note}
+                              onChange={(e) => handleMailVerifyChange(req.ticket_id, 'second_note', e.target.value)}
+                              className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500"
+                            />
+                          </div>
+                        )}
                       </div>
 
-                      {isPending && (
+                      {isPending ? (
                         <div className="flex items-center space-x-2 pt-2">
                           <button
                             onClick={() => handleApprove(req)}
-                            disabled={actionLoading || !mv.verified}
-                            className={`flex-1 py-2 rounded-xl text-xs font-bold text-white transition-all flex items-center justify-center space-x-1 ${mv.verified
-                              ? 'bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20'
-                              : 'bg-slate-300 cursor-not-allowed'
+                            disabled={actionLoading || !mv.verified || ((req.type === 'LINK_FAMILIES' || req.type === 'MERGE_FAMILIES') && !mv.second_verified)}
+                            className={`flex-1 py-2 rounded-xl text-xs font-bold text-white transition-all flex items-center justify-center space-x-1 ${
+                              mv.verified && ((req.type !== 'LINK_FAMILIES' && req.type !== 'MERGE_FAMILIES') || mv.second_verified)
+                                ? 'bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20'
+                                : 'bg-slate-300 cursor-not-allowed'
                               }`}
                           >
                             <CheckCircle2 className="w-4 h-4" />
@@ -449,6 +539,19 @@ export default function AdminDashboardPage({ onLogout }) {
                             Reject...
                           </button>
                         </div>
+                      ) : (
+                        req.status === 'Approved' && (req.type === 'LINK_FAMILIES' || req.type === 'MERGE_FAMILIES') && (
+                          <div className="pt-2">
+                            <button
+                              type="button"
+                              onClick={() => handleUndoMerge(req.ticket_id)}
+                              disabled={actionLoading}
+                              className="w-full py-1.5 px-3 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold text-xs rounded-xl transition-all"
+                            >
+                              Undo Merge / Revert Link
+                            </button>
+                          </div>
+                        )
                       )}
                     </div>
                   </div>

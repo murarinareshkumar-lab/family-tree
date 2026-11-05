@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { apiRequest } from '../utils/api';
 import CaptchaWidget from '../components/CaptchaWidget';
+import Modal from '../components/Modal';
 import {
   validateName,
   validateEmail,
@@ -18,7 +19,10 @@ import {
   ArrowRight,
   UserCheck,
   ShieldCheck,
-  Users
+  Users,
+  UserPlus,
+  GitMerge,
+  Link2
 } from 'lucide-react';
 
 export default function OnboardSurnamePage({ onNavigate }) {
@@ -31,8 +35,34 @@ export default function OnboardSurnamePage({ onNavigate }) {
   const [searchCompleted, setSearchCompleted] = useState(false);
   const [searchFound, setSearchFound] = useState(false);
   const [searchPending, setSearchPending] = useState(false);
-  const [searchResults, setSearchResults] = useState([]); // Array of families: [{ surname_ref_id, husband, wife }]
+  const [searchResults, setSearchResults] = useState([]); // Array of families: [{ branch_no, surname_ref_id, husband, wife }]
   const [confirmedDifferentFamily, setConfirmedDifferentFamily] = useState(false);
+
+  // Linking modal state
+  const [linkModalOpen, setLinkModalOpen] = useState(false);
+  const [linkFamilyA, setLinkFamilyA] = useState(null);
+  const [linkMode, setLinkMode] = useState('SAME_SURNAME'); // 'SAME_SURNAME' or 'DIFF_SURNAME'
+  const [targetFamilyRefId, setTargetFamilyRefId] = useState('');
+  const [selectedLinkType, setSelectedLinkType] = useState('MERGE_FAMILIES'); // MERGE_FAMILIES, PARENT_CHILD, SAME_PERSON
+  const [familyAMembers, setFamilyAMembers] = useState([]);
+  const [familyBMembers, setFamilyBMembers] = useState([]);
+  const [personAId, setPersonAId] = useState('');
+  const [personBId, setPersonBId] = useState('');
+  const [relationNote, setRelationNote] = useState('');
+  const [partyAEmail, setPartyAEmail] = useState('');
+  const [partyBEmail, setPartyBEmail] = useState('');
+  const [linkSubmitterName, setLinkSubmitterName] = useState('');
+  const [linkSubmitterEmail, setLinkSubmitterEmail] = useState('');
+  const [linkSubmitterPhone, setLinkSubmitterPhone] = useState('');
+  const [linkSubmitting, setLinkSubmitting] = useState(false);
+  const [linkError, setLinkError] = useState(null);
+  const [linkSuccessTicket, setLinkSuccessTicket] = useState(null);
+
+  // Different surname search inside modal
+  const [diffSurnameQuery, setDiffSurnameQuery] = useState('');
+  const [diffSurnameResults, setDiffSurnameResults] = useState([]);
+  const [diffSurnameLoading, setDiffSurnameLoading] = useState(false);
+  const [diffSurnameSearched, setDiffSurnameSearched] = useState(false);
 
   // Husband details
   const [husbandFirstName, setHusbandFirstName] = useState('');
@@ -103,6 +133,189 @@ export default function OnboardSurnamePage({ onNavigate }) {
       setSearchCompleted(false);
     } finally {
       setSearchLoading(false);
+    }
+  };
+
+  // Helper functions for Linking
+  const openSameSurnameLink = async (fam) => {
+    setLinkFamilyA(fam);
+    setLinkMode('SAME_SURNAME');
+    setSelectedLinkType('MERGE_FAMILIES');
+    setLinkError(null);
+    setLinkSuccessTicket(null);
+    setRelationNote('');
+    setPartyAEmail('');
+    setPartyBEmail('');
+
+    const otherFamilies = searchResults.filter(f => f.surname_ref_id !== fam.surname_ref_id);
+    const targetFam = otherFamilies[0]?.surname_ref_id || '';
+    setTargetFamilyRefId(targetFam);
+
+    try {
+      const resA = await apiRequest(`/families/members?ref=${encodeURIComponent(fam.surname_ref_id)}`);
+      setFamilyAMembers(resA.members || []);
+      if (resA.members?.length > 0) setPersonAId(resA.members[0].person_id);
+    } catch (_) {
+      setFamilyAMembers([]);
+    }
+
+    if (targetFam) {
+      try {
+        const resB = await apiRequest(`/families/members?ref=${encodeURIComponent(targetFam)}`);
+        setFamilyBMembers(resB.members || []);
+        if (resB.members?.length > 0) setPersonBId(resB.members[0].person_id);
+      } catch (_) {
+        setFamilyBMembers([]);
+      }
+    } else {
+      setFamilyBMembers([]);
+    }
+
+    setLinkModalOpen(true);
+  };
+
+  const handleSelectSameFamilyB = async (targetFamRef) => {
+    setTargetFamilyRefId(targetFamRef);
+    if (!targetFamRef) {
+      setFamilyBMembers([]);
+      return;
+    }
+    try {
+      const resB = await apiRequest(`/families/members?ref=${encodeURIComponent(targetFamRef)}`);
+      setFamilyBMembers(resB.members || []);
+      if (resB.members?.length > 0) setPersonBId(resB.members[0].person_id);
+    } catch (_) {
+      setFamilyBMembers([]);
+    }
+  };
+
+  const openDiffSurnameLink = async (fam) => {
+    setLinkFamilyA(fam);
+    setLinkMode('DIFF_SURNAME');
+    setSelectedLinkType('SAME_PERSON'); // MERGE_FAMILIES not allowed across different surnames
+    setTargetFamilyRefId('');
+    setFamilyBMembers([]);
+    setDiffSurnameQuery('');
+    setDiffSurnameResults([]);
+    setDiffSurnameSearched(false);
+    setLinkError(null);
+    setLinkSuccessTicket(null);
+    setRelationNote('');
+    setPartyAEmail('');
+    setPartyBEmail('');
+
+    try {
+      const resA = await apiRequest(`/families/members?ref=${encodeURIComponent(fam.surname_ref_id)}`);
+      setFamilyAMembers(resA.members || []);
+      if (resA.members?.length > 0) setPersonAId(resA.members[0].person_id);
+    } catch (_) {
+      setFamilyAMembers([]);
+    }
+
+    setLinkModalOpen(true);
+  };
+
+  const handleSearchDiffSurname = async () => {
+    const q = diffSurnameQuery.trim();
+    if (q.length < 3) return;
+    setDiffSurnameLoading(true);
+    setDiffSurnameSearched(true);
+    try {
+      const res = await apiRequest(`/surnames/search?q=${encodeURIComponent(q)}`);
+      setDiffSurnameResults(res.families || []);
+    } catch (_) {
+      setDiffSurnameResults([]);
+    } finally {
+      setDiffSurnameLoading(false);
+    }
+  };
+
+  const handleSelectDiffFamilyB = async (famB) => {
+    setTargetFamilyRefId(famB.surname_ref_id);
+    try {
+      const resB = await apiRequest(`/families/members?ref=${encodeURIComponent(famB.surname_ref_id)}`);
+      setFamilyBMembers(resB.members || []);
+      if (resB.members?.length > 0) setPersonBId(resB.members[0].person_id);
+    } catch (_) {
+      setFamilyBMembers([]);
+    }
+  };
+
+  const handleLinkSubmit = async (e) => {
+    e.preventDefault();
+    if (!targetFamilyRefId) {
+      setLinkError('Please select Family B to link with.');
+      return;
+    }
+    if ((selectedLinkType === 'SAME_PERSON' || selectedLinkType === 'PARENT_CHILD') && (!personAId || !personBId)) {
+      setLinkError('Please select members from both families.');
+      return;
+    }
+
+    const emailAVal = validateEmail(partyAEmail, true);
+    const emailBVal = validateEmail(partyBEmail, true);
+    if (!emailAVal.valid) {
+      setLinkError('Please enter a valid registered email for Family A: ' + emailAVal.error);
+      return;
+    }
+    if (!emailBVal.valid) {
+      setLinkError('Please enter a valid registered email for Family B: ' + emailBVal.error);
+      return;
+    }
+
+    const subNameVal = validateName(linkSubmitterName, true);
+    const subEmailVal = validateEmail(linkSubmitterEmail, true);
+    const subPhoneVal = validatePhone(linkSubmitterPhone, true);
+
+    if (!subNameVal.valid) {
+      setLinkError('Submitter name: ' + subNameVal.error);
+      return;
+    }
+    if (!subEmailVal.valid) {
+      setLinkError('Submitter email: ' + subEmailVal.error);
+      return;
+    }
+    if (!subPhoneVal.valid) {
+      setLinkError('Submitter phone: ' + subPhoneVal.error);
+      return;
+    }
+
+    setLinkSubmitting(true);
+    setLinkError(null);
+
+    const isMerge = selectedLinkType === 'MERGE_FAMILIES';
+    const requestType = isMerge ? 'MERGE_FAMILIES' : 'LINK_FAMILIES';
+
+    const payload = {
+      type: requestType,
+      requester_email: subEmailVal.value,
+      captcha_token: 'valid',
+      payload: {
+        link_type: selectedLinkType,
+        family_a_ref_id: linkFamilyA.surname_ref_id,
+        family_b_ref_id: targetFamilyRefId,
+        person_a_id: personAId || null,
+        person_b_id: personBId || null,
+        relation_note: relationNote.trim(),
+        party_a_email: emailAVal.value,
+        party_b_email: emailBVal.value,
+        second_party_email: emailBVal.value,
+        submitter_name: subNameVal.value,
+        submitter_email: subEmailVal.value,
+        submitter_phone: subPhoneVal.value
+      }
+    };
+
+    try {
+      const res = await apiRequest('/requests', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      setLinkSuccessTicket(res.ticket_id);
+    } catch (err) {
+      setLinkError(err.message || 'Failed to submit link request');
+    } finally {
+      setLinkSubmitting(false);
     }
   };
 
@@ -409,43 +622,61 @@ export default function OnboardSurnamePage({ onNavigate }) {
                       </span>
                     </div>
 
-                    <div className="space-y-2.5">
-                      {searchResults.map((family) => (
+                    <div className="space-y-3">
+                      {searchResults.map((family, idx) => (
                         <div
                           key={family.surname_ref_id}
-                          className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/80 transition-colors"
+                          className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col gap-3 hover:bg-slate-50/80 transition-colors"
                         >
-                          <div className="space-y-1">
-                            <span className="inline-block px-2 py-0.5 bg-emerald-100 text-emerald-800 font-mono text-[11px] font-bold rounded-md">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2">
+                            <span className="font-bold text-sm text-slate-900">
+                              Family {family.branch_no || (idx + 1)}
+                            </span>
+                            <span className="inline-block px-2.5 py-0.5 bg-emerald-100 text-emerald-800 font-mono text-[11px] font-bold rounded-md self-start sm:self-auto">
                               {family.surname_ref_id}
                             </span>
-                            <div className="text-xs text-slate-800">
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-800">
+                            <div>
                               <span className="font-semibold text-slate-600">Founding Husband: </span>
                               <strong>{family.husband?.name || 'N/A'}</strong>{' '}
                               <span className="font-mono text-emerald-700 font-medium">({family.husband?.member_ref_id || 'N/A'})</span>
                             </div>
-                            <div className="text-xs text-slate-800">
+                            <div>
                               <span className="font-semibold text-slate-600">Founding Wife: </span>
                               <strong>{family.wife?.name || 'N/A'}</strong>{' '}
                               <span className="font-mono text-emerald-700 font-medium">({family.wife?.member_ref_id || 'N/A'})</span>
                             </div>
                           </div>
 
-                          <button
-                            type="button"
-                            onClick={() => onNavigate('request', {
-                              type: 'LINK_MEMBERS',
-                              surname_ref_id: family.surname_ref_id,
-                              husband_ref_id: family.husband?.member_ref_id,
-                              wife_ref_id: family.wife?.member_ref_id,
-                              secondary_member_ref_id: family.husband?.member_ref_id,
-                              display_name: `${family.husband?.name || ''} & ${family.wife?.name || ''}`
-                            })}
-                            className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center space-x-1.5 shrink-0 self-start sm:self-center"
-                          >
-                            <UserCheck className="w-3.5 h-3.5" />
-                            <span>This is my family - request link</span>
-                          </button>
+                          {/* 3 Action Buttons per Card */}
+                          <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100">
+                            <button
+                              type="button"
+                              onClick={() => onNavigate('add-member', { surname_ref_id: family.surname_ref_id })}
+                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center space-x-1.5"
+                            >
+                              <UserPlus className="w-3.5 h-3.5" />
+                              <span>Add members</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => openSameSurnameLink(family)}
+                              className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 font-semibold text-xs rounded-xl transition-all flex items-center space-x-1.5"
+                            >
+                              <GitMerge className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>Link a same-surname family</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => openDiffSurnameLink(family)}
+                              className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 font-semibold text-xs rounded-xl transition-all flex items-center space-x-1.5"
+                            >
+                              <Link2 className="w-3.5 h-3.5 text-blue-600" />
+                              <span>Link a different-surname family</span>
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -746,6 +977,305 @@ export default function OnboardSurnamePage({ onNavigate }) {
           )}
         </form>
       </div>
+
+      {/* Linking Modal Dialog */}
+      <Modal
+        isOpen={linkModalOpen}
+        onClose={() => setLinkModalOpen(false)}
+        title={linkMode === 'SAME_SURNAME' ? 'Link Same-Surname Family' : 'Link Different-Surname Family'}
+        maxWidth="max-w-xl"
+      >
+        {linkSuccessTicket ? (
+          <div className="space-y-4 text-center py-2">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-100">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+            <h4 className="text-base font-bold text-slate-900">Link Request Created!</h4>
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <span className="text-[11px] uppercase tracking-wider text-slate-500 font-bold">Ticket ID</span>
+              <p className="text-xl font-mono font-extrabold text-emerald-700 mt-0.5 select-all">{linkSuccessTicket}</p>
+            </div>
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-left text-xs text-amber-900 space-y-1">
+              <div className="flex items-center space-x-1.5 font-bold text-amber-800">
+                <Mail className="w-3.5 h-3.5" />
+                <span>Dual Mail Verification Required</span>
+              </div>
+              <p>
+                Both parties (Family A and Family B registered emails) must send an email to <strong className="font-mono">support@familytree.local</strong> with subject:
+              </p>
+              <p className="font-mono bg-white p-1.5 rounded border border-amber-200 select-all font-semibold text-slate-800">
+                Verify Ticket: {linkSuccessTicket}
+              </p>
+              <p className="text-[11px] text-amber-700">The Administrator will verify both before approving.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => { setLinkModalOpen(false); setLinkSuccessTicket(null); }}
+              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl"
+            >
+              Close
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleLinkSubmit} className="space-y-4 text-xs">
+            {linkError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl flex items-center space-x-2 text-xs">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{linkError}</span>
+              </div>
+            )}
+
+            {/* Family A Info */}
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <span className="text-slate-500 font-bold block mb-1">Family A (Selected)</span>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-slate-900 text-sm">
+                  Family {linkFamilyA?.branch_no || 1}
+                </span>
+                <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  {linkFamilyA?.surname_ref_id}
+                </span>
+              </div>
+              <p className="text-slate-600 mt-1">
+                Founding: {linkFamilyA?.husband?.name || 'N/A'} & {linkFamilyA?.wife?.name || 'N/A'}
+              </p>
+            </div>
+
+            {/* Family B Selection */}
+            {linkMode === 'SAME_SURNAME' ? (
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Select Family B to link with *
+                </label>
+                {searchResults.filter(f => f.surname_ref_id !== linkFamilyA?.surname_ref_id).length === 0 ? (
+                  <p className="text-slate-500 italic p-2 bg-slate-50 rounded-lg">
+                    No other family with the surname '{lastSearchedSurname}' found.
+                  </p>
+                ) : (
+                  <select
+                    value={targetFamilyRefId}
+                    onChange={(e) => handleSelectSameFamilyB(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 focus:outline-none focus:border-emerald-500"
+                  >
+                    <option value="">-- Choose Family B --</option>
+                    {searchResults
+                      .filter(f => f.surname_ref_id !== linkFamilyA?.surname_ref_id)
+                      .map((f, i) => (
+                        <option key={f.surname_ref_id} value={f.surname_ref_id}>
+                          Family {f.branch_no || (i + 1)} ({f.surname_ref_id}) - {f.husband?.name} & {f.wife?.name}
+                        </option>
+                      ))}
+                  </select>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <label className="block font-bold text-slate-700">
+                  Search Family B by Surname *
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Enter surname to search (min 3 chars)..."
+                    value={diffSurnameQuery}
+                    onChange={(e) => setDiffSurnameQuery(e.target.value)}
+                    className="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 focus:outline-none focus:border-emerald-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSearchDiffSurname}
+                    disabled={diffSurnameQuery.trim().length < 3 || diffSurnameLoading}
+                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all disabled:opacity-50"
+                  >
+                    {diffSurnameLoading ? 'Searching...' : 'Search'}
+                  </button>
+                </div>
+
+                {diffSurnameSearched && (
+                  <div className="max-h-36 overflow-y-auto space-y-1.5 border border-slate-200 rounded-xl p-2 bg-slate-50">
+                    {diffSurnameResults.length === 0 ? (
+                      <p className="text-slate-500 text-[11px] text-center py-2">No matching families found.</p>
+                    ) : (
+                      diffSurnameResults.map((fb, idx) => (
+                        <div
+                          key={fb.surname_ref_id}
+                          className={`p-2 rounded-lg border flex items-center justify-between cursor-pointer transition-colors ${
+                            targetFamilyRefId === fb.surname_ref_id
+                              ? 'bg-emerald-50 border-emerald-300 ring-1 ring-emerald-400'
+                              : 'bg-white border-slate-200 hover:bg-slate-100'
+                          }`}
+                          onClick={() => handleSelectDiffFamilyB(fb)}
+                        >
+                          <div>
+                            <span className="font-bold text-slate-800">Family {fb.branch_no || idx + 1} ({fb.surname_ref_id})</span>
+                            <p className="text-[11px] text-slate-600">{fb.husband?.name} & {fb.wife?.name}</p>
+                          </div>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${targetFamilyRefId === fb.surname_ref_id ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                            {targetFamilyRefId === fb.surname_ref_id ? 'Selected' : 'Select'}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Link Type Choice */}
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">
+                Link Type *
+              </label>
+              <select
+                value={selectedLinkType}
+                onChange={(e) => setSelectedLinkType(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 focus:outline-none focus:border-emerald-500"
+              >
+                {linkMode === 'SAME_SURNAME' && (
+                  <option value="MERGE_FAMILIES">MERGE_FAMILIES (Combines Family B into Family A)</option>
+                )}
+                <option value="SAME_PERSON">SAME_PERSON (Same person in both families)</option>
+                <option value="PARENT_CHILD">PARENT_CHILD (Parent-child link across families)</option>
+              </select>
+              {linkMode === 'DIFF_SURNAME' && (
+                <p className="text-[11px] text-slate-500 mt-1">Note: Merging families is only permitted between families sharing the exact same surname.</p>
+              )}
+            </div>
+
+            {/* If PARENT_CHILD or SAME_PERSON: Person Dropdowns */}
+            {(selectedLinkType === 'SAME_PERSON' || selectedLinkType === 'PARENT_CHILD') && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Person in Family A *</label>
+                  <select
+                    value={personAId}
+                    onChange={(e) => setPersonAId(e.target.value)}
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800"
+                  >
+                    <option value="">-- Choose person --</option>
+                    {familyAMembers.map(m => (
+                      <option key={m.person_id} value={m.person_id}>
+                        {m.name} ({m.member_ref_id}) {m.founding_role ? `[${m.founding_role}]` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Person in Family B *</label>
+                  <select
+                    value={personBId}
+                    onChange={(e) => setPersonBId(e.target.value)}
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800"
+                  >
+                    <option value="">-- Choose person --</option>
+                    {familyBMembers.map(m => (
+                      <option key={m.person_id} value={m.person_id}>
+                        {m.name} ({m.member_ref_id}) {m.founding_role ? `[${m.founding_role}]` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {/* Relation note */}
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Relation Note / Explanation (Optional)</label>
+              <input
+                type="text"
+                placeholder="e.g. Ramesh moved to another city and was recorded in both branches"
+                value={relationNote}
+                onChange={(e) => setRelationNote(e.target.value)}
+                className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-emerald-500"
+              />
+            </div>
+
+            {/* Submitter Contact */}
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+              <span className="font-bold text-slate-800 block">Submitter Contact Information</span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <input
+                  type="text"
+                  required
+                  placeholder="Your Name *"
+                  value={linkSubmitterName}
+                  onChange={(e) => setLinkSubmitterName(e.target.value)}
+                  className="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg"
+                />
+                <input
+                  type="email"
+                  required
+                  placeholder="Your Email *"
+                  value={linkSubmitterEmail}
+                  onChange={(e) => setLinkSubmitterEmail(e.target.value)}
+                  className="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg"
+                />
+                <input
+                  type="tel"
+                  required
+                  placeholder="Your Phone (10 digits) *"
+                  value={linkSubmitterPhone}
+                  onChange={(e) => setLinkSubmitterPhone(e.target.value)}
+                  className="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg font-mono"
+                />
+              </div>
+            </div>
+
+            {/* Dual Registered Emails (typed by user, never revealed on screen) */}
+            <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl space-y-2">
+              <div className="flex items-center space-x-1.5 font-bold text-amber-900">
+                <ShieldCheck className="w-4 h-4 text-amber-700" />
+                <span>Dual Registered Email Verification Required</span>
+              </div>
+              <p className="text-[11px] text-amber-800">
+                To protect privacy, registered emails are never displayed. Enter the registered emails of both parties below.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Family A Registered Email *</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="familyA_member@example.com"
+                    value={partyAEmail}
+                    onChange={(e) => setPartyAEmail(e.target.value)}
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Family B Registered Email *</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="familyB_member@example.com"
+                    value={partyBEmail}
+                    onChange={(e) => setPartyBEmail(e.target.value)}
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setLinkModalOpen(false)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={linkSubmitting}
+                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all shadow-sm disabled:opacity-50"
+              >
+                {linkSubmitting ? 'Submitting...' : 'Submit Link Request'}
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 }

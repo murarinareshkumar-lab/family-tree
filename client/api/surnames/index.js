@@ -39,3 +39,4 @@ export default async function handler(req, res) {
     sendError(res, 500, 'Failed to fetch surnames', err.message);
   }
 }
+

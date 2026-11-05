@@ -31,21 +31,21 @@ export async function performSurnameSearch(q, sheetsClient) {
     }
   }
 
-  // 2. Find Approved matching surnames (exact match on normalized letters)
+  // 2. Find Approved matching surnames (exact match on normalized letters, Merged excluded)
   const approvedMatchingSurnames = [];
   for (const s of surnames) {
     if (s.status === 'Approved') {
       const sNorm = s.surname_norm ? normalizeSurnameLetters(s.surname_norm) : normalizeSurnameLetters(s.surname_name);
       if (sNorm === normQ) {
         approvedMatchingSurnames.push(s);
-        if (approvedMatchingSurnames.length >= 10) break; // At most 10 families
       }
     }
   }
 
   // 3. For each approved family, find founding husband and wife only
   const families = [];
-  for (const s of approvedMatchingSurnames) {
+  for (let idx = 0; idx < approvedMatchingSurnames.length; idx++) {
+    const s = approvedMatchingSurnames[idx];
     const familyPersons = persons.filter(
       p => p.surname_ref_id === s.surname_ref_id && p.status === 'Approved'
     );
@@ -58,20 +58,27 @@ export async function performSurnameSearch(q, sheetsClient) {
       p => String(p.founding_role).toUpperCase() === 'WIFE' || String(p.member_ref_id).endsWith('-0002') || String(p.member_ref_id).endsWith('-2')
     );
 
-    // Strict whitelist: name and member_ref_id only
+    const branchNo = parseInt(s.branch_no, 10) || (idx + 1);
+
+    // Strict whitelist: branch_no, surname_ref_id, husband, wife
     families.push({
+      branch_no: branchNo,
       surname_ref_id: s.surname_ref_id,
       husband: husband ? { name: husband.full_name || '', member_ref_id: husband.member_ref_id || '' } : null,
       wife: wife ? { name: wife.full_name || '', member_ref_id: wife.member_ref_id || '' } : null
     });
   }
 
+  // Sort by branch_no ascending, cap at max 10
+  families.sort((a, b) => a.branch_no - b.branch_no);
+  const cappedFamilies = families.slice(0, 10);
+
   return {
     ok: true,
     query: q,
-    found: families.length > 0,
+    found: cappedFamilies.length > 0,
     pending: isPending,
-    families
+    families: cappedFamilies
   };
 }
 
