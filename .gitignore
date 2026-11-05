@@ -10,14 +10,10 @@ service-account*.json
 node_modules/
 client/node_modules/
 
-# Builds
-dist/
-client/dist/
-.vercel/
-
-# Logs
+# Logs & OS
 *.log
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+.vercel/
