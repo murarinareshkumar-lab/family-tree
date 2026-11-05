@@ -2,15 +2,24 @@
 export async function apiRequest(endpoint, options = {}) {
   const url = endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`;
   
+  // Check for private admin key in URL or session storage
+  const urlParams = new URLSearchParams(window.location.search || window.location.hash.slice(window.location.hash.indexOf('?')));
+  const keyFromUrl = urlParams.get('key') || urlParams.get('admin_key');
+  if (keyFromUrl) {
+    sessionStorage.setItem('ft_admin_key', keyFromUrl);
+  }
+  const adminKey = sessionStorage.getItem('ft_admin_key');
+
   const headers = {
     'Content-Type': 'application/json',
+    ...(adminKey ? { 'x-admin-key': adminKey } : {}),
     ...(options.headers || {})
   };
 
   const response = await fetch(url, {
     ...options,
     headers,
-    credentials: 'include' // Include httpOnly cookies for admin auth
+    credentials: 'include'
   });
 
   const contentType = response.headers.get('content-type');
@@ -31,4 +40,3 @@ export async function apiRequest(endpoint, options = {}) {
 
   return data;
 }
-

@@ -5,27 +5,41 @@ import OnboardSurnamePage from './pages/OnboardSurnamePage';
 import AddMemberPage from './pages/AddMemberPage';
 import RequestTicketPage from './pages/RequestTicketPage';
 import TicketStatusPage from './pages/TicketStatusPage';
-import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import { apiRequest } from './utils/api';
-import { GitBranch, Shield, Heart } from 'lucide-react';
+import { GitBranch } from 'lucide-react';
 
 export default function App() {
   const [activePage, setActivePage] = useState('tree');
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [adminUser, setAdminUser] = useState(null);
 
-  // Check admin session on mount
   useEffect(() => {
-    checkAdminSession();
+    // Check if user arrived via private admin portal URL (?key=... or #admin)
+    const urlParams = new URLSearchParams(window.location.search);
+    const key = urlParams.get('key') || urlParams.get('admin_key');
+    const path = window.location.pathname;
+
+    if (key) {
+      sessionStorage.setItem('ft_admin_key', key);
+    }
+
+    if (key || path.includes('/admin') || window.location.hash.includes('admin')) {
+      checkAdminSession(true);
+    } else {
+      checkAdminSession(false);
+    }
   }, []);
 
-  const checkAdminSession = async () => {
+  const checkAdminSession = async (autoSwitchToAdmin = false) => {
     try {
       const res = await apiRequest('/admin/me');
       if (res.authenticated) {
         setIsAdminLoggedIn(true);
         setAdminUser(res.admin);
+        if (autoSwitchToAdmin) {
+          setActivePage('admin-dashboard');
+        }
       } else {
         setIsAdminLoggedIn(false);
         setAdminUser(null);
@@ -36,19 +50,13 @@ export default function App() {
     }
   };
 
-  const handleLoginSuccess = (admin) => {
-    setIsAdminLoggedIn(true);
-    setAdminUser(admin);
-    setActivePage('admin-dashboard');
-  };
-
-  const handleLogout = async () => {
-    try {
-      await apiRequest('/admin/logout', { method: 'POST' });
-    } catch (_) {}
+  const handleLogout = () => {
+    sessionStorage.removeItem('ft_admin_key');
     setIsAdminLoggedIn(false);
     setAdminUser(null);
     setActivePage('tree');
+    // Clear URL parameters
+    window.history.replaceState({}, document.title, window.location.pathname);
   };
 
   return (
@@ -66,14 +74,11 @@ export default function App() {
         {activePage === 'add-member' && <AddMemberPage onNavigate={setActivePage} />}
         {activePage === 'request' && <RequestTicketPage onNavigate={setActivePage} />}
         {activePage === 'ticket-status' && <TicketStatusPage />}
-        {activePage === 'admin-login' && (
-          <AdminLoginPage onLoginSuccess={handleLoginSuccess} />
-        )}
         {activePage === 'admin-dashboard' && (
           isAdminLoggedIn ? (
             <AdminDashboardPage onLogout={handleLogout} />
           ) : (
-            <AdminLoginPage onLoginSuccess={handleLoginSuccess} />
+            <HomePage onNavigate={setActivePage} />
           )
         )}
       </main>
@@ -85,14 +90,13 @@ export default function App() {
             <GitBranch className="w-4 h-4 text-emerald-600" />
             <span className="font-semibold text-slate-700">Family Tree Portal</span>
             <span>•</span>
-            <span>Serverless Architecture on Google Sheets</span>
+            <span>Google Sheets Architecture</span>
           </div>
 
           <div className="flex items-center space-x-4">
             <button onClick={() => setActivePage('tree')} className="hover:text-emerald-700">Lineages</button>
             <button onClick={() => setActivePage('onboard')} className="hover:text-emerald-700">Onboard</button>
             <button onClick={() => setActivePage('ticket-status')} className="hover:text-emerald-700">Track Ticket</button>
-            <button onClick={() => setActivePage('admin-login')} className="hover:text-emerald-700">Admin</button>
           </div>
 
           <div className="flex items-center space-x-1 text-slate-400">
@@ -103,4 +107,3 @@ export default function App() {
     </div>
   );
 }
-
