@@ -232,27 +232,30 @@ test('Surname Search API - Matches 1 family and 2 families sharing same surname,
 
   // Family 1
   const fam1 = res.families[0];
-  assert.equal(fam1.surname_ref_id, 'MURFT');
-  assert.deepEqual(fam1.husband, { name: 'Gurubheema Murari', member_ref_id: 'MURFT-0001' });
-  assert.deepEqual(fam1.wife, { name: 'Neeraja Kumari Murari', member_ref_id: 'MURFT-0002' });
+  assert.equal(fam1.branch_no, 1);
+  assert.deepEqual(fam1.husband, { name: 'Gurubheema Murari' });
+  assert.deepEqual(fam1.wife, { name: 'Neeraja Kumari Murari' });
 
   // Family 2
   const fam2 = res.families[1];
-  assert.equal(fam2.surname_ref_id, 'MURAFT');
-  assert.deepEqual(fam2.husband, { name: 'Venkatesh Murari', member_ref_id: 'MURAFT-0001' });
-  assert.deepEqual(fam2.wife, { name: 'Lakshmi Murari', member_ref_id: 'MURAFT-0002' });
+  assert.equal(fam2.branch_no, 2);
+  assert.deepEqual(fam2.husband, { name: 'Venkatesh Murari' });
+  assert.deepEqual(fam2.wife, { name: 'Lakshmi Murari' });
 
-  // Strict Whitelist Check: NEVER return DOB, email, phone, parent IDs, or child members
+  // Strict Whitelist Check: NEVER return DOB, email, phone, parent IDs, child members, or reference IDs
   for (const fam of res.families) {
     const keys = Object.keys(fam).sort();
-    assert.deepEqual(keys, ['branch_no', 'husband', 'surname_ref_id', 'wife']);
+    assert.deepEqual(keys, ['branch_no', 'husband', 'wife']);
 
+    assert.equal(fam.surname_ref_id, undefined);
     assert.equal(fam.dob, undefined);
     assert.equal(fam.email, undefined);
     assert.equal(fam.phone, undefined);
+    assert.equal(fam.husband.member_ref_id, undefined);
     assert.equal(fam.husband.dob, undefined);
     assert.equal(fam.husband.email, undefined);
     assert.equal(fam.husband.phone, undefined);
+    assert.equal(fam.wife.member_ref_id, undefined);
     assert.equal(fam.wife.dob, undefined);
     assert.equal(fam.wife.email, undefined);
     assert.equal(fam.wife.phone, undefined);

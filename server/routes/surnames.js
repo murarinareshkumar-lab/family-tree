@@ -5,6 +5,10 @@ import { normalizeSurnameLetters } from '../../lib/id-generator.js';
 
 const router = express.Router();
 
+/**
+ * Searches approved families sharing a surname.
+ * Strict privacy: names only. No member_ref_id, no surname_ref_id, no dates, no contact details.
+ */
 export async function performSurnameSearch(q, sheetsClient) {
   const normQ = normalizeSurnameLetters(q);
   if (!normQ || normQ.length < 3) {
@@ -44,7 +48,7 @@ export async function performSurnameSearch(q, sheetsClient) {
     }
   }
 
-  // 3. For each approved family, find founding husband and wife only
+  // 3. For each approved family, return founding couple names only
   const families = [];
   for (let idx = 0; idx < approvedMatchingSurnames.length; idx++) {
     const s = approvedMatchingSurnames[idx];
@@ -52,7 +56,6 @@ export async function performSurnameSearch(q, sheetsClient) {
       p => p.surname_ref_id === s.surname_ref_id && p.status === 'Approved'
     );
 
-    // Look by founding_role (HUSBAND / WIFE) with fallback to member number -0001 and -0002
     let husband = familyPersons.find(
       p => String(p.founding_role).toUpperCase() === 'HUSBAND' || String(p.member_ref_id).endsWith('-0001') || String(p.member_ref_id).endsWith('-1')
     );
@@ -62,12 +65,11 @@ export async function performSurnameSearch(q, sheetsClient) {
 
     const branchNo = parseInt(s.branch_no, 10) || (idx + 1);
 
-    // Strict whitelist: branch_no, surname_ref_id, husband, wife
+    // Strict whitelist: branch_no, husband name, wife name
     families.push({
       branch_no: branchNo,
-      surname_ref_id: s.surname_ref_id,
-      husband: husband ? { name: husband.full_name || '', member_ref_id: husband.member_ref_id || '' } : null,
-      wife: wife ? { name: wife.full_name || '', member_ref_id: wife.member_ref_id || '' } : null
+      husband: husband ? { name: husband.full_name || '' } : null,
+      wife: wife ? { name: wife.full_name || '' } : null
     });
   }
 
@@ -103,7 +105,7 @@ router.get('/search', async (req, res, next) => {
   }
 });
 
-// GET /api/surnames (handles search fallback as well if q is passed)
+// GET /api/surnames
 router.get('/', async (req, res, next) => {
   const q = String(req.query.q || req.query.search || '').trim();
   if (q) {
@@ -126,10 +128,8 @@ router.get('/', async (req, res, next) => {
     const approvedSurnames = rows
       .filter(r => r.status === 'Approved')
       .map(r => ({
-        surname_ref_id: r.surname_ref_id,
         surname_name: r.surname_name,
-        branch_no: r.branch_no || '1',
-        created_at: r.created_at
+        branch_no: r.branch_no || '1'
       }));
     res.json({ surnames: approvedSurnames });
   } catch (err) {

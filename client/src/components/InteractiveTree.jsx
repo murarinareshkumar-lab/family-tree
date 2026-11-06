@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
-import { User, Users, Heart, Search, ZoomIn, ZoomOut, RotateCcw, Info, GitBranch } from 'lucide-react';
+import { Users, Search, ZoomIn, ZoomOut, RotateCcw, GitBranch } from 'lucide-react';
 import Modal from './Modal';
 
+/**
+ * Interactive Tree Component.
+ * Strict public view: names and tree connecting lines only.
+ * No gender icons, no reference IDs, no relationship words, no privacy footer text.
+ */
 export default function InteractiveTree({ treeData, onRefresh, showConnected = false, onToggleConnected }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [zoomLevel, setZoomLevel] = useState(1);
   const [selectedMember, setSelectedMember] = useState(null);
 
-  if (!treeData || !treeData.members || treeData.members.length === 0) {
+  if (!treeData || (!treeData.tree && (!treeData.members || treeData.members.length === 0))) {
     return (
       <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-sm">
         <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
@@ -19,48 +24,8 @@ export default function InteractiveTree({ treeData, onRefresh, showConnected = f
     );
   }
 
-  // Filter members matching search query
-  const filteredMembers = treeData.members.filter(m =>
-    m.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (m.member_ref_id && m.member_ref_id.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  // Group members into hierarchy: Roots (no known parents in list) and Children
-  const memberMap = new Map(treeData.members.map(m => [m.person_id, m]));
-
-  const allRoots = treeData.members.filter(m => !m.father_person_id && !m.mother_person_id);
-
-  const getChildrenOf = (personId) => {
-    return treeData.members.filter(m =>
-      m.father_person_id === personId || m.mother_person_id === personId
-    );
-  };
-
-  const getSpousesOf = (member) => {
-    if (!member.relationships) return [];
-    return member.relationships
-      .filter(r => r.type === 'SPOUSE_OF')
-      .map(r => memberMap.get(r.target_person_id))
-      .filter(Boolean);
-  };
-
-  // Sort roots: Founding husband first, then founding wife, then earliest DOB
-  allRoots.sort((a, b) => {
-    const aRole = String(a.founding_role || '').toUpperCase();
-    const bRole = String(b.founding_role || '').toUpperCase();
-    if (aRole === 'HUSBAND') return -1;
-    if (bRole === 'HUSBAND') return 1;
-    if (aRole === 'WIFE') return -1;
-    if (bRole === 'WIFE') return 1;
-    return (a.dob || '').localeCompare(b.dob || '');
-  });
-
-  // Exclude root wives who are already rendered side-by-side beside their root husband
-  const spouseOfRoots = new Set();
-  allRoots.forEach(r => {
-    getSpousesOf(r).forEach(s => spouseOfRoots.add(s.person_id));
-  });
-  const roots = allRoots.filter(r => !spouseOfRoots.has(r.person_id));
+  const rawTree = treeData.tree || [];
+  const memberList = treeData.members || [];
 
   const handleZoom = (delta) => {
     setZoomLevel(prev => Math.min(Math.max(0.6, prev + delta), 1.6));
@@ -68,18 +33,18 @@ export default function InteractiveTree({ treeData, onRefresh, showConnected = f
 
   return (
     <div className="space-y-4">
-      {/* Connected Families Banner with Dashed Connector Badge & Toggle */}
+      {/* Connected Families Banner */}
       {treeData.connected_families && treeData.connected_families.length > 0 && (
         <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-bold text-slate-700">Family Connections:</span>
-            {treeData.connected_families.map(cf => (
+            {treeData.connected_families.map((cf, idx) => (
               <span
-                key={cf.link_id}
+                key={idx}
                 className="inline-flex items-center space-x-1.5 px-3 py-1 bg-white border-2 border-dashed border-emerald-500 text-emerald-800 rounded-xl text-xs font-bold shadow-sm"
               >
                 <GitBranch className="w-3.5 h-3.5 text-emerald-600" />
-                <span>{cf.badge || `Connected: Family ${cf.connected_branch_no} (${cf.connected_surname_name})`}</span>
+                <span>{cf.badge || 'Connected Family'}</span>
               </span>
             ))}
           </div>
@@ -106,7 +71,7 @@ export default function InteractiveTree({ treeData, onRefresh, showConnected = f
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search family member or ID..."
+            placeholder="Search family member name..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-3 py-1.5 text-sm bg-slate-50 rounded-xl border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
@@ -140,9 +105,11 @@ export default function InteractiveTree({ treeData, onRefresh, showConnected = f
               <RotateCcw className="w-3.5 h-3.5" />
             </button>
           </div>
-          <span className="text-xs text-slate-500 font-medium px-2 py-1 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100">
-            {treeData.members.length} Members
-          </span>
+          {memberList.length > 0 && (
+            <span className="text-xs text-slate-500 font-medium px-2 py-1 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100">
+              {memberList.length} Members
+            </span>
+          )}
         </div>
       </div>
 
@@ -152,26 +119,15 @@ export default function InteractiveTree({ treeData, onRefresh, showConnected = f
           className="transition-transform duration-200 ease-out origin-top flex flex-col items-center space-y-12"
           style={{ transform: `scale(${zoomLevel})` }}
         >
-          {roots.length === 0 ? (
-            // Fallback flat grid if all have cross links
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {filteredMembers.map(m => (
-                <MemberCard
-                  key={m.person_id}
-                  member={m}
-                  spouses={getSpousesOf(m)}
-                  onClick={() => setSelectedMember(m)}
-                />
-              ))}
+          {rawTree.length === 0 ? (
+            <div className="text-center py-8 text-slate-500 text-sm">
+              Tree hierarchy is being processed.
             </div>
           ) : (
-            roots.map(root => (
+            rawTree.map((rootNode) => (
               <TreeNode
-                key={root.person_id}
-                member={root}
-                memberMap={memberMap}
-                getChildrenOf={getChildrenOf}
-                getSpousesOf={getSpousesOf}
+                key={rootNode.id}
+                node={rootNode}
                 onSelectMember={setSelectedMember}
                 searchTerm={searchTerm}
               />
@@ -180,7 +136,7 @@ export default function InteractiveTree({ treeData, onRefresh, showConnected = f
         </div>
       </div>
 
-      {/* Public Whitelisted Details Modal */}
+      {/* Whitelisted Details Modal: Name only */}
       <Modal
         isOpen={Boolean(selectedMember)}
         onClose={() => setSelectedMember(null)}
@@ -189,78 +145,19 @@ export default function InteractiveTree({ treeData, onRefresh, showConnected = f
       >
         {selectedMember && (
           <div className="space-y-4">
-            <div className="flex items-center space-x-3 p-3 bg-emerald-50 rounded-xl border border-emerald-100">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg ${selectedMember.gender === 'Female' ? 'bg-pink-100 text-pink-700' : 'bg-emerald-100 text-emerald-700'
-                }`}>
-                {selectedMember.full_name?.charAt(0)}
+            <div className="flex items-center space-x-3 p-4 bg-emerald-50/60 rounded-2xl border border-emerald-100">
+              <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-800 font-bold text-lg flex items-center justify-center shrink-0">
+                {selectedMember.display_name?.charAt(0) || 'M'}
               </div>
-              <div>
-                <h4 className="font-bold text-slate-900 text-base">{selectedMember.full_name}</h4>
-                <p className="text-xs font-mono text-emerald-700 font-semibold">{selectedMember.member_ref_id}</p>
-                <div className="flex items-center space-x-2 mt-1">
-                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-white border border-emerald-200 font-medium text-slate-600">
-                    {selectedMember.gender || 'Unknown'}
-                  </span>
-                  {selectedMember.is_deceased && (
-                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 font-medium">
-                      Deceased
-                    </span>
-                  )}
-                </div>
+              <div className="min-w-0 flex-1">
+                <h4 className="font-bold text-slate-900 text-base truncate">{selectedMember.display_name}</h4>
+                <p className="text-xs text-slate-500 mt-0.5">Verified Lineage Member</p>
               </div>
             </div>
 
-            {/* Calculated Relatives */}
-            <div className="border border-slate-100 rounded-xl p-3 bg-slate-50/50 space-y-2 text-sm">
-              <h5 className="text-xs font-bold uppercase tracking-wider text-slate-500">Family Relations</h5>
-
-              {selectedMember.calculated_relatives ? (
-                <div className="space-y-1.5 text-xs">
-                  {selectedMember.calculated_relatives.father && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Father:</span>
-                      <span className="font-semibold text-slate-800">{selectedMember.calculated_relatives.father.full_name}</span>
-                    </div>
-                  )}
-                  {selectedMember.calculated_relatives.mother && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Mother:</span>
-                      <span className="font-semibold text-slate-800">{selectedMember.calculated_relatives.mother.full_name}</span>
-                    </div>
-                  )}
-                  {selectedMember.calculated_relatives.spouses?.length > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Spouse(s):</span>
-                      <span className="font-semibold text-slate-800">
-                        {selectedMember.calculated_relatives.spouses.map(s => s.full_name).join(', ')}
-                      </span>
-                    </div>
-                  )}
-                  {selectedMember.calculated_relatives.children?.length > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Children:</span>
-                      <span className="font-semibold text-slate-800">
-                        {selectedMember.calculated_relatives.children.map(c => c.full_name).join(', ')}
-                      </span>
-                    </div>
-                  )}
-                  {selectedMember.calculated_relatives.siblings?.length > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Siblings:</span>
-                      <span className="font-semibold text-slate-800">
-                        {selectedMember.calculated_relatives.siblings.map(s => s.full_name).join(', ')}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-xs text-slate-400">Direct relatives connected in tree.</p>
-              )}
-            </div>
-
-            <div className="flex items-center space-x-2 text-[11px] text-slate-500 bg-amber-50 border border-amber-200/60 p-2.5 rounded-xl">
-              <Info className="w-4 h-4 text-amber-600 shrink-0" />
-              <span>Public privacy protection: Personal email, phone numbers, and dates of birth are permanently hidden from public records.</span>
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-1">
+              <p className="font-semibold text-slate-700">Public Record Notice</p>
+              <p>This lineage tree is public. To protect family privacy, contact details and personal records are restricted to portal administrators.</p>
             </div>
           </div>
         )}
@@ -269,29 +166,27 @@ export default function InteractiveTree({ treeData, onRefresh, showConnected = f
   );
 }
 
-function TreeNode({ member, memberMap, getChildrenOf, getSpousesOf, onSelectMember, searchTerm }) {
-  const children = getChildrenOf(member.person_id);
-  const spouses = getSpousesOf(member);
+function TreeNode({ node, onSelectMember, searchTerm }) {
+  const children = node.children || [];
+  const spouses = node.spouses || [];
 
   return (
     <div className="flex flex-col items-center">
       {/* Node Card with Spouse */}
       <div className="flex items-center space-x-3 relative z-10">
         <MemberCard
-          member={member}
-          onClick={() => onSelectMember(member)}
-          highlight={searchTerm && member.full_name.toLowerCase().includes(searchTerm.toLowerCase())}
+          member={node}
+          onClick={() => onSelectMember(node)}
+          highlight={searchTerm && node.display_name?.toLowerCase().includes(searchTerm.toLowerCase())}
         />
 
-        {spouses.map(spouse => (
-          <React.Fragment key={spouse.person_id}>
-            <div className="flex items-center justify-center -mx-1 text-rose-500">
-              <Heart className="w-4 h-4 fill-rose-500 animate-pulse" />
-            </div>
+        {spouses.map((spouse) => (
+          <React.Fragment key={spouse.id}>
+            <div className="w-4 h-0.5 bg-slate-400" />
             <MemberCard
               member={spouse}
               onClick={() => onSelectMember(spouse)}
-              highlight={searchTerm && spouse.full_name.toLowerCase().includes(searchTerm.toLowerCase())}
+              highlight={searchTerm && spouse.display_name?.toLowerCase().includes(searchTerm.toLowerCase())}
             />
           </React.Fragment>
         ))}
@@ -300,10 +195,10 @@ function TreeNode({ member, memberMap, getChildrenOf, getSpousesOf, onSelectMemb
       {/* Children connector lines */}
       {children.length > 0 && (
         <div className="flex flex-col items-center mt-3">
-          {/* Vertical line from parent */}
+          {/* Vertical drop line from parents */}
           <div className="w-0.5 h-6 bg-slate-300" />
 
-          {/* Children container */}
+          {/* Children container with horizontal connecting bar */}
           <div className="relative pt-6">
             {children.length > 1 && (
               <div
@@ -316,15 +211,12 @@ function TreeNode({ member, memberMap, getChildrenOf, getSpousesOf, onSelectMemb
             )}
 
             <div className="flex items-start justify-center space-x-8 sm:space-x-12">
-              {children.map(child => (
-                <div key={child.person_id} className="flex flex-col items-center relative">
+              {children.map((child) => (
+                <div key={child.id} className="flex flex-col items-center relative">
                   {/* Vertical drop line to child */}
                   <div className="w-0.5 h-6 bg-slate-300 absolute -top-6" />
                   <TreeNode
-                    member={child}
-                    memberMap={memberMap}
-                    getChildrenOf={getChildrenOf}
-                    getSpousesOf={getSpousesOf}
+                    node={child}
                     onSelectMember={onSelectMember}
                     searchTerm={searchTerm}
                   />
@@ -339,39 +231,28 @@ function TreeNode({ member, memberMap, getChildrenOf, getSpousesOf, onSelectMemb
 }
 
 function MemberCard({ member, onClick, highlight }) {
-  const isFemale = member.gender === 'Female';
-  const displayName = member.former_name && !member.full_name?.includes('(née')
-    ? `${member.full_name} (née ${member.former_name})`
-    : member.full_name;
+  const displayName = member.display_name || member.full_name || 'Member';
 
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`group relative text-left bg-white border rounded-2xl p-3 shadow-sm hover:shadow-md transition-all w-44 hover:-translate-y-0.5 ${highlight
-        ? 'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-50/20'
-        : 'border-slate-200 hover:border-emerald-300'
-        }`}
+      className={`group relative text-left bg-white border rounded-2xl p-3 shadow-sm hover:shadow-md transition-all w-44 hover:-translate-y-0.5 ${
+        highlight
+          ? 'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-50/20'
+          : 'border-slate-200 hover:border-emerald-300'
+      }`}
     >
       <div className="flex items-center space-x-2.5">
-        <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${isFemale ? 'bg-pink-100 text-pink-700' : 'bg-emerald-100 text-emerald-800'
-          }`}>
-          <User className="w-4 h-4" />
+        <div className="w-8 h-8 rounded-xl bg-slate-100 group-hover:bg-emerald-100 text-slate-700 group-hover:text-emerald-800 flex items-center justify-center font-bold text-xs shrink-0 transition-colors">
+          {displayName.charAt(0) || 'M'}
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-bold text-slate-800 truncate group-hover:text-emerald-700 transition-colors" title={displayName}>
             {displayName}
           </p>
-          <p className="text-[10px] font-mono font-medium text-emerald-700 truncate">
-            {member.member_ref_id || 'PENDING'}
-          </p>
         </div>
       </div>
-      {member.is_deceased && (
-        <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.2 bg-slate-700 text-white text-[9px] rounded-md font-semibold">
-          Deceased
-        </span>
-      )}
     </button>
   );
 }
-

@@ -625,28 +625,23 @@ export default function OnboardSurnamePage({ onNavigate }) {
                     <div className="space-y-3">
                       {searchResults.map((family, idx) => (
                         <div
-                          key={family.surname_ref_id}
+                          key={family.branch_no || idx}
                           className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col gap-3 hover:bg-slate-50/80 transition-colors"
                         >
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2">
                             <span className="font-bold text-sm text-slate-900">
-                              Family {family.branch_no || (idx + 1)}
-                            </span>
-                            <span className="inline-block px-2.5 py-0.5 bg-emerald-100 text-emerald-800 font-mono text-[11px] font-bold rounded-md self-start sm:self-auto">
-                              {family.surname_ref_id}
+                              Family {family.branch_no || (idx + 1)}: {family.husband?.name || 'Founding Member'} & {family.wife?.name || 'Spouse'}
                             </span>
                           </div>
 
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-800">
                             <div>
                               <span className="font-semibold text-slate-600">Founding Husband: </span>
-                              <strong>{family.husband?.name || 'N/A'}</strong>{' '}
-                              <span className="font-mono text-emerald-700 font-medium">({family.husband?.member_ref_id || 'N/A'})</span>
+                              <strong>{family.husband?.name || 'N/A'}</strong>
                             </div>
                             <div>
                               <span className="font-semibold text-slate-600">Founding Wife: </span>
-                              <strong>{family.wife?.name || 'N/A'}</strong>{' '}
-                              <span className="font-mono text-emerald-700 font-medium">({family.wife?.member_ref_id || 'N/A'})</span>
+                              <strong>{family.wife?.name || 'N/A'}</strong>
                             </div>
                           </div>
 

@@ -1,32 +1,45 @@
 import express from 'express';
 import { getSheetsClient } from '../../lib/sheets.js';
 import { TABS } from '../../lib/schema.js';
+import { whitelistPublicMember } from '../../lib/security.js';
 
 const router = express.Router();
 
-// GET /api/families/members?ref=...
+/**
+ * GET /api/families/members?ref=... or ?surname=...
+ * Strict public whitelist: display_name and throwaway node id only.
+ * No member_ref_id, person_id, gender, dob, phone or email.
+ */
 router.get('/members', async (req, res, next) => {
-  const ref = String(req.query.ref || req.query.surname_ref_id || '').trim().toUpperCase();
-  if (!ref) {
-    return res.status(400).json({ error: 'Query parameter "ref" (surname_ref_id) is required' });
+  const query = String(req.query.ref || req.query.surname || req.query.surname_ref_id || '').trim();
+  if (!query) {
+    return res.status(400).json({ error: 'Query parameter "surname" or "ref" is required' });
   }
 
   try {
     const sheetsClient = getSheetsClient();
-    const persons = await sheetsClient.getRows(TABS.PERSONS);
+    const [surnames, persons] = await Promise.all([
+      sheetsClient.getRows(TABS.SURNAMES),
+      sheetsClient.getRows(TABS.PERSONS)
+    ]);
 
-    const familyPersons = persons.filter(
-      p => p.surname_ref_id?.toUpperCase() === ref && p.status === 'Approved'
+    const upper = query.toUpperCase();
+    const targetSurname = surnames.find(s =>
+      s.status === 'Approved' && (
+        s.surname_ref_id?.toUpperCase() === upper ||
+        s.surname_name?.toUpperCase() === upper ||
+        s.surname_norm?.toUpperCase() === upper
+      )
     );
 
-    const members = familyPersons.map(p => ({
-      name: p.full_name || '',
-      member_ref_id: p.member_ref_id || '',
-      person_id: p.person_id || '',
-      founding_role: p.founding_role || ''
-    }));
+    const targetRef = targetSurname ? targetSurname.surname_ref_id : query;
+    const familyPersons = persons.filter(
+      p => p.surname_ref_id?.toUpperCase() === targetRef.toUpperCase() && p.status === 'Approved'
+    );
 
-    res.json({ ok: true, surname_ref_id: ref, members });
+    const members = familyPersons.map(p => whitelistPublicMember(p));
+
+    res.json({ ok: true, members });
   } catch (err) {
     next(err);
   }

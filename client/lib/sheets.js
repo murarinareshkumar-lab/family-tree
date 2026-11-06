@@ -266,13 +266,19 @@ class GoogleSheetsProvider {
 let instance = null;
 export function getSheetsClient() {
   if (instance) return instance;
+  if (process.env.NODE_ENV === 'test' && process.env.USE_LIVE_SHEETS !== 'true') {
+    instance = new InMemorySheetsProvider();
+    return instance;
+  }
   const sheetId = process.env.GOOGLE_SHEET_ID_SURNAME || process.env.GOOGLE_SHEET_ID_USER || process.env.GOOGLE_SHEET_ID_ADMIN || process.env.GOOGLE_SHEET_ID;
   const sa = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
   if (sheetId && sa) {
     try {
       const creds = sa.trim().startsWith('{') ? JSON.parse(sa) : JSON.parse(Buffer.from(sa, 'base64').toString('utf8'));
-      instance = new GoogleSheetsProvider(sheetId, creds);
-      return instance;
+      if (creds && creds.client_email && typeof creds.private_key === 'string' && creds.private_key.includes('BEGIN PRIVATE KEY')) {
+        instance = new GoogleSheetsProvider(sheetId, creds);
+        return instance;
+      }
     } catch {}
   }
   instance = new InMemorySheetsProvider();

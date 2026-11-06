@@ -130,8 +130,8 @@ export default function HomePage({ onNavigate, initialParams = {} }) {
                 className="bg-slate-50 border border-slate-200 text-slate-800 text-xs sm:text-sm font-semibold rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-none cursor-pointer"
               >
                 {surnames.map((s, idx) => (
-                  <option key={s.surname_ref_id} value={s.surname_ref_id}>
-                    {s.surname_name} - Family {s.branch_no || (idx + 1)} ({s.surname_ref_id})
+                  <option key={s.surname_ref_id || idx} value={s.surname_name || s.surname_ref_id}>
+                    {s.surname_name} - Family {s.branch_no || (idx + 1)}
                   </option>
                 ))}
               </select>
