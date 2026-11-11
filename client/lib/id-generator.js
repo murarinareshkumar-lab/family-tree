@@ -43,15 +43,78 @@ export function generateFamilyRefId(existingIds = new Set()) {
 }
 
 /**
- * Member reference: "FM-" + 8 random characters.
- * Alphabet: ABCDEFGHJKMNPQRSTUVWXYZ23456789 (no 0, O, 1, I).
- * Regenerates on collision against ALL existing IDs.
+ * Member Reference ID Generator:
+ * PRD v4.0 format: SS-FFF-MMYYYY-NNN (e.g. MU-NAR-071995-001)
+ * - SS: First 2 letters of surname (pad with 'X' if shorter)
+ * - FFF: First 3 letters of first name (pad with 'X' if shorter)
+ * - MMYYYY: Month (2 digits) and Year (4 digits) of birth, or 00YYYY for year-only, or 000000 for unknown
+ * - NNN: 3-digit sequence starting at 001, avoiding collisions against existing IDs
+ *
+ * Backwards-compatible with Set/Array argument as existingIds (generates FM-XXXXXXXX).
  */
-export function generateMemberRefId(existingIds = new Set()) {
-  const existingSet = existingIds instanceof Set
-    ? existingIds
-    : new Set(Array.from(existingIds || []).map(s => String(s).toUpperCase()));
+export function generateMemberRefId(personOrExisting = new Set(), maybeExisting = new Set()) {
+  let existingSet;
+  let person = null;
 
+  if (personOrExisting instanceof Set || Array.isArray(personOrExisting)) {
+    existingSet = personOrExisting instanceof Set
+      ? personOrExisting
+      : new Set(Array.from(personOrExisting || []).map(s => String(s).toUpperCase()));
+  } else if (typeof personOrExisting === 'object' && personOrExisting !== null) {
+    person = personOrExisting;
+    existingSet = maybeExisting instanceof Set
+      ? maybeExisting
+      : new Set(Array.from(maybeExisting || []).map(s => String(s).toUpperCase()));
+  } else {
+    existingSet = new Set();
+  }
+
+  if (person && (person.surname || person.full_name || person.firstName || person.first_name || person.last_name)) {
+    // 1. Surname (SS)
+    const surnameRaw = person.surname || person.last_name || (person.full_name ? person.full_name.trim().split(/\s+/).pop() : '');
+    const cleanSurname = normalizeSurnameLetters(surnameRaw);
+    let ss = cleanSurname.slice(0, 2);
+    if (ss.length === 0) ss = 'XX';
+    else if (ss.length === 1) ss = ss + 'X';
+
+    // 2. First Name (FFF)
+    const firstRaw = person.firstName || person.first_name || (person.full_name ? person.full_name.trim().split(/\s+/)[0] : '');
+    const cleanFirst = normalizeSurnameLetters(firstRaw);
+    let fff = cleanFirst.slice(0, 3);
+    if (fff.length === 0) fff = 'XXX';
+    else if (fff.length === 1) fff = fff + 'XX';
+    else if (fff.length === 2) fff = fff + 'X';
+
+    // 3. MMYYYY from DOB
+    let mmyyyy = '000000';
+    if (person.dob) {
+      const dobStr = String(person.dob).trim();
+      const isoMatch = dobStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      const dmyMatch = dobStr.match(/^(\d{2})[-/](\d{2})[-/](\d{4})/);
+      const yearOnlyMatch = dobStr.match(/^(\d{4})$/);
+      if (isoMatch) {
+        mmyyyy = `${isoMatch[2]}${isoMatch[1]}`;
+      } else if (dmyMatch) {
+        mmyyyy = `${dmyMatch[2]}${dmyMatch[3]}`;
+      } else if (yearOnlyMatch) {
+        mmyyyy = `00${yearOnlyMatch[1]}`;
+      }
+    }
+
+    const prefix = `${ss}-${fff}-${mmyyyy}-`;
+    let seq = 1;
+    while (true) {
+      const seqStr = String(seq).padStart(3, '0');
+      const candidate = `${prefix}${seqStr}`;
+      if (!existingSet.has(candidate.toUpperCase())) {
+        existingSet.add(candidate.toUpperCase());
+        return candidate;
+      }
+      seq++;
+    }
+  }
+
+  // Fallback: Random FM-XXXXXXXX format
   while (true) {
     const code = generateRandomCode(8, ID_ALPHABET);
     const candidate = `FM-${code}`;

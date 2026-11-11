@@ -26,10 +26,23 @@ class InMemorySheetsProvider {
     targetSheet.rows.push(sanitized);
     return { ...sanitized, __rowIndex: targetSheet.rows.length + 1 };
   }
-  async updateRow(tab, rowIndex, obj) {
+  async updateRow(tab, arg2, arg3, arg4) {
     const s = this.sheets[tab];
     if (!s) return null;
-    const idx = rowIndex - 2;
+    let idx = -1;
+    let obj = {};
+
+    if (typeof arg2 === 'number') {
+      idx = arg2 - 2;
+      obj = arg3 || {};
+    } else if (typeof arg2 === 'string' && typeof arg3 !== 'object') {
+      const keyCol = arg2;
+      const keyVal = String(arg3);
+      idx = s.rows.findIndex(r => String(r[keyCol]) === keyVal);
+      obj = arg4 || {};
+    }
+
+    if (idx < 0 || idx >= s.rows.length) return null;
     const sanitized = {};
     for (const [k, v] of Object.entries(obj)) sanitized[k] = sanitizeFormula(v);
     s.rows[idx] = { ...s.rows[idx], ...sanitized };
@@ -66,7 +79,7 @@ class GoogleSheetsProvider {
     if (tab === TABS.PERSONS || tab === TABS.RELATIONSHIPS) {
       return process.env.GOOGLE_SHEET_ID_USER || this.spreadsheetId;
     }
-    if (tab === TABS.REQUESTS || tab === TABS.AUDIT_LOG || tab === TABS.META || tab === TABS.FAMILY_LINKS) {
+    if (tab === TABS.REQUESTS || tab === TABS.AUDIT_LOG || tab === TABS.META || tab === TABS.FAMILY_LINKS || tab === TABS.OTP) {
       return process.env.GOOGLE_SHEET_ID_ADMIN || this.spreadsheetId;
     }
     return this.spreadsheetId;
@@ -83,6 +96,7 @@ class GoogleSheetsProvider {
       [TABS.RELATIONSHIPS]: ['Relationships', 'FT_Relationships', 'Rels'],
       [TABS.REQUESTS]: ['Requests', 'FT_Requests', 'Tickets'],
       [TABS.FAMILY_LINKS]: ['FamilyLinks', 'Family_Links', 'FT_FamilyLinks', 'Links'],
+      [TABS.OTP]: ['Otp', 'FT_Otp', 'OTPs'],
       [TABS.AUDIT_LOG]: ['AuditLog', 'Audit_Log', 'FT_Admin', 'Audit'],
       [TABS.META]: ['Meta', 'FT_Admin_Meta', 'Config']
     };
@@ -234,7 +248,16 @@ class GoogleSheetsProvider {
     return { ...sanitized, __rowIndex: match ? parseInt(match[1], 10) : null };
   }
 
-  async updateRow(tab, rowIndex, obj) {
+  async updateRow(tab, arg2, arg3, arg4) {
+    let rowIndex = arg2;
+    let obj = arg3;
+    if (typeof arg2 === 'string' && typeof arg3 !== 'object') {
+      const rows = await this.getRows(tab);
+      const match = rows.find(r => String(r[arg2]) === String(arg3));
+      if (!match) return null;
+      rowIndex = match.__rowIndex;
+      obj = arg4 || {};
+    }
     const sheetId = this.getSpreadsheetId(tab);
     const resolvedTab = await this.resolveActualTabName(tab);
     const map = await this.getHeaderMap(tab);

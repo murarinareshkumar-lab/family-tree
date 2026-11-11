@@ -12,6 +12,7 @@ import { checkDuplicates, normalizeEmail, normalizePhone, normalizeName } from '
 import { validateRelationship, convertDropdownToRelationships } from '../../lib/relationships.js';
 import { logAuditEvent } from '../../lib/audit.js';
 import { sendJson, sendError, parseBody, parseQuery, requireAdmin } from '../../lib/api-helper.js';
+import { sendApprovalEmail, sendRejectionEmail } from '../../lib/email.js';
 
 export default async function handler(req, res) {
   const admin = requireAdmin(req, res);
@@ -134,6 +135,30 @@ export default async function handler(req, res) {
         return sendJson(res, 200, { success: true, request: updated });
       }
 
+      // ACTION 1.5: RECORD_PHONE_VERIFICATION (Fallback for elders/minors/deceased without email)
+      if (upperAction === 'RECORD_PHONE_VERIFICATION') {
+        const body = parseBody(req);
+        const now = new Date().toISOString();
+        const updateData = {
+          phone_verified: 'true',
+          phone_verified_by: body.phone_verified_by || admin.sub || 'admin',
+          phone_verified_at: now,
+          phone_verified_note: body.phone_verified_note || `Phone verification call completed by admin with ${body.phone_number || 'family contact'}`
+        };
+
+        const updated = await sheetsClient.updateRow(TABS.REQUESTS, reqRow.__rowIndex, updateData);
+        await logAuditEvent(sheetsClient, {
+          admin: admin.sub || 'admin',
+          action: 'RECORD_PHONE_VERIFICATION',
+          entity: 'Requests',
+          entity_id: ticket_id,
+          previous_value: reqRow.phone_verified || 'false',
+          updated_value: updateData,
+          ticket_id
+        });
+        return sendJson(res, 200, { success: true, request: updated });
+      }
+
       // ACTION 2: REJECT (Requires admin_remarks)
       if (upperAction === 'REJECT') {
         if (!admin_remarks?.trim()) {
@@ -158,6 +183,20 @@ export default async function handler(req, res) {
           },
           ticket_id
         });
+
+        if (reqRow.requester_email) {
+          try {
+            await sendRejectionEmail({
+              toEmail: reqRow.requester_email,
+              fullName: '',
+              ticketId: ticket_id,
+              remarks: admin_remarks.trim()
+            });
+          } catch (mErr) {
+            console.warn('[Admin] Rejection email note:', mErr.message);
+          }
+        }
+
         return sendJson(res, 200, { success: true, request: updated });
       }
 
@@ -235,8 +274,9 @@ export default async function handler(req, res) {
         // APPROVE: ONBOARD_SURNAME
         // -------------------------------------------------------
         if (reqRow.type === 'ONBOARD_SURNAME') {
-          if (String(reqRow.mail_verified).toLowerCase() !== 'true') {
-            return sendError(res, 400, 'Refused: Cannot approve request until "Mail verified" is confirmed.');
+          const isVerified = String(reqRow.mail_verified).toLowerCase() === 'true' || String(reqRow.phone_verified).toLowerCase() === 'true';
+          if (!isVerified) {
+            return sendError(res, 400, 'Refused: Cannot approve request until verification is confirmed (by Email OTP or recorded Admin phone call).');
           }
 
           const surname = payload.surname || payload.surname_name;
@@ -268,11 +308,19 @@ export default async function handler(req, res) {
             const allUsedFamilyIds = new Set(curSurnames.map(s => String(s.surname_ref_id || '').toUpperCase()));
             const allUsedMemberIds = new Set(curPersons.map(p => String(p.member_ref_id || '').toUpperCase()));
 
-            // Generate FT-XXXXXX and FM-XXXXXXXX
+            // Generate FT-XXXXXX and PRD v4.0 SS-FFF-MMYYYY-NNN Member Reference IDs
             const familyRefId = generateFamilyRefId(allUsedFamilyIds);
-            const hMemberRefId = generateMemberRefId(allUsedMemberIds);
+            const hMemberRefId = generateMemberRefId({
+              surname,
+              firstName: husband.first_name || (husband.full_name ? husband.full_name.split(/\s+/)[0] : ''),
+              dob: husband.dob
+            }, allUsedMemberIds);
             allUsedMemberIds.add(hMemberRefId.toUpperCase());
-            const wMemberRefId = generateMemberRefId(allUsedMemberIds);
+            const wMemberRefId = generateMemberRefId({
+              surname,
+              firstName: wife.first_name || (wife.full_name ? wife.full_name.split(/\s+/)[0] : ''),
+              dob: wife.dob
+            }, allUsedMemberIds);
 
             // Compute branch_no
             const branchNo = computeNextBranchNo(surname, curSurnames);
@@ -385,6 +433,19 @@ export default async function handler(req, res) {
               ticket_id
             });
 
+            if (reqRow.requester_email) {
+              try {
+                await sendApprovalEmail({
+                  toEmail: reqRow.requester_email,
+                  fullName: husband.full_name || '',
+                  ticketId: ticket_id,
+                  memberRefId: hMemberRefId
+                });
+              } catch (mErr) {
+                console.warn('[Admin] Approval email note:', mErr.message);
+              }
+            }
+
             return sendJson(res, 200, {
               success: true,
               surname_ref_id: familyRefId,
@@ -398,11 +459,12 @@ export default async function handler(req, res) {
         }
 
         // -------------------------------------------------------
-        // APPROVE: ADD_MEMBER
+        // APPROVE: ADD_MEMBER / JOIN_REQUEST
         // -------------------------------------------------------
-        if (reqRow.type === 'ADD_MEMBER') {
-          if (String(reqRow.mail_verified).toLowerCase() !== 'true') {
-            return sendError(res, 400, 'Refused: Cannot approve request until "Mail verified" is confirmed.');
+        if (reqRow.type === 'ADD_MEMBER' || reqRow.type === 'JOIN_REQUEST') {
+          const isVerified = String(reqRow.mail_verified).toLowerCase() === 'true' || String(reqRow.phone_verified).toLowerCase() === 'true';
+          if (!isVerified) {
+            return sendError(res, 400, 'Refused: Cannot approve request until verification is confirmed (by Email OTP or recorded Admin phone call).');
           }
 
           const { surname_ref_id, person, relative_person_id, relationship_type } = payload;
@@ -416,7 +478,11 @@ export default async function handler(req, res) {
             ]);
 
             const allUsedMemberIds = new Set(curPersons.map(p => String(p.member_ref_id || '').toUpperCase()));
-            const newMemberRefId = generateMemberRefId(allUsedMemberIds);
+            const newMemberRefId = generateMemberRefId({
+              surname: person.last_name || (person.full_name ? person.full_name.split(/\s+/).pop() : ''),
+              firstName: person.first_name || (person.full_name ? person.full_name.split(/\s+/)[0] : ''),
+              dob: person.dob
+            }, allUsedMemberIds);
             const newPersonId = randomUUID();
 
             // Resolve relative
@@ -496,6 +562,19 @@ export default async function handler(req, res) {
               },
               ticket_id
             });
+
+            if (reqRow.requester_email) {
+              try {
+                await sendApprovalEmail({
+                  toEmail: reqRow.requester_email,
+                  fullName: person.full_name || payload.submitter_name || '',
+                  ticketId: ticket_id,
+                  memberRefId: newMemberRefId
+                });
+              } catch (mErr) {
+                console.warn('[Admin] Approval email note:', mErr.message);
+              }
+            }
 
             return sendJson(res, 200, { success: true, member_ref_id: newMemberRefId, person_id: newPersonId });
           } finally {

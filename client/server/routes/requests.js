@@ -2,12 +2,14 @@ import express from 'express';
 import { randomUUID } from 'node:crypto';
 import { getSheetsClient } from '../../lib/sheets.js';
 import { TABS } from '../../lib/schema.js';
-import { checkDuplicates, normalizeEmail, normalizePhone, isMinor } from '../../lib/duplicates.js';
+import { checkDuplicates, checkA4FamilyMatch, normalizeEmail, normalizePhone, isMinor } from '../../lib/duplicates.js';
 import { normalizeSurnameLetters } from '../../lib/id-generator.js';
 import { validateRelationship, convertDropdownToRelationships } from '../../lib/relationships.js';
 import { logAuditEvent } from '../../lib/audit.js';
 import { composeFullName } from '../../lib/security.js';
 import { validateName, validateEmail, validatePhone, parseAndValidateDob } from '../../lib/validation.js';
+import { verifyVerificationToken } from '../../lib/otp.js';
+import { sendTicketReceivedEmail } from '../../lib/email.js';
 
 const router = express.Router();
 
@@ -208,6 +210,82 @@ router.post('/', async (req, res, next) => {
       const dupP = checkDuplicates(person, existingPersons, pendingRequests);
       if (dupP.blocked) return res.status(409).json({ error: dupP.reason });
       flags.push(...dupP.flags);
+
+      // A4 Warning: Check exact Name + DOB within selected family branch
+      const familyPersons = existingPersons.filter(p => p.surname_ref_id === payload.surname_ref_id);
+      const a4 = checkA4FamilyMatch(person, familyPersons);
+      if (a4.warning && !payload.proceed_anyway) {
+        return res.status(200).json({
+          warning: true,
+          code: 'A4_FAMILY_MATCH',
+          message: a4.message,
+          matched_member: a4.matched_member
+        });
+      }
+    }
+
+    // ---------------------------------------------------------
+    // 2.5. JOIN_REQUEST (PRD v4.0)
+    // ---------------------------------------------------------
+    else if (type === 'JOIN_REQUEST') {
+      const person = payload.person || payload;
+      const relPersonId = payload.relative_person_id;
+      const relType = payload.relationship || payload.relationship_type;
+
+      if (!relPersonId) {
+        return res.status(400).json({ error: 'Please select a relative from the family tree.' });
+      }
+      const relative = existingPersons.find(p => p.person_id === relPersonId || p.member_ref_id === relPersonId);
+      if (!relative) {
+        return res.status(404).json({ error: 'Selected relative not found in the portal.' });
+      }
+
+      const pFirstRes = validateName(person.first_name, true);
+      if (!pFirstRes.valid) fieldErrors['first_name'] = pFirstRes.error;
+      const pMidRes = validateName(person.middle_name, false);
+      if (!pMidRes.valid) fieldErrors['middle_name'] = pMidRes.error;
+      const pLastRes = validateName(person.last_name, true);
+      if (!pLastRes.valid) fieldErrors['last_name'] = pLastRes.error;
+
+      const pDobRes = parseAndValidateDob(person.dob);
+      if (!pDobRes.valid) fieldErrors['dob'] = pDobRes.error;
+
+      const pEmailRes = validateEmail(person.email, true);
+      if (!pEmailRes.valid) fieldErrors['email'] = pEmailRes.error;
+
+      const pPhoneRes = validatePhone(person.phone, true);
+      if (!pPhoneRes.valid) fieldErrors['phone'] = pPhoneRes.error;
+
+      if (Object.keys(fieldErrors).length > 0) {
+        return res.status(400).json({ error: 'Validation failed for submitted fields', fieldErrors });
+      }
+
+      person.first_name = pFirstRes.value;
+      person.middle_name = pMidRes.value;
+      person.last_name = pLastRes.value;
+      person.full_name = composeFullName(pFirstRes.value, pMidRes.value, pLastRes.value);
+      person.dob = pDobRes.value;
+      person.email = pEmailRes.value;
+      person.phone = pPhoneRes.value;
+
+      const dupJ = checkDuplicates(person, existingPersons, pendingRequests);
+      if (dupJ.blocked) return res.status(409).json({ error: dupJ.reason });
+      flags.push(...dupJ.flags);
+
+      // A4 Warning in relative's family
+      const famPersons = existingPersons.filter(p => p.surname_ref_id === relative.surname_ref_id);
+      const a4J = checkA4FamilyMatch(person, famPersons);
+      if (a4J.warning && !payload.proceed_anyway) {
+        return res.status(200).json({
+          warning: true,
+          code: 'A4_FAMILY_MATCH',
+          message: a4J.message,
+          matched_member: a4J.matched_member
+        });
+      }
+
+      payload.surname_ref_id = relative.surname_ref_id;
+      payload.relative_name = relative.full_name || relative.display_name;
     }
 
     // ---------------------------------------------------------
@@ -297,6 +375,7 @@ router.post('/', async (req, res, next) => {
     // Format Ticket ID
     const ticketPrefix =
       type === 'ONBOARD_SURNAME' ? 'TKT-SRN' :
+      type === 'JOIN_REQUEST' ? 'TKT-JON' :
       type === 'ADD_MEMBER' ? 'TKT-MEM' :
       type === 'MERGE_FAMILIES' ? 'TKT-MRG' :
       type === 'DELINK_FAMILIES' ? 'TKT-DLK' : 'TKT-LNK';
@@ -306,8 +385,21 @@ router.post('/', async (req, res, next) => {
 
     if (flags.length > 0) payload.duplicate_flags = flags;
 
-    const finalRequesterEmail = requester_email || payload.requester_email || payload.party_a_email || '';
+    const finalRequesterEmail = requester_email || payload.requester_email || payload.party_a_email || payload.person?.email || '';
     const secondPartyEmail = payload.party_b_email || payload.second_party_email || '';
+
+    // Check if OTP was verified for requester or parties
+    let isMailVerified = false;
+    let mailVerifiedNote = '';
+
+    const reqToken = payload.otp_token || payload.requester_otp_token || req.body.otp_token;
+    if (reqToken && finalRequesterEmail) {
+      const chk = verifyVerificationToken(reqToken, type, finalRequesterEmail);
+      if (chk.valid) {
+        isMailVerified = true;
+        mailVerifiedNote = 'Verified by OTP at submission';
+      }
+    }
 
     await sheetsClient.appendRow(TABS.REQUESTS, {
       ticket_id: ticketId,
@@ -315,13 +407,27 @@ router.post('/', async (req, res, next) => {
       payload_json: JSON.stringify(payload),
       requester_email: finalRequesterEmail,
       status: 'Pending',
-      mail_verified: 'false',
-      mail_verified_note: '',
+      mail_verified: isMailVerified ? 'true' : 'false',
+      mail_verified_note: mailVerifiedNote,
       second_party_email: secondPartyEmail,
       second_party_mail_verified: 'false',
       second_party_mail_note: '',
       created_at: now
     });
+
+    // Send confirmation email
+    if (finalRequesterEmail) {
+      try {
+        await sendTicketReceivedEmail({
+          toEmail: finalRequesterEmail,
+          fullName: payload.submitter_name || payload.person?.full_name || payload.husband?.full_name || '',
+          ticketId,
+          requestType: type
+        });
+      } catch (mailErr) {
+        console.warn('[Requests] Ticket confirmation email note:', mailErr.message);
+      }
+    }
 
     await logAuditEvent(sheetsClient, {
       admin: 'SYSTEM_PUBLIC_REQUEST',
