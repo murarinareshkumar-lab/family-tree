@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GitBranch, PlusCircle, UserPlus, FileText, CheckCircle, Shield, Menu, X } from 'lucide-react';
+import { GitBranch, PlusCircle, UserPlus, UserCheck, FileText, CheckCircle, Shield, Menu, X } from 'lucide-react';
 
 export default function Navbar({ activePage, setActivePage, isAdminLoggedIn, onLogout }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -8,6 +8,7 @@ export default function Navbar({ activePage, setActivePage, isAdminLoggedIn, onL
     { id: 'tree', label: 'Explore Trees', icon: GitBranch },
     { id: 'onboard', label: 'Onboard Surname', icon: PlusCircle },
     { id: 'add-member', label: 'Add Member', icon: UserPlus },
+    { id: 'join', label: 'Join Tree', icon: UserCheck },
     { id: 'request', label: 'Submit Request', icon: FileText },
     { id: 'ticket-status', label: 'Track Ticket', icon: CheckCircle },
   ];

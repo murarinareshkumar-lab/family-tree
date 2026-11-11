@@ -56,6 +56,45 @@ test('Member Reference ID - Collision avoidance against existing member IDs', ()
   assert.notStrictEqual(generated, 'FM-BBBBBBBB');
 });
 
+test('Member Reference ID - PRD v4.0 SS-FFF-MMYYYY-NNN format and sequence increment', () => {
+  const person1 = {
+    surname: 'Murari',
+    firstName: 'Naresh',
+    dob: '1995-07-15'
+  };
+  const existing = new Set();
+  const id1 = generateMemberRefId(person1, existing);
+  assert.strictEqual(id1, 'MU-NAR-071995-001');
+
+  // Next person with identical prefix increments to 002
+  const id2 = generateMemberRefId(person1, existing);
+  assert.strictEqual(id2, 'MU-NAR-071995-002');
+
+  // Short surname padded with X, short first name padded with X
+  const person2 = {
+    surname: 'O',
+    firstName: 'Al',
+    dob: '2000-01-01'
+  };
+  const id3 = generateMemberRefId(person2, existing);
+  assert.strictEqual(id3, 'OX-ALX-012000-001');
+
+  // Unknown DOB defaults to 000000, year-only defaults to 00YYYY
+  const person3 = {
+    full_name: 'Suresh Patil',
+    dob: ''
+  };
+  const id4 = generateMemberRefId(person3, existing);
+  assert.strictEqual(id4, 'PA-SUR-000000-001');
+
+  const personYearOnly = {
+    full_name: 'Ramesh Patil',
+    dob: '1960'
+  };
+  const id5 = generateMemberRefId(personYearOnly, existing);
+  assert.strictEqual(id5, 'PA-RAM-001960-001');
+});
+
 test('Branch Number Calculation - Increments for same surname_norm among Approved/Merged', () => {
   const allSurnames = [
     { surname_ref_id: 'FT-AAAAAA', surname_name: 'Murari', surname_norm: 'MURARI', branch_no: '1', status: 'Approved' },

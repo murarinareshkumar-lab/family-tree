@@ -4,6 +4,7 @@ import surnamesRouter from './routes/surnames.js';
 import familiesRouter from './routes/families.js';
 import treeRouter from './routes/tree.js';
 import requestsRouter from './routes/requests.js';
+import otpRouter from './routes/otp.js';
 import adminRouter from './routes/admin.js';
 
 const app = express();
@@ -19,6 +20,7 @@ apiRouter.use('/surnames', surnamesRouter);
 apiRouter.use('/families', familiesRouter);
 apiRouter.use('/tree', treeRouter);
 apiRouter.use('/requests', requestsRouter);
+apiRouter.use('/otp', otpRouter);
 apiRouter.use('/admin', adminRouter);
 
 // Mount under both /api and / so it works seamlessly whether Vercel strips /api or preserves it

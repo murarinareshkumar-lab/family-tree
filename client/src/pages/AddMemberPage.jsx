@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../utils/api';
 import CaptchaWidget from '../components/CaptchaWidget';
+import EmailOtpVerification from '../components/EmailOtpVerification';
+import A4WarningModal from '../components/A4WarningModal';
 import {
   validateName,
   validateEmail,
@@ -38,6 +40,9 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
   const [submitterName, setSubmitterName] = useState('');
   const [submitterEmail, setSubmitterEmail] = useState('');
   const [submitterPhone, setSubmitterPhone] = useState('');
+  const [submitterOtpToken, setSubmitterOtpToken] = useState('');
+  const [memberOtpToken, setMemberOtpToken] = useState('');
+  const [a4Warning, setA4Warning] = useState({ isOpen: false, message: '', matchedMember: '' });
 
   // Touched state for displaying inline errors
   const [touched, setTouched] = useState({});
@@ -154,8 +159,8 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
     subEmailVal.valid &&
     subPhoneVal.valid;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e, proceedAnyway = false) => {
+    if (e && e.preventDefault) e.preventDefault();
     if (!isFormValid) {
       setError('Please correct the validation errors in the form.');
       return;
@@ -188,6 +193,9 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
         submitter_name: subNameVal.value,
         submitter_email: subEmailVal.value,
         submitter_phone: subPhoneVal.value,
+        requester_otp_token: submitterOtpToken || '',
+        member_otp_token: memberOtpToken || '',
+        proceed_anyway: proceedAnyway,
         person: {
           first_name: firstVal.value,
           middle_name: midVal.value,
@@ -199,7 +207,8 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
           email: emailVal.valid ? emailVal.value : '',
           phone: phoneVal.valid ? phoneVal.value : '',
           father_person_id: fatherPersonId || null,
-          mother_person_id: motherPersonId || null
+          mother_person_id: motherPersonId || null,
+          otp_token: memberOtpToken || ''
         },
         gender,
         dob: dobVal.value,
@@ -220,6 +229,17 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
         method: 'POST',
         body: JSON.stringify(payload)
       });
+
+      if (res.warning && res.code === 'A4_FAMILY_MATCH') {
+        setA4Warning({
+          isOpen: true,
+          message: res.message,
+          matchedMember: res.matched_member
+        });
+        return;
+      }
+
+      setA4Warning({ isOpen: false, message: '', matchedMember: '' });
       setTicketResult(res);
     } catch (err) {
       setError(err.message || 'Submission failed. Please check your inputs.');
@@ -520,6 +540,17 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                     <p className="text-[11px] text-rose-600 mt-1">{phoneVal.error}</p>
                   )}
                 </div>
+
+                {emailVal.valid && (
+                  <div className="col-span-1 sm:col-span-2 pt-2">
+                    <EmailOtpVerification
+                      email={email}
+                      purpose="ADD_MEMBER"
+                      label="Verify Member Email"
+                      onVerified={(token) => setMemberOtpToken(token)}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           ) : (
@@ -541,7 +572,7 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                     <option value="">-- Select Father --</option>
                     {familyMembers.map(m => (
                       <option key={m.person_id} value={m.person_id}>
-                        {m.name || m.full_name} ({m.member_ref_id})
+                        {m.name || m.full_name || m.display_name}
                       </option>
                     ))}
                   </select>
@@ -556,7 +587,7 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                     <option value="">-- Select Mother --</option>
                     {familyMembers.map(m => (
                       <option key={m.person_id} value={m.person_id}>
-                        {m.name || m.full_name} ({m.member_ref_id})
+                        {m.name || m.full_name || m.display_name}
                       </option>
                     ))}
                   </select>
@@ -626,6 +657,17 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                   <p className="text-[11px] text-rose-600 mt-1">{subPhoneVal.error}</p>
                 )}
               </div>
+
+              {subEmailVal.valid && (
+                <div className="col-span-1 sm:col-span-3 pt-2">
+                  <EmailOtpVerification
+                    email={submitterEmail}
+                    purpose="ADD_MEMBER"
+                    label="Verify Submitter Email"
+                    onVerified={(token) => setSubmitterOtpToken(token)}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -647,6 +689,17 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
             )}
           </button>
         </form>
+
+        <A4WarningModal
+          isOpen={a4Warning.isOpen}
+          message={a4Warning.message}
+          matchedMember={a4Warning.matchedMember}
+          onGoBack={() => setA4Warning({ isOpen: false, message: '', matchedMember: '' })}
+          onProceedAnyway={() => {
+            setA4Warning({ isOpen: false, message: '', matchedMember: '' });
+            handleSubmit(null, true);
+          }}
+        />
       </div>
     </div>
   );

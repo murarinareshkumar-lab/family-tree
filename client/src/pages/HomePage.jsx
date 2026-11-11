@@ -93,6 +93,12 @@ export default function HomePage({ onNavigate, initialParams = {} }) {
             >
               Add Member to Family
             </button>
+            <button
+              onClick={() => onNavigate('join')}
+              className="px-4 py-2.5 bg-blue-600/80 hover:bg-blue-600 text-white font-semibold text-xs sm:text-sm rounded-xl border border-blue-400/30 transition-all"
+            >
+              Join Family Tree
+            </button>
           </div>
         </div>
 

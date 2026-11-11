@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
 import OnboardSurnamePage from './pages/OnboardSurnamePage';
 import AddMemberPage from './pages/AddMemberPage';
+import JoinRequestPage from './pages/JoinRequestPage';
 import RequestTicketPage from './pages/RequestTicketPage';
 import TicketStatusPage from './pages/TicketStatusPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
@@ -93,6 +94,7 @@ export default function App() {
         {activePage === 'tree' && <HomePage onNavigate={handlePageChange} initialParams={pageParams} />}
         {activePage === 'onboard' && <OnboardSurnamePage onNavigate={handlePageChange} initialParams={pageParams} />}
         {activePage === 'add-member' && <AddMemberPage onNavigate={handlePageChange} initialParams={pageParams} />}
+        {activePage === 'join' && <JoinRequestPage onNavigate={handlePageChange} initialParams={pageParams} />}
         {activePage === 'request' && <RequestTicketPage onNavigate={handlePageChange} initialParams={pageParams} />}
         {activePage === 'ticket-status' && <TicketStatusPage />}
         {activePage === 'admin-dashboard' && (

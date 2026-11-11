@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { apiRequest } from '../utils/api';
 import CaptchaWidget from '../components/CaptchaWidget';
 import Modal from '../components/Modal';
+import EmailOtpVerification from '../components/EmailOtpVerification';
+import A4WarningModal from '../components/A4WarningModal';
 import {
   validateName,
   validateEmail,
@@ -79,6 +81,10 @@ export default function OnboardSurnamePage({ onNavigate }) {
   const [wifeEmail, setWifeEmail] = useState('');
   const [wifePhone, setWifePhone] = useState('');
   const [wifeDob, setWifeDob] = useState(''); // Raw input DD/MM/YYYY
+
+  const [husbandOtpToken, setHusbandOtpToken] = useState('');
+  const [wifeOtpToken, setWifeOtpToken] = useState('');
+  const [a4Warning, setA4Warning] = useState({ isOpen: false, message: '', matchedMember: '' });
 
   // Touched state for displaying inline errors once user interacts
   const [touched, setTouched] = useState({});
@@ -368,8 +374,8 @@ export default function OnboardSurnamePage({ onNavigate }) {
     captchaVerified &&
     !loading;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e, proceedAnyway = false) => {
+    if (e && e.preventDefault) e.preventDefault();
     if (!isSearchValid) {
       setServerError('Search is required before submitting. Please search for the current surname first.');
       return;
@@ -410,6 +416,9 @@ export default function OnboardSurnamePage({ onNavigate }) {
         surname_searched: lastSearchedSurname,
         surname_ref_ids_shown: searchResults.map(f => f.surname_ref_id),
         different_family_confirmed: Boolean(confirmedDifferentFamily),
+        husband_otp_token: husbandOtpToken || '',
+        wife_otp_token: wifeOtpToken || '',
+        proceed_anyway: proceedAnyway,
         husband: {
           first_name: hFirstVal.value,
           middle_name: hMidVal.value,
@@ -420,7 +429,8 @@ export default function OnboardSurnamePage({ onNavigate }) {
           dob: hDobVal.value, // YYYY-MM-DD
           gender: 'Male',
           founding_role: 'HUSBAND',
-          relationship: 'SPOUSE'
+          relationship: 'SPOUSE',
+          otp_token: husbandOtpToken || ''
         },
         wife: {
           first_name: wFirstVal.value,
@@ -432,7 +442,8 @@ export default function OnboardSurnamePage({ onNavigate }) {
           dob: wDobVal.value, // YYYY-MM-DD
           gender: 'Female',
           founding_role: 'WIFE',
-          relationship: 'SPOUSE'
+          relationship: 'SPOUSE',
+          otp_token: wifeOtpToken || ''
         }
       }
     };
@@ -442,6 +453,17 @@ export default function OnboardSurnamePage({ onNavigate }) {
         method: 'POST',
         body: JSON.stringify(payload)
       });
+
+      if (res.warning && res.code === 'A4_FAMILY_MATCH') {
+        setA4Warning({
+          isOpen: true,
+          message: res.message,
+          matchedMember: res.matched_member
+        });
+        return;
+      }
+
+      setA4Warning({ isOpen: false, message: '', matchedMember: '' });
       setTicketResult(res);
     } catch (err) {
       setServerError(err.message || 'Submission failed. Please check your inputs.');
@@ -818,6 +840,17 @@ export default function OnboardSurnamePage({ onNavigate }) {
                       <p className="text-[11px] text-rose-600 mt-1">{hPhoneVal.error}</p>
                     )}
                   </div>
+
+                  {hEmailVal.valid && (
+                    <div className="col-span-1 sm:col-span-3 pt-2">
+                      <EmailOtpVerification
+                        email={husbandEmail}
+                        purpose="ONBOARD_SURNAME"
+                        label="Verify Founding Husband Email"
+                        onVerified={(token) => setHusbandOtpToken(token)}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -947,6 +980,17 @@ export default function OnboardSurnamePage({ onNavigate }) {
                       <p className="text-[11px] text-rose-600 mt-1">{wPhoneVal.error}</p>
                     )}
                   </div>
+
+                  {wEmailVal.valid && (
+                    <div className="col-span-1 sm:col-span-3 pt-2">
+                      <EmailOtpVerification
+                        email={wifeEmail}
+                        purpose="ONBOARD_SURNAME"
+                        label="Verify Founding Wife Email"
+                        onVerified={(token) => setWifeOtpToken(token)}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1271,6 +1315,17 @@ export default function OnboardSurnamePage({ onNavigate }) {
           </form>
         )}
       </Modal>
+
+      <A4WarningModal
+        isOpen={a4Warning.isOpen}
+        message={a4Warning.message}
+        matchedMember={a4Warning.matchedMember}
+        onGoBack={() => setA4Warning({ isOpen: false, message: '', matchedMember: '' })}
+        onProceedAnyway={() => {
+          setA4Warning({ isOpen: false, message: '', matchedMember: '' });
+          handleSubmit(null, true);
+        }}
+      />
     </div>
   );
 }
