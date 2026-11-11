@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { apiRequest } from '../utils/api';
 import CaptchaWidget from '../components/CaptchaWidget';
+import EmailOtpVerification from '../components/EmailOtpVerification';
 import { FileText, Mail, CheckCircle2, AlertCircle, ArrowRight, GitMerge, UserCheck, Edit3 } from 'lucide-react';
 
 export default function RequestTicketPage({ onNavigate, initialParams = {} }) {
   const [requestType, setRequestType] = useState(initialParams?.type || 'EDIT_MEMBER'); // EDIT_MEMBER, LINK_MEMBERS, MERGE_MEMBERS, EMAIL_CHANGE
   const [requesterEmail, setRequesterEmail] = useState('');
   const [memberRefId, setMemberRefId] = useState('');
+  const [requesterOtpToken, setRequesterOtpToken] = useState('');
   
   // Specific payloads
   const [secondaryEmail, setSecondaryEmail] = useState('');
@@ -52,12 +54,18 @@ export default function RequestTicketPage({ onNavigate, initialParams = {} }) {
       return;
     }
 
+    if (!requesterOtpToken) {
+      setError('Please verify your registered email address with the verification code first.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     const payload = {
       type: requestType,
       requester_email: requesterEmail.trim(),
+      otp_token: requesterOtpToken,
       captcha_token: 'valid',
       payload: {
         member_ref_id: memberRefId.trim(),
@@ -220,8 +228,19 @@ export default function RequestTicketPage({ onNavigate, initialParams = {} }) {
               className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
             />
             <p className="text-[11px] text-slate-400 mt-1">
-              You must be able to send a verification email from this exact address.
+              You must be able to verify this registered email address with an OTP code.
             </p>
+            {requesterEmail && requesterEmail.includes('@') && memberRefId && (
+              <div className="pt-2">
+                <EmailOtpVerification
+                  email={requesterEmail}
+                  purpose="EXISTING_MEMBER_EMAIL_VERIFICATION"
+                  member_ref_id={memberRefId}
+                  label="Verify Registered Member Email"
+                  onVerified={(token) => setRequesterOtpToken(token)}
+                />
+              </div>
+            )}
           </div>
 
           {/* Conditional Fields */}

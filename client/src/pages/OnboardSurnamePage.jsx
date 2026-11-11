@@ -845,7 +845,7 @@ export default function OnboardSurnamePage({ onNavigate }) {
                     <div className="col-span-1 sm:col-span-3 pt-2">
                       <EmailOtpVerification
                         email={husbandEmail}
-                        purpose="ONBOARD_SURNAME"
+                        purpose="NEW_PERSON_EMAIL_VERIFICATION"
                         label="Verify Founding Husband Email"
                         onVerified={(token) => setHusbandOtpToken(token)}
                       />
@@ -985,7 +985,7 @@ export default function OnboardSurnamePage({ onNavigate }) {
                     <div className="col-span-1 sm:col-span-3 pt-2">
                       <EmailOtpVerification
                         email={wifeEmail}
-                        purpose="ONBOARD_SURNAME"
+                        purpose="NEW_PERSON_EMAIL_VERIFICATION"
                         label="Verify Founding Wife Email"
                         onVerified={(token) => setWifeOtpToken(token)}
                       />

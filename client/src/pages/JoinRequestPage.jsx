@@ -391,7 +391,7 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
               <div className="pt-2">
                 <EmailOtpVerification
                   email={email}
-                  purpose="JOIN_REQUEST"
+                  purpose="NEW_PERSON_EMAIL_VERIFICATION"
                   label="Verify Your Email Address"
                   onVerified={(token) => setOtpToken(token)}
                 />

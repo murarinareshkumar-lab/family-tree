@@ -545,7 +545,7 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                   <div className="col-span-1 sm:col-span-2 pt-2">
                     <EmailOtpVerification
                       email={email}
-                      purpose="ADD_MEMBER"
+                      purpose="NEW_PERSON_EMAIL_VERIFICATION"
                       label="Verify Member Email"
                       onVerified={(token) => setMemberOtpToken(token)}
                     />
