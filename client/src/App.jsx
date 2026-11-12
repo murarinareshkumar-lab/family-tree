@@ -7,6 +7,7 @@ import JoinRequestPage from './pages/JoinRequestPage';
 import RequestTicketPage from './pages/RequestTicketPage';
 import TicketStatusPage from './pages/TicketStatusPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminLoginPage from './pages/admin/AdminLoginPage';
 import { apiRequest } from './utils/api';
 import { GitBranch } from 'lucide-react';
 
@@ -33,14 +34,14 @@ export default function App() {
     } else {
       checkAdminSession(false);
       const targetPage = pageParam || hash || path;
-      if (['onboard', 'add-member', 'request', 'ticket-status', 'tree'].includes(targetPage)) {
+      if (['onboard', 'add-member', 'join', 'request', 'ticket-status', 'tree', 'admin', 'admin-dashboard'].includes(targetPage)) {
         setActivePage(targetPage);
       }
     }
 
     const handleHashChange = () => {
       const newHash = window.location.hash.replace('#', '');
-      if (['onboard', 'add-member', 'request', 'ticket-status', 'tree'].includes(newHash)) {
+      if (['onboard', 'add-member', 'join', 'request', 'ticket-status', 'tree', 'admin', 'admin-dashboard'].includes(newHash)) {
         setActivePage(newHash);
       }
     };
@@ -59,17 +60,23 @@ export default function App() {
       const res = await apiRequest('/admin/me');
       if (res.authenticated) {
         setIsAdminLoggedIn(true);
-        setAdminUser(res.admin);
+        setAdminUser(res.admin || { email: res.email });
         if (autoSwitchToAdmin) {
           setActivePage('admin-dashboard');
         }
       } else {
         setIsAdminLoggedIn(false);
         setAdminUser(null);
+        if (autoSwitchToAdmin) {
+          setActivePage('admin');
+        }
       }
     } catch (_) {
       setIsAdminLoggedIn(false);
       setAdminUser(null);
+      if (autoSwitchToAdmin) {
+        setActivePage('admin');
+      }
     }
   };
 
@@ -97,11 +104,15 @@ export default function App() {
         {activePage === 'join' && <JoinRequestPage onNavigate={handlePageChange} initialParams={pageParams} />}
         {activePage === 'request' && <RequestTicketPage onNavigate={handlePageChange} initialParams={pageParams} />}
         {activePage === 'ticket-status' && <TicketStatusPage />}
-        {activePage === 'admin-dashboard' && (
+        {(activePage === 'admin-dashboard' || activePage === 'admin') && (
           isAdminLoggedIn ? (
             <AdminDashboardPage onLogout={handleLogout} />
           ) : (
-            <HomePage onNavigate={handlePageChange} />
+            <AdminLoginPage onLoginSuccess={(admin) => {
+              setIsAdminLoggedIn(true);
+              setAdminUser(admin);
+              setActivePage('admin-dashboard');
+            }} />
           )
         )}
       </main>
@@ -120,6 +131,7 @@ export default function App() {
             <button onClick={() => handlePageChange('tree')} className="hover:text-emerald-700">Lineages</button>
             <button onClick={() => handlePageChange('onboard')} className="hover:text-emerald-700">Onboard Surname</button>
             <button onClick={() => handlePageChange('ticket-status')} className="hover:text-emerald-700">Track Ticket</button>
+            <button onClick={() => handlePageChange('admin')} className="hover:text-emerald-700 font-medium">Admin Portal</button>
           </div>
 
           <div className="flex items-center space-x-1 text-slate-400">
