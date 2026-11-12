@@ -14,7 +14,7 @@ export const HEADERS = {
   [TABS.PERSONS]: [
     'person_id', 'member_ref_id', 'surname_ref_id', 'first_name', 'middle_name', 'last_name',
     'full_name', 'former_name', 'name_norm', 'gender', 'founding_role', 'dob', 'dob_precision',
-    'is_deceased', 'date_of_death', 'marital_status', 'surname_before_marriage', 'surname_after_marriage',
+    'is_deceased', 'date_of_death', 'marital_status', 'surname_before_marriage', 'prior_marriage_surname', 'surname_after_marriage',
     'occupation', 'location', 'email', 'email_norm', 'phone', 'phone_norm',
     'father_person_id', 'mother_person_id', 'status', 'merged_into_person_id',
     'verified_by_admin', 'photo_url', 'created_at'
@@ -46,7 +46,8 @@ export const PLAIN_TEXT_COLUMNS = new Set([
   'dob_precision', 'marital_status', 'start_date', 'spouse_status', 'verified_by',
   'ticket_id', 'rel_id', 'link_id', 'family_a_ref_id', 'family_b_ref_id', 'person_a_id', 'person_b_id',
   'merged_into_surname_ref_id', 'merged_into_person_id', 'log_id', 'father_person_id', 'mother_person_id',
-  'founding_role', 'former_name', 'branch_no', 'otp_id', 'code_hash', 'request_ref', 'email_norm'
+  'founding_role', 'former_name', 'branch_no', 'otp_id', 'code_hash', 'request_ref', 'email_norm',
+  'surname_before_marriage', 'prior_marriage_surname'
 ]);
 
 export function createHeaderMap(headerRow = []) {

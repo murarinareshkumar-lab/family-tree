@@ -169,6 +169,8 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
       .filter(Boolean)
       .join(' ');
 
+    const maidenSurname = isFemaleAndMarried ? beforeMarriageSurname.trim() : '';
+
     const payload = {
       type: 'JOIN_REQUEST',
       requester_email: isDeceased ? '' : (emailVal.valid ? emailVal.value : ''),
@@ -188,13 +190,16 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
           full_name: composedFullName,
           gender,
           marital_status: isFemaleAndMarried ? 'Married' : maritalStatus,
-          surname_before_marriage: isFemaleAndMarried ? beforeMarriageSurname.trim() : '',
+          surname_before_marriage: maidenSurname,
+          prior_marriage_surname: maidenSurname,
           dob: dobVal.value,
           is_deceased: Boolean(isDeceased),
           email: isDeceased ? '' : (emailVal.valid ? emailVal.value : ''),
           phone: isDeceased ? '' : (phoneVal.valid ? phoneVal.value : ''),
           otp_token: isDeceased ? '' : otpToken
-        }
+        },
+        surname_before_marriage: maidenSurname,
+        prior_marriage_surname: maidenSurname
       }
     };
 
@@ -405,187 +410,7 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
             </div>
           </div>
 
-          {/* Step 3: Visitor Personal Details */}
-          <div className="space-y-4">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
-              Your Personal Details
-            </span>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">First Name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Ramesh"
-                  value={firstName}
-                  onBlur={() => markTouched('first')}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Middle Name</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Kumar"
-                  value={middleName}
-                  onChange={(e) => setMiddleName(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Last Name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Patil"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Gender *</label>
-                <select
-                  value={gender}
-                  onChange={(e) => setGender(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500"
-                >
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Date of Birth (DD/MM/YYYY) *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="DD/MM/YYYY"
-                  maxLength={10}
-                  value={dob}
-                  onChange={(e) => setDob(formatDobMask(e.target.value))}
-                  className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:border-blue-500"
-                />
-              </div>
-            </div>
-
-            {gender === 'Female' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                {relationshipType !== 'SPOUSE_OF' && (
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Marital Status *</label>
-                    <select
-                      value={maritalStatus}
-                      onChange={(e) => setMaritalStatus(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500"
-                    >
-                      <option value="Single">Single</option>
-                      <option value="Married">Married</option>
-                      <option value="Widowed">Widowed</option>
-                      <option value="Divorced">Divorced</option>
-                    </select>
-                  </div>
-                )}
-
-                {(relationshipType === 'SPOUSE_OF' || maritalStatus === 'Married') && (
-                  <div className={relationshipType === 'SPOUSE_OF' ? 'col-span-1 sm:col-span-2' : ''}>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">
-                      Before Marriage Surname (Maiden Name)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Kulkarni, Patil"
-                      value={beforeMarriageSurname}
-                      onChange={(e) => setBeforeMarriageSurname(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500"
-                    />
-                    <p className="text-[10px] text-slate-400 mt-0.5">
-                      Maiden surname before marriage for maternal lineage preservation.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="flex items-center space-x-2 pt-1 pb-1">
-              <input
-                type="checkbox"
-                id="isDeceased"
-                checked={isDeceased}
-                onChange={(e) => setIsDeceased(e.target.checked)}
-                className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
-              />
-              <label htmlFor="isDeceased" className="text-xs font-medium text-slate-700 cursor-pointer">
-                This family member is deceased (no phone/email required; linked by parent identity)
-              </label>
-            </div>
-
-            {!isDeceased && (
-              <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Email Address *</label>
-                    <input
-                      type="email"
-                      required
-                      placeholder="your.email@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Phone Number *</label>
-                    <input
-                      type="tel"
-                      required
-                      placeholder="9876543210 (10 digits starting with 9, 8, 7, 6)"
-                      maxLength={14}
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:border-blue-500"
-                    />
-                    {!phoneVal.valid && phone ? (
-                      <p className="text-[11px] text-rose-600 mt-1">{phoneVal.error}</p>
-                    ) : (
-                      <p className="text-[10px] text-slate-400 mt-0.5">10 digits starting with 9, 8, 7, or 6</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Email OTP Verification */}
-                <div className="pt-2">
-                  <EmailOtpVerification
-                    email={email}
-                    purpose="NEW_PERSON_EMAIL_VERIFICATION"
-                    label="Verify Your Email Address"
-                    disabled={!emailVal.valid || !phoneVal.valid}
-                    disabledReason={
-                      !emailVal.valid && !phoneVal.valid
-                        ? 'Enter a valid email address and a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
-                        : !phoneVal.valid
-                        ? 'Enter a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
-                        : !emailVal.valid
-                        ? 'Enter a valid email address to enable email verification.'
-                        : ''
-                    }
-                    onVerified={(token) => setOtpToken(token)}
-                  />
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Relative Verification Gate (Post Member Details) */}
+          {/* POST THIS: Verify Relative Email to Link Directly */}
           <div className="border border-slate-200 bg-slate-50/70 rounded-2xl p-5 space-y-3">
             <div className="flex items-center space-x-2">
               <ShieldCheck className="w-4 h-4 text-blue-600" />
@@ -594,7 +419,7 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
               </span>
             </div>
             <p className="text-xs text-slate-600 leading-relaxed">
-              To link directly without waiting for admin approval, enter the registered & verified email address of <strong>{selectedMember?.full_name || 'the selected family member'}</strong>.
+              To link directly without waiting for admin approval, enter the registered &amp; verified email address of <strong>{selectedMember?.full_name || 'the selected family member'}</strong>.
             </p>
 
             <div className="flex gap-2 pt-1">
@@ -647,6 +472,211 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
             {selectedMember && !selectedMember.has_registered_email && (
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs">
                 Note: {selectedMember.full_name} does not have an active email on file (deceased or elder record). You can submit this as an exception request for administrator review.
+              </div>
+            )}
+          </div>
+
+          {/* THEN: User Entry Details */}
+          <div className="border border-slate-200 rounded-2xl p-5 bg-white space-y-4">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-800">
+              Your Personal Details
+            </span>
+
+            {/* Step 1: Name, Contact & Deceased status */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">First Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Ramesh"
+                  value={firstName}
+                  onBlur={() => markTouched('first')}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Middle Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Kumar"
+                  value={middleName}
+                  onChange={(e) => setMiddleName(e.target.value)}
+                  className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Last Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Patil"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2 pt-1 pb-1">
+              <input
+                type="checkbox"
+                id="isDeceased"
+                checked={isDeceased}
+                onChange={(e) => setIsDeceased(e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+              />
+              <label htmlFor="isDeceased" className="text-xs font-medium text-slate-700 cursor-pointer">
+                This family member is deceased (no phone/email required; linked by parent identity)
+              </label>
+            </div>
+
+            {!isDeceased && (
+              <div className="border border-blue-100 bg-blue-50/40 rounded-2xl p-4 space-y-3">
+                <span className="text-xs font-bold uppercase tracking-wider text-blue-800">
+                  Contact Identity &amp; Email Verification
+                </span>
+                <p className="text-xs text-slate-500">
+                  Enter your mobile number and email. Email OTP verification is mandatory to unlock remaining details.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Phone Number *</label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="9876543210 (10 digits starting with 9, 8, 7, 6)"
+                      maxLength={14}
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:border-blue-500"
+                    />
+                    {!phoneVal.valid && phone ? (
+                      <p className="text-[11px] text-rose-600 mt-1">{phoneVal.error}</p>
+                    ) : (
+                      <p className="text-[10px] text-slate-400 mt-0.5">10 digits starting with 9, 8, 7, or 6</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Email Address *</label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="your.email@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div className="col-span-1 sm:col-span-2 pt-2">
+                    <EmailOtpVerification
+                      email={email}
+                      purpose="NEW_PERSON_EMAIL_VERIFICATION"
+                      label="Verify Your Email Address"
+                      disabled={!emailVal.valid || !phoneVal.valid}
+                      disabledReason={
+                        !emailVal.valid && !phoneVal.valid
+                          ? 'Enter a valid email address and a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
+                          : !phoneVal.valid
+                          ? 'Enter a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
+                          : !emailVal.valid
+                          ? 'Enter a valid email address to enable email verification.'
+                          : ''
+                      }
+                      onVerified={(token) => setOtpToken(token)}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Remaining All Details (Unlocked once email is verified or if deceased) */}
+            {(isDeceased || otpToken) ? (
+              <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50/30 space-y-4 animate-in fade-in duration-200">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                  Remaining Personal Details
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Gender *</label>
+                    <select
+                      value={gender}
+                      onChange={(e) => setGender(e.target.value)}
+                      className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500"
+                    >
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Date of Birth (DD/MM/YYYY) *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="DD/MM/YYYY"
+                      maxLength={10}
+                      value={dob}
+                      onChange={(e) => setDob(formatDobMask(e.target.value))}
+                      className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {gender === 'Female' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    {relationshipType !== 'SPOUSE_OF' && (
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1">Marital Status *</label>
+                        <select
+                          value={maritalStatus}
+                          onChange={(e) => setMaritalStatus(e.target.value)}
+                          className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500"
+                        >
+                          <option value="Single">Single</option>
+                          <option value="Married">Married</option>
+                          <option value="Widowed">Widowed</option>
+                          <option value="Divorced">Divorced</option>
+                        </select>
+                      </div>
+                    )}
+
+                    {(relationshipType === 'SPOUSE_OF' || maritalStatus === 'Married') && (
+                      <div className={relationshipType === 'SPOUSE_OF' ? 'col-span-1 sm:col-span-2' : ''}>
+                        <label className="block text-xs font-medium text-slate-600 mb-1">
+                          Prior Marriage Surname (Maiden Name)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Kulkarni, Patil"
+                          value={beforeMarriageSurname}
+                          onChange={(e) => setBeforeMarriageSurname(e.target.value)}
+                          className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500"
+                        />
+                        <p className="text-[10px] text-slate-400 mt-0.5">
+                          Maiden surname before marriage for maternal lineage preservation. Stored in Google Sheets under prior_marriage_surname.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center space-x-3 text-slate-600 text-xs">
+                <div className="w-8 h-8 rounded-xl bg-slate-200/80 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-4 h-4 text-slate-500" />
+                </div>
+                <div>
+                  <p className="font-bold text-slate-800">Remaining Details Locked</p>
+                  <p className="text-slate-500 mt-0.5">Please verify your email address with OTP above to enter Date of Birth, Gender, and Prior Marriage Surname.</p>
+                </div>
               </div>
             )}
           </div>

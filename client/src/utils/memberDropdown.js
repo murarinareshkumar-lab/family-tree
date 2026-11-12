@@ -31,7 +31,7 @@ export function formatMemberDropdownLabel(member, allMembers = []) {
   const gender = String(member.gender || '').toUpperCase();
   const isFemale = gender === 'FEMALE';
   const isMale = gender === 'MALE';
-  const maiden = (member.surname_before_marriage || member.maiden_surname || '').trim();
+  const maiden = (member.prior_marriage_surname || member.surname_before_marriage || member.maiden_surname || '').trim();
   const isMarried = member.marital_status === 'Married' || member.founding_role === 'WIFE' || Boolean(member.spouse_name);
   const maidenSuffix = maiden ? `, Before Marriage: ${maiden}` : '';
 

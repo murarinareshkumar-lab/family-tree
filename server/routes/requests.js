@@ -133,7 +133,9 @@ router.post('/', async (req, res, next) => {
       wife.phone = wPhoneRes.value;
       wife.dob = wDobRes.value;
       wife.marital_status = 'Married';
-      wife.surname_before_marriage = wife.surname_before_marriage || wife.maiden_surname || '';
+      const wPrior = wife.prior_marriage_surname || wife.surname_before_marriage || wife.maiden_surname || '';
+      wife.surname_before_marriage = wPrior;
+      wife.prior_marriage_surname = wPrior;
       husband.marital_status = 'Married';
 
       // Husband duplicates check
@@ -212,7 +214,9 @@ router.post('/', async (req, res, next) => {
       person.email = pEmailRes.value;
       person.phone = pPhoneRes.value;
       person.marital_status = person.marital_status || (payload.relationship_type === 'SPOUSE' ? 'Married' : '');
-      person.surname_before_marriage = person.surname_before_marriage || person.maiden_surname || '';
+      const pPrior = person.prior_marriage_surname || person.surname_before_marriage || person.maiden_surname || '';
+      person.surname_before_marriage = pPrior;
+      person.prior_marriage_surname = pPrior;
 
       // Selected relative email verification check (for direct link)
       if (relPersonId && (payload.direct_link || payload.relative_email || payload.parent_email)) {
@@ -290,7 +294,9 @@ router.post('/', async (req, res, next) => {
       person.email = pEmailRes.value;
       person.phone = pPhoneRes.value;
       person.marital_status = person.marital_status || (payload.relationship_type === 'SPOUSE' ? 'Married' : '');
-      person.surname_before_marriage = person.surname_before_marriage || person.maiden_surname || '';
+      const pPrior = person.prior_marriage_surname || person.surname_before_marriage || person.maiden_surname || '';
+      person.surname_before_marriage = pPrior;
+      person.prior_marriage_surname = pPrior;
 
       // Selected relative email verification check (for direct link)
       if (relPersonId && (payload.direct_link || payload.relative_email || payload.parent_email)) {
@@ -548,7 +554,8 @@ router.post('/', async (req, res, next) => {
             dob: targetPerson.dob || '',
             is_deceased: String(Boolean(targetPerson.is_deceased)),
             marital_status: targetPerson.marital_status || (relType === 'SPOUSE' || relType === 'SPOUSE_OF' ? 'Married' : ''),
-            surname_before_marriage: targetPerson.surname_before_marriage || '',
+            surname_before_marriage: targetPerson.prior_marriage_surname || targetPerson.surname_before_marriage || '',
+            prior_marriage_surname: targetPerson.prior_marriage_surname || targetPerson.surname_before_marriage || '',
             email: targetPerson.email || '',
             email_norm: normalizeEmail(targetPerson.email),
             phone: targetPerson.phone || '',

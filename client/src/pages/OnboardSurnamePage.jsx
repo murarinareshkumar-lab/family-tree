@@ -349,12 +349,12 @@ export default function OnboardSurnamePage({ onNavigate }) {
     hFirstVal.valid &&
     hMidVal.valid &&
     hLastVal.valid &&
-    (hDeceased ? true : (hEmailVal.valid && hPhoneVal.valid)) &&
+    (hDeceased ? true : (hEmailVal.valid && hPhoneVal.valid && Boolean(husbandOtpToken))) &&
     hDobVal.valid &&
     wFirstVal.valid &&
     wMidVal.valid &&
     wLastVal.valid &&
-    (wDeceased ? true : (wEmailVal.valid && wPhoneVal.valid)) &&
+    (wDeceased ? true : (wEmailVal.valid && wPhoneVal.valid && Boolean(wifeOtpToken))) &&
     wDobVal.valid;
 
   // Search valid rule: must have searched current surname value
@@ -446,6 +446,7 @@ export default function OnboardSurnamePage({ onNavigate }) {
           gender: 'Female',
           marital_status: 'Married',
           surname_before_marriage: wifeBeforeMarriageSurname.trim(),
+          prior_marriage_surname: wifeBeforeMarriageSurname.trim(),
           is_deceased: Boolean(wDeceased),
           founding_role: 'WIFE',
           relationship: 'SPOUSE',
@@ -803,46 +804,10 @@ export default function OnboardSurnamePage({ onNavigate }) {
                   </label>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Date of Birth (DD/MM/YYYY) *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="DD/MM/YYYY (e.g. 01011950)"
-                      maxLength={10}
-                      value={husbandDob}
-                      onBlur={() => markTouched('hDob')}
-                      onChange={(e) => setHusbandDob(formatDobMask(e.target.value))}
-                      className={`w-full px-3.5 py-2 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 font-mono ${
-                        touched.hDob && !hDobVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
-                      }`}
-                    />
-                    {touched.hDob && !hDobVal.valid && (
-                      <p className="text-[11px] text-rose-600 mt-1">{hDobVal.error}</p>
-                    )}
-                  </div>
-
-                  {!hDeceased && (
-                    <>
-                      <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">Email Address *</label>
-                        <input
-                          type="email"
-                          required
-                          placeholder="ramesh@example.com"
-                          value={husbandEmail}
-                          onBlur={() => markTouched('hEmail')}
-                          onChange={(e) => setHusbandEmail(e.target.value)}
-                          className={`w-full px-3.5 py-2 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 ${
-                            touched.hEmail && !hEmailVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
-                          }`}
-                        />
-                        {touched.hEmail && !hEmailVal.valid && (
-                          <p className="text-[11px] text-rose-600 mt-1">{hEmailVal.error}</p>
-                        )}
-                      </div>
-
+                {/* Contact & Email OTP Verification (if alive) */}
+                {!hDeceased && (
+                  <div className="space-y-3 pt-1 border-t border-slate-100">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-medium text-slate-600 mb-1">Phone Number *</label>
                         <input
@@ -864,27 +829,77 @@ export default function OnboardSurnamePage({ onNavigate }) {
                         )}
                       </div>
 
-                      <div className="col-span-1 sm:col-span-3 pt-2">
-                        <EmailOtpVerification
-                          email={husbandEmail}
-                          purpose="NEW_PERSON_EMAIL_VERIFICATION"
-                          label="Verify Founding Husband Email"
-                          disabled={!hEmailVal.valid || !hPhoneVal.valid}
-                          disabledReason={
-                            !hEmailVal.valid && !hPhoneVal.valid
-                              ? 'Enter a valid email address and a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
-                              : !hPhoneVal.valid
-                              ? 'Enter a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
-                              : !hEmailVal.valid
-                              ? 'Enter a valid email address to enable email verification.'
-                              : ''
-                          }
-                          onVerified={(token) => setHusbandOtpToken(token)}
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1">Email Address *</label>
+                        <input
+                          type="email"
+                          required
+                          placeholder="ramesh@example.com"
+                          value={husbandEmail}
+                          onBlur={() => markTouched('hEmail')}
+                          onChange={(e) => setHusbandEmail(e.target.value)}
+                          className={`w-full px-3.5 py-2 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 ${
+                            touched.hEmail && !hEmailVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                          }`}
                         />
+                        {touched.hEmail && !hEmailVal.valid && (
+                          <p className="text-[11px] text-rose-600 mt-1">{hEmailVal.error}</p>
+                        )}
                       </div>
-                    </>
-                  )}
-                </div>
+                    </div>
+
+                    <EmailOtpVerification
+                      email={husbandEmail}
+                      purpose="NEW_PERSON_EMAIL_VERIFICATION"
+                      label="Verify Founding Husband Email"
+                      disabled={!hEmailVal.valid || !hPhoneVal.valid}
+                      disabledReason={
+                        !hEmailVal.valid && !hPhoneVal.valid
+                          ? 'Enter a valid email address and a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
+                          : !hPhoneVal.valid
+                          ? 'Enter a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
+                          : !hEmailVal.valid
+                          ? 'Enter a valid email address to enable email verification.'
+                          : ''
+                      }
+                      onVerified={(token) => setHusbandOtpToken(token)}
+                    />
+                  </div>
+                )}
+
+                {/* Remaining Member Details (Locked until email OTP verified or deceased) */}
+                {hDeceased || husbandOtpToken ? (
+                  <div className="pt-3 border-t border-slate-200 space-y-3">
+                    <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
+                      Founding Husband Details
+                    </span>
+                    <div className="max-w-xs">
+                      <label className="block text-xs font-medium text-slate-600 mb-1">Date of Birth (DD/MM/YYYY) *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="DD/MM/YYYY (e.g. 01011950)"
+                        maxLength={10}
+                        value={husbandDob}
+                        onBlur={() => markTouched('hDob')}
+                        onChange={(e) => setHusbandDob(formatDobMask(e.target.value))}
+                        className={`w-full px-3.5 py-2 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 font-mono ${
+                          touched.hDob && !hDobVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                        }`}
+                      />
+                      {touched.hDob && !hDobVal.valid && (
+                        <p className="text-[11px] text-rose-600 mt-1">{hDobVal.error}</p>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3.5 bg-slate-50 border border-dashed border-slate-300 rounded-xl flex items-center space-x-3 text-xs text-slate-600">
+                    <span className="text-base">🔒</span>
+                    <p>
+                      Please verify Founding Husband's email with OTP above to enter Date of Birth.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Wife Section */}
@@ -957,22 +972,6 @@ export default function OnboardSurnamePage({ onNavigate }) {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">
-                    Before Marriage Surname (Maiden Name)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Kulkarni, Deshpande (optional)"
-                    value={wifeBeforeMarriageSurname}
-                    onChange={(e) => setWifeBeforeMarriageSurname(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
-                  />
-                  <p className="text-[10px] text-slate-400 mt-0.5">
-                    Wife's maiden surname before marriage for maternal lineage preservation.
-                  </p>
-                </div>
-
                 <div className="flex items-center space-x-2 pt-1 pb-1">
                   <input
                     type="checkbox"
@@ -986,46 +985,10 @@ export default function OnboardSurnamePage({ onNavigate }) {
                   </label>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Date of Birth (DD/MM/YYYY) *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="DD/MM/YYYY (e.g. 01011960)"
-                      maxLength={10}
-                      value={wifeDob}
-                      onBlur={() => markTouched('wDob')}
-                      onChange={(e) => setWifeDob(formatDobMask(e.target.value))}
-                      className={`w-full px-3.5 py-2 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 font-mono ${
-                        touched.wDob && !wDobVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
-                      }`}
-                    />
-                    {touched.wDob && !wDobVal.valid && (
-                      <p className="text-[11px] text-rose-600 mt-1">{wDobVal.error}</p>
-                    )}
-                  </div>
-
-                  {!wDeceased && (
-                    <>
-                      <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">Email Address *</label>
-                        <input
-                          type="email"
-                          required
-                          placeholder="sunita@example.com"
-                          value={wifeEmail}
-                          onBlur={() => markTouched('wEmail')}
-                          onChange={(e) => setWifeEmail(e.target.value)}
-                          className={`w-full px-3.5 py-2 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 ${
-                            touched.wEmail && !wEmailVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
-                          }`}
-                        />
-                        {touched.wEmail && !wEmailVal.valid && (
-                          <p className="text-[11px] text-rose-600 mt-1">{wEmailVal.error}</p>
-                        )}
-                      </div>
-
+                {/* Contact & Email OTP Verification (if alive) */}
+                {!wDeceased && (
+                  <div className="space-y-3 pt-1 border-t border-slate-100">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-medium text-slate-600 mb-1">Phone Number *</label>
                         <input
@@ -1047,27 +1010,95 @@ export default function OnboardSurnamePage({ onNavigate }) {
                         )}
                       </div>
 
-                      <div className="col-span-1 sm:col-span-3 pt-2">
-                        <EmailOtpVerification
-                          email={wifeEmail}
-                          purpose="NEW_PERSON_EMAIL_VERIFICATION"
-                          label="Verify Founding Wife Email"
-                          disabled={!wEmailVal.valid || !wPhoneVal.valid}
-                          disabledReason={
-                            !wEmailVal.valid && !wPhoneVal.valid
-                              ? 'Enter a valid email address and a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
-                              : !wPhoneVal.valid
-                              ? 'Enter a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
-                              : !wEmailVal.valid
-                              ? 'Enter a valid email address to enable email verification.'
-                              : ''
-                          }
-                          onVerified={(token) => setWifeOtpToken(token)}
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1">Email Address *</label>
+                        <input
+                          type="email"
+                          required
+                          placeholder="sunita@example.com"
+                          value={wifeEmail}
+                          onBlur={() => markTouched('wEmail')}
+                          onChange={(e) => setWifeEmail(e.target.value)}
+                          className={`w-full px-3.5 py-2 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 ${
+                            touched.wEmail && !wEmailVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                          }`}
                         />
+                        {touched.wEmail && !wEmailVal.valid && (
+                          <p className="text-[11px] text-rose-600 mt-1">{wEmailVal.error}</p>
+                        )}
                       </div>
-                    </>
-                  )}
-                </div>
+                    </div>
+
+                    <EmailOtpVerification
+                      email={wifeEmail}
+                      purpose="NEW_PERSON_EMAIL_VERIFICATION"
+                      label="Verify Founding Wife Email"
+                      disabled={!wEmailVal.valid || !wPhoneVal.valid}
+                      disabledReason={
+                        !wEmailVal.valid && !wPhoneVal.valid
+                          ? 'Enter a valid email address and a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
+                          : !wPhoneVal.valid
+                          ? 'Enter a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
+                          : !wEmailVal.valid
+                          ? 'Enter a valid email address to enable email verification.'
+                          : ''
+                      }
+                      onVerified={(token) => setWifeOtpToken(token)}
+                    />
+                  </div>
+                )}
+
+                {/* Remaining Member Details (Locked until email OTP verified or deceased) */}
+                {wDeceased || wifeOtpToken ? (
+                  <div className="pt-3 border-t border-slate-200 space-y-3">
+                    <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
+                      Founding Wife Details
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1">Date of Birth (DD/MM/YYYY) *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="DD/MM/YYYY (e.g. 01011960)"
+                          maxLength={10}
+                          value={wifeDob}
+                          onBlur={() => markTouched('wDob')}
+                          onChange={(e) => setWifeDob(formatDobMask(e.target.value))}
+                          className={`w-full px-3.5 py-2 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 font-mono ${
+                            touched.wDob && !wDobVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                          }`}
+                        />
+                        {touched.wDob && !wDobVal.valid && (
+                          <p className="text-[11px] text-rose-600 mt-1">{wDobVal.error}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1">
+                          Prior Marriage Surname (Maiden Name)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Kulkarni, Deshpande (optional)"
+                          value={wifeBeforeMarriageSurname}
+                          onChange={(e) => setWifeBeforeMarriageSurname(e.target.value)}
+                          className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                        />
+                        <p className="text-[10px] text-slate-400 mt-0.5">
+                          Wife's maiden surname before marriage for maternal lineage preservation.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3.5 bg-slate-50 border border-dashed border-slate-300 rounded-xl flex items-center space-x-3 text-xs text-slate-600">
+                    <span className="text-base">🔒</span>
+                    <p>
+                      Please verify Founding Wife's email with OTP above to enter Date of Birth and Prior Marriage Surname.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Submit Button */}
