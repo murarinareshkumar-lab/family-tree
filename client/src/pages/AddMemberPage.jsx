@@ -275,7 +275,7 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
             To verify this request, please send an email from <strong>{submitterEmail}</strong> to:
           </p>
           <p className="font-mono bg-white p-2 rounded-lg border border-amber-200 text-slate-800 font-semibold select-all">
-            support@familytree.local
+            support.familytree@gmail.com
           </p>
           <p>
             With the subject: <strong className="font-mono select-all">Verify Ticket: {ticketResult.ticket_id}</strong>

@@ -121,7 +121,7 @@ export default function TicketStatusPage() {
               <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-800 flex items-start space-x-2">
                 <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <span>
-                  This ticket is in the administrator's review queue. Remember to email <strong>support@familytree.local</strong> with the subject <strong>Verify Ticket: {ticket.ticket_id}</strong> to expedite processing.
+                  This ticket is in the administrator's review queue. Remember to email <strong>support.familytree@gmail.com</strong> with the subject <strong>Verify Ticket: {ticket.ticket_id}</strong> to expedite processing.
                 </span>
               </div>
             )}

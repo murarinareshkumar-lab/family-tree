@@ -499,7 +499,7 @@ export default function OnboardSurnamePage({ onNavigate }) {
             To prevent unauthorized family creation, please send an email from <strong>{husbandEmail}</strong> or <strong>{wifeEmail}</strong> to our support mailbox:
           </p>
           <p className="font-mono bg-white p-2 rounded-lg border border-amber-200 text-slate-800 font-semibold select-all">
-            support@familytree.local
+            support.familytree@gmail.com
           </p>
           <p>
             With the exact subject: <strong className="font-mono select-all">Verify Ticket: {ticketResult.ticket_id}</strong>
@@ -1040,7 +1040,7 @@ export default function OnboardSurnamePage({ onNavigate }) {
                 <span>Dual Mail Verification Required</span>
               </div>
               <p>
-                Both parties (Family A and Family B registered emails) must send an email to <strong className="font-mono">support@familytree.local</strong> with subject:
+                Both parties (Family A and Family B registered emails) must send an email to <strong className="font-mono">support.familytree@gmail.com</strong> with subject:
               </p>
               <p className="font-mono bg-white p-1.5 rounded border border-amber-200 select-all font-semibold text-slate-800">
                 Verify Ticket: {linkSuccessTicket}

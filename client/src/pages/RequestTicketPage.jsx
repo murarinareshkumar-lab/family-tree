@@ -113,7 +113,7 @@ export default function RequestTicketPage({ onNavigate, initialParams = {} }) {
             <span>Email Authentication Requirement</span>
           </div>
           <p>
-            Please email <strong className="font-mono bg-white px-2 py-0.5 rounded border border-amber-200">support@familytree.local</strong> with the subject:
+            Please email <strong className="font-mono bg-white px-2 py-0.5 rounded border border-amber-200">support.familytree@gmail.com</strong> with the subject:
           </p>
           <p className="font-mono bg-white p-2 rounded-lg border border-amber-200 text-slate-800 font-semibold select-all">
             Verify Ticket: {ticketResult.ticket_id}

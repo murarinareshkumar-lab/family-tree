@@ -38,7 +38,7 @@ router.get('/status', async (req, res, next) => {
       decided_at: t.decided_at || null,
       admin_remarks: t.admin_remarks || null,
       verification_instructions: {
-        support_email: process.env.SUPPORT_EMAIL || 'support@familytree.local',
+        support_email: process.env.SUPPORT_EMAIL || 'support.familytree@gmail.com',
         subject: `Ticket #${t.ticket_id} - Verification`
       }
     });
@@ -446,7 +446,7 @@ router.post('/', async (req, res, next) => {
       message: 'Request submitted successfully. To verify identity, email support with Ticket ID in subject.',
       duplicate_flags_detected: flags.length > 0 ? flags : undefined,
       verification_instructions: {
-        support_email: process.env.SUPPORT_EMAIL || 'support@familytree.local',
+        support_email: process.env.SUPPORT_EMAIL || 'support.familytree@gmail.com',
         subject: `Ticket #${ticketId} - Verification`,
         note: (type === 'LINK_FAMILIES' || type === 'MERGE_FAMILIES')
           ? 'Both parties must send an email to support from their registered email addresses quoting this ticket.'
