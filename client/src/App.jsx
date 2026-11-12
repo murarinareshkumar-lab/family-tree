@@ -17,42 +17,62 @@ export default function App() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [adminUser, setAdminUser] = useState(null);
 
+  const resolveTargetPage = (pathname, hash, search) => {
+    const cleanPath = pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
+    const cleanHash = hash.replace(/^#+/, '').toLowerCase();
+    const params = new URLSearchParams(search);
+    const pageParam = params.get('page')?.toLowerCase();
+
+    const target = pageParam || cleanPath || cleanHash;
+    if (target === 'admin' || target === 'admin-dashboard') return 'admin';
+    if (['onboard', 'add-member', 'join', 'request', 'ticket-status', 'tree'].includes(target)) {
+      return target;
+    }
+    return 'tree';
+  };
+
   useEffect(() => {
-    // Check if user arrived via direct link (e.g. #onboard, ?page=onboard, or private admin key)
     const urlParams = new URLSearchParams(window.location.search);
     const key = urlParams.get('key') || urlParams.get('admin_key');
-    const pageParam = urlParams.get('page');
-    const hash = window.location.hash.replace('#', '');
-    const path = window.location.pathname.replace(/^\//, '');
-
     if (key) {
       sessionStorage.setItem('ft_admin_key', key);
     }
 
-    if (key || path.includes('admin') || hash.includes('admin')) {
-      checkAdminSession(true);
-    } else {
-      checkAdminSession(false);
-      const targetPage = pageParam || hash || path;
-      if (['onboard', 'add-member', 'join', 'request', 'ticket-status', 'tree', 'admin', 'admin-dashboard'].includes(targetPage)) {
-        setActivePage(targetPage);
-      }
-    }
-
-    const handleHashChange = () => {
-      const newHash = window.location.hash.replace('#', '');
-      if (['onboard', 'add-member', 'join', 'request', 'ticket-status', 'tree', 'admin', 'admin-dashboard'].includes(newHash)) {
-        setActivePage(newHash);
+    const syncPageFromUrl = () => {
+      const page = resolveTargetPage(window.location.pathname, window.location.hash, window.location.search);
+      if (page === 'admin' || key) {
+        checkAdminSession(true);
+      } else {
+        checkAdminSession(false);
+        setActivePage(page);
       }
     };
+
+    syncPageFromUrl();
+
+    const handlePopState = () => syncPageFromUrl();
+    const handleHashChange = () => syncPageFromUrl();
+
+    window.addEventListener('popstate', handlePopState);
     window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('hashchange', handleHashChange);
+    };
   }, []);
 
   const handlePageChange = (page, params = {}) => {
     setActivePage(page);
     setPageParams(params);
-    window.location.hash = page;
+    let targetPath = '/';
+    if (page === 'admin' || page === 'admin-dashboard') {
+      targetPath = '/admin';
+    } else if (page !== 'tree') {
+      targetPath = `/${page}`;
+    }
+    if (window.location.pathname !== targetPath || window.location.hash) {
+      window.history.pushState({ page }, '', targetPath);
+    }
   };
 
   const checkAdminSession = async (autoSwitchToAdmin = false) => {
@@ -63,12 +83,18 @@ export default function App() {
         setAdminUser(res.admin || { email: res.email });
         if (autoSwitchToAdmin) {
           setActivePage('admin-dashboard');
+          if (window.location.pathname !== '/admin') {
+            window.history.replaceState({ page: 'admin' }, '', '/admin');
+          }
         }
       } else {
         setIsAdminLoggedIn(false);
         setAdminUser(null);
         if (autoSwitchToAdmin) {
           setActivePage('admin');
+          if (window.location.pathname !== '/admin') {
+            window.history.replaceState({ page: 'admin' }, '', '/admin');
+          }
         }
       }
     } catch (_) {
@@ -76,6 +102,9 @@ export default function App() {
       setAdminUser(null);
       if (autoSwitchToAdmin) {
         setActivePage('admin');
+        if (window.location.pathname !== '/admin') {
+          window.history.replaceState({ page: 'admin' }, '', '/admin');
+        }
       }
     }
   };
@@ -85,7 +114,7 @@ export default function App() {
     setIsAdminLoggedIn(false);
     setAdminUser(null);
     setActivePage('tree');
-    window.history.replaceState({}, document.title, window.location.pathname);
+    window.history.pushState({ page: 'tree' }, '', '/');
   };
 
   return (
@@ -112,6 +141,9 @@ export default function App() {
               setIsAdminLoggedIn(true);
               setAdminUser(admin);
               setActivePage('admin-dashboard');
+              if (window.location.pathname !== '/admin') {
+                window.history.replaceState({ page: 'admin' }, '', '/admin');
+              }
             }} />
           )
         )}
