@@ -85,50 +85,50 @@ export default function RequestTicketPage({ onNavigate, initialParams = {} }) {
 
   if (ticketResult) {
     return (
-      <div className="max-w-2xl mx-auto bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
-        <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 border border-emerald-100">
-          <CheckCircle2 className="w-8 h-8" />
+      <div className="max-w-2xl mx-auto bg-slate-900 rounded-3xl border border-slate-800 p-6 sm:p-7 shadow-sm text-slate-100">
+        <div className="w-12 h-12 rounded-2xl bg-emerald-950 text-emerald-400 flex items-center justify-center mx-auto mb-3.5 border border-emerald-800/80">
+          <CheckCircle2 className="w-6 h-6" />
         </div>
-        <h2 className="text-2xl font-bold text-center text-slate-900">Ticket Created Successfully!</h2>
-        <p className="text-center text-sm text-slate-600 mt-2">
+        <h2 className="text-xl font-bold text-center text-white">Ticket Created Successfully!</h2>
+        <p className="text-center text-xs sm:text-sm text-slate-300 mt-1">
           Your request for <strong>{requestType.replace('_', ' ')}</strong> has been registered.
         </p>
 
-        <div className="mt-6 p-4 bg-slate-50 rounded-2xl border border-slate-200 text-center">
-          <span className="text-xs uppercase tracking-wider text-slate-500 font-bold">Your Tracking Ticket ID</span>
-          <p className="text-2xl font-mono font-extrabold text-emerald-700 mt-1 select-all">
+        <div className="mt-5 p-3.5 bg-slate-950 rounded-2xl border border-slate-800 text-center">
+          <span className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Your Tracking Ticket ID</span>
+          <p className="text-xl sm:text-2xl font-mono font-extrabold text-emerald-400 mt-0.5 select-all">
             {ticketResult.ticket_id}
           </p>
         </div>
 
-        <div className="mt-6 p-5 bg-amber-50/70 border border-amber-200 rounded-2xl text-xs sm:text-sm text-amber-900 space-y-2">
-          <div className="flex items-center space-x-2 font-bold text-amber-800">
+        <div className="mt-5 p-4 bg-amber-950/60 border border-amber-800 rounded-2xl text-xs text-amber-200 space-y-1.5">
+          <div className="flex items-center space-x-1.5 font-bold text-amber-300">
             <Mail className="w-4 h-4" />
             <span>Email Authentication Requirement</span>
           </div>
           <p>
-            Please email <strong className="font-mono bg-white px-2 py-0.5 rounded border border-amber-200">support.familytree@gmail.com</strong> with the subject:
+            Please email <strong className="font-mono bg-amber-900/60 px-1.5 py-0.5 rounded border border-amber-700">support.familytree@gmail.com</strong> with the subject:
           </p>
-          <p className="font-mono bg-white p-2 rounded-lg border border-amber-200 text-slate-800 font-semibold select-all">
+          <p className="font-mono bg-slate-950 p-2 rounded-lg border border-amber-800 text-amber-200 font-semibold select-all">
             Verify Ticket: {ticketResult.ticket_id}
           </p>
           {(requestType === 'LINK_MEMBERS' || requestType === 'MERGE_MEMBERS') && (
-            <p className="font-semibold text-amber-950">
+            <p className="font-semibold text-amber-100">
               Notice: Both parties ({requesterEmail} and {secondaryEmail}) must independently email the support address referencing this ticket before Admin approval.
             </p>
           )}
         </div>
 
-        <div className="mt-8 flex justify-center space-x-3">
+        <div className="mt-6 flex justify-center space-x-3">
           <button
             onClick={() => onNavigate('ticket-status')}
-            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-emerald-600/20"
+            className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm"
           >
             Track Status Now
           </button>
           <button
             onClick={() => onNavigate('tree')}
-            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-xl transition-all"
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs sm:text-sm rounded-xl transition-all border border-slate-700"
           >
             Return to Tree
           </button>
@@ -139,30 +139,30 @@ export default function RequestTicketPage({ onNavigate, initialParams = {} }) {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center">
-            <FileText className="w-6 h-6" />
+      <div className="bg-slate-900 rounded-3xl border border-slate-800 p-5 sm:p-6 shadow-sm text-slate-100">
+        <div className="flex items-center space-x-3 mb-5">
+          <div className="w-10 h-10 rounded-2xl bg-emerald-950 text-emerald-400 border border-emerald-800/80 flex items-center justify-center shrink-0">
+            <FileText className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Submit Verification Ticket</h1>
-            <p className="text-xs sm:text-sm text-slate-500">
+            <h1 className="text-lg sm:text-xl font-bold text-white">Submit Verification Ticket</h1>
+            <p className="text-xs text-slate-400">
               Request profile edits, minor adult promotion, family linkage, or record merge
             </p>
           </div>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl flex items-center space-x-3 text-sm">
-            <AlertCircle className="w-5 h-5 shrink-0" />
+          <div className="mb-4 p-3.5 bg-rose-950/70 border border-rose-800 text-rose-300 rounded-2xl flex items-center space-x-2 text-xs sm:text-sm">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
             <span>{error}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Ticket Type */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
               Request Type *
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -179,13 +179,13 @@ export default function RequestTicketPage({ onNavigate, initialParams = {} }) {
                     key={t.id}
                     type="button"
                     onClick={() => setRequestType(t.id)}
-                    className={`flex items-center space-x-2 p-3 rounded-xl border text-left transition-all ${
+                    className={`flex items-center space-x-2 p-2.5 rounded-xl border text-left transition-all ${
                       isSelected
-                        ? 'border-emerald-600 bg-emerald-50/60 text-emerald-900 font-bold'
-                        : 'border-slate-200 hover:border-slate-300 text-slate-700 font-medium'
+                        ? 'border-emerald-500 bg-emerald-950/50 text-emerald-300 font-bold'
+                        : 'border-slate-800 bg-slate-950/50 hover:border-slate-700 text-slate-300 font-medium'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-emerald-600' : 'text-slate-400'}`} />
+                    <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-emerald-400' : 'text-slate-500'}`} />
                     <span className="text-xs">{t.label}</span>
                   </button>
                 );
@@ -195,7 +195,7 @@ export default function RequestTicketPage({ onNavigate, initialParams = {} }) {
 
           {/* Member Reference ID */}
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
+            <label className="block text-xs font-medium text-slate-300 mb-1">
               Member Reference ID *
             </label>
             <input
@@ -204,13 +204,13 @@ export default function RequestTicketPage({ onNavigate, initialParams = {} }) {
               placeholder="e.g. PATFT-0001"
               value={memberRefId}
               onChange={(e) => setMemberRefId(e.target.value.toUpperCase())}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:bg-white focus:outline-none focus:border-emerald-500"
+              className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs sm:text-sm font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
             />
           </div>
 
           {/* Requester Registered Email */}
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
+            <label className="block text-xs font-medium text-slate-300 mb-1">
               Your Registered Email Address *
             </label>
             <input
@@ -219,7 +219,7 @@ export default function RequestTicketPage({ onNavigate, initialParams = {} }) {
               placeholder="The email currently registered for this person or parent"
               value={requesterEmail}
               onChange={(e) => setRequesterEmail(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+              className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
             />
             <p className="text-[11px] text-slate-400 mt-1">
               You must be able to verify this registered email address with an OTP code.
@@ -239,12 +239,12 @@ export default function RequestTicketPage({ onNavigate, initialParams = {} }) {
 
           {/* Conditional Fields */}
           {(requestType === 'LINK_MEMBERS' || requestType === 'MERGE_MEMBERS') && (
-            <div className="border border-slate-200 bg-slate-50 rounded-2xl p-4 space-y-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
+            <div className="border border-slate-800 bg-slate-950/60 rounded-2xl p-3.5 space-y-2.5">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
                 Second Party Details (Dual-Mail Verification)
               </span>
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">
+                <label className="block text-xs font-medium text-slate-400 mb-1">
                   Target Member Reference ID *
                 </label>
                 <input
@@ -253,11 +253,11 @@ export default function RequestTicketPage({ onNavigate, initialParams = {} }) {
                   placeholder="e.g. PATFT-0002"
                   value={secondaryMemberRefId}
                   onChange={(e) => setSecondaryMemberRefId(e.target.value.toUpperCase())}
-                  className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">
+                <label className="block text-xs font-medium text-slate-400 mb-1">
                   Second Member's Registered Email *
                 </label>
                 <input
@@ -266,7 +266,7 @@ export default function RequestTicketPage({ onNavigate, initialParams = {} }) {
                   placeholder="second.person@example.com"
                   value={secondaryEmail}
                   onChange={(e) => setSecondaryEmail(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                 />
               </div>
             </div>
@@ -274,7 +274,7 @@ export default function RequestTicketPage({ onNavigate, initialParams = {} }) {
 
           {requestType === 'EMAIL_CHANGE' && (
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
+              <label className="block text-xs font-medium text-slate-300 mb-1">
                 New Email Address to Bind *
               </label>
               <input
@@ -283,14 +283,14 @@ export default function RequestTicketPage({ onNavigate, initialParams = {} }) {
                 placeholder="new.email@example.com"
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
               />
             </div>
           )}
 
           {/* Details / Explanation */}
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
+            <label className="block text-xs font-medium text-slate-300 mb-1">
               Details of Request / Changes Needed *
             </label>
             <textarea
@@ -299,24 +299,26 @@ export default function RequestTicketPage({ onNavigate, initialParams = {} }) {
               placeholder="e.g. Minor is now 18 years old, adding contact phone +91 9999999999 and email..."
               value={changeDetails}
               onChange={(e) => setChangeDetails(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+              className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-emerald-600/20 disabled:opacity-50 flex items-center justify-center space-x-2"
-          >
-            {loading ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <>
-                <span>Generate Request Ticket</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </button>
+          <div className="pt-1">
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm disabled:opacity-50 flex items-center justify-center space-x-2"
+            >
+              {loading ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <span>Generate Request Ticket</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </div>
         </form>
       </div>
     </div>

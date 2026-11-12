@@ -481,51 +481,51 @@ export default function OnboardSurnamePage({ onNavigate }) {
 
   if (ticketResult) {
     return (
-      <div className="max-w-4xl mx-auto bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
-        <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 border border-emerald-100">
-          <CheckCircle2 className="w-8 h-8" />
+      <div className="max-w-4xl mx-auto bg-slate-900 rounded-3xl border border-slate-800 p-6 sm:p-7 shadow-sm text-slate-100">
+        <div className="w-12 h-12 rounded-2xl bg-emerald-950 text-emerald-400 flex items-center justify-center mx-auto mb-3.5 border border-emerald-800/80">
+          <CheckCircle2 className="w-6 h-6" />
         </div>
-        <h2 className="text-2xl font-bold text-center text-slate-900">Request Submitted Successfully!</h2>
-        <p className="text-center text-sm text-slate-600 mt-2">
+        <h2 className="text-xl font-bold text-center text-white">Request Submitted Successfully!</h2>
+        <p className="text-center text-xs sm:text-sm text-slate-300 mt-1">
           Your onboarding request has been recorded. Reference IDs will be generated permanently upon Administrator approval.
         </p>
 
-        <div className="mt-6 p-4 bg-slate-50 rounded-2xl border border-slate-200 text-center">
-          <span className="text-xs uppercase tracking-wider text-slate-500 font-bold">Your Tracking Ticket ID</span>
-          <p className="text-2xl font-mono font-extrabold text-emerald-700 mt-1 select-all">
+        <div className="mt-5 p-3.5 bg-slate-950 rounded-2xl border border-slate-800 text-center">
+          <span className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Your Tracking Ticket ID</span>
+          <p className="text-xl sm:text-2xl font-mono font-extrabold text-emerald-400 mt-0.5 select-all">
             {ticketResult.ticket_id}
           </p>
         </div>
 
-        <div className="mt-6 p-5 bg-amber-50/70 border border-amber-200 rounded-2xl text-xs sm:text-sm text-amber-900 space-y-2">
-          <div className="flex items-center space-x-2 font-bold text-amber-800">
+        <div className="mt-5 p-4 bg-amber-950/60 border border-amber-800 rounded-2xl text-xs text-amber-200 space-y-1.5">
+          <div className="flex items-center space-x-1.5 font-bold text-amber-300">
             <Mail className="w-4 h-4" />
             <span>Important Verification Step Required</span>
           </div>
           <p>
             To prevent unauthorized family creation, please send an email from <strong>{husbandEmail}</strong> or <strong>{wifeEmail}</strong> to our support mailbox:
           </p>
-          <p className="font-mono bg-white p-2 rounded-lg border border-amber-200 text-slate-800 font-semibold select-all">
+          <p className="font-mono bg-slate-950 p-2 rounded-lg border border-amber-800 text-amber-200 font-semibold select-all">
             support.familytree@gmail.com
           </p>
           <p>
             With the exact subject: <strong className="font-mono select-all">Verify Ticket: {ticketResult.ticket_id}</strong>
           </p>
-          <p className="text-xs text-amber-700">
+          <p className="text-[11px] text-amber-300/80">
             The admin will verify SPF/DKIM/DMARC headers to ensure authenticated ownership before assigning your permanent Surname Reference ID.
           </p>
         </div>
 
-        <div className="mt-8 flex justify-center space-x-3">
+        <div className="mt-6 flex justify-center space-x-3">
           <button
             onClick={() => onNavigate('ticket-status')}
-            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-emerald-600/20"
+            className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm"
           >
             Track Status Now
           </button>
           <button
             onClick={() => onNavigate('tree')}
-            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-xl transition-all"
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs sm:text-sm rounded-xl transition-all border border-slate-700"
           >
             Return to Tree
           </button>
@@ -536,31 +536,31 @@ export default function OnboardSurnamePage({ onNavigate }) {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center">
-            <PlusCircle className="w-6 h-6" />
+      <div className="bg-slate-900 rounded-3xl border border-slate-800 p-5 sm:p-6 shadow-sm text-slate-100">
+        <div className="flex items-center space-x-3 mb-5">
+          <div className="w-10 h-10 rounded-2xl bg-emerald-950 text-emerald-400 border border-emerald-800/80 flex items-center justify-center shrink-0">
+            <PlusCircle className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Onboard New Surname</h1>
-            <p className="text-xs sm:text-sm text-slate-500">
+            <h1 className="text-lg sm:text-xl font-bold text-white">Onboard New Surname</h1>
+            <p className="text-xs text-slate-400">
               Search for your surname first to connect with an existing family or establish a new branch.
             </p>
           </div>
         </div>
 
         {serverError && (
-          <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl flex items-center space-x-3 text-sm">
-            <AlertCircle className="w-5 h-5 shrink-0" />
+          <div className="mb-4 p-3.5 bg-rose-950/70 border border-rose-800 text-rose-300 rounded-2xl flex items-center space-x-2 text-xs sm:text-sm">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
             <span>{serverError}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Step 1: Surname Field & Search Button */}
           <div className="space-y-2">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-              Family Surname / Lineage Name <span className="text-rose-500">*</span>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
+              Family Surname / Lineage Name <span className="text-rose-400">*</span>
             </label>
             <div className="flex gap-2">
               <input
@@ -570,15 +570,15 @@ export default function OnboardSurnamePage({ onNavigate }) {
                 value={surnameName}
                 onBlur={() => markTouched('surname')}
                 onChange={(e) => handleSurnameChange(e.target.value)}
-                className={`flex-1 px-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 ${
-                  touched.surname && !surnameVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                className={`flex-1 px-3.5 py-2 bg-slate-950 border rounded-xl text-xs sm:text-sm font-semibold text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 ${
+                  touched.surname && !surnameVal.valid ? 'border-rose-400 bg-rose-950/30' : 'border-slate-700'
                 }`}
               />
               <button
                 type="button"
                 onClick={handleSearchSurname}
                 disabled={surnameName.trim().length < 3 || searchLoading}
-                className="px-4 sm:px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center space-x-1.5 shrink-0"
+                className="px-4 sm:px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center space-x-1.5 shrink-0"
               >
                 {searchLoading ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -592,7 +592,7 @@ export default function OnboardSurnamePage({ onNavigate }) {
             </div>
 
             {touched.surname && !surnameVal.valid && (
-              <p className="text-xs text-rose-600 font-medium">{surnameVal.error}</p>
+              <p className="text-xs text-rose-400 font-medium">{surnameVal.error}</p>
             )}
 
             <p className="text-[11px] text-slate-400">
@@ -601,15 +601,15 @@ export default function OnboardSurnamePage({ onNavigate }) {
 
             {/* Error state on search failure */}
             {searchFailed && (
-              <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs sm:text-sm font-medium flex items-center justify-between gap-3">
+              <div className="p-3 bg-rose-950/70 border border-rose-800 rounded-xl text-rose-300 text-xs sm:text-sm font-medium flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
                   <span>Search is unavailable, please try again</span>
                 </div>
                 <button
                   type="button"
                   onClick={handleSearchSurname}
-                  className="px-3 py-1.5 bg-white hover:bg-rose-100 text-rose-700 border border-rose-300 font-semibold text-xs rounded-lg transition-colors flex items-center gap-1 shrink-0"
+                  className="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-rose-300 border border-rose-700 font-semibold text-xs rounded-lg transition-colors flex items-center gap-1 shrink-0"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>Retry</span>
@@ -622,11 +622,11 @@ export default function OnboardSurnamePage({ onNavigate }) {
               <div className="pt-2 space-y-3">
                 {/* 4. If pending=true, show notice */}
                 {searchPending && (
-                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-900 text-xs sm:text-sm flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 shrink-0 text-amber-600 mt-0.5" />
+                  <div className="p-3.5 bg-amber-950/60 border border-amber-800 rounded-2xl text-amber-200 text-xs sm:text-sm flex items-start gap-2.5">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
                     <div>
                       <p className="font-bold">A request for this surname is already awaiting approval.</p>
-                      <p className="text-amber-800 mt-0.5">
+                      <p className="text-amber-300/80 mt-0.5">
                         If it is your family, please wait for approval. If it is a different family you can continue below.
                       </p>
                     </div>
@@ -635,51 +635,51 @@ export default function OnboardSurnamePage({ onNavigate }) {
 
                 {/* 2. Surname NOT found */}
                 {!searchFound ? (
-                  <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-900 text-xs sm:text-sm font-medium flex items-center gap-2.5">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <div className="p-3 bg-emerald-950/60 border border-emerald-800 rounded-2xl text-emerald-300 text-xs sm:text-sm font-medium flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                     <span>No family found with the surname '{lastSearchedSurname}'. You can add your family below.</span>
                   </div>
                 ) : (
                   /* 3. Surname found: One card per existing family */
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">
                         Existing Families with Surname '{lastSearchedSurname}' ({searchResults.length})
                       </h4>
-                      <span className="text-[11px] font-medium text-slate-500">
+                      <span className="text-[11px] font-medium text-slate-400">
                         Founding members listed below
                       </span>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-2.5">
                       {searchResults.map((family, idx) => (
                         <div
                           key={family.branch_no || idx}
-                          className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col gap-3 hover:bg-slate-50/80 transition-colors"
+                          className="p-3.5 bg-slate-950/60 border border-slate-800 rounded-2xl flex flex-col gap-2.5 hover:border-slate-700 transition-colors"
                         >
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2">
-                            <span className="font-bold text-sm text-slate-900">
-                              Family {family.branch_no || (idx + 1)}: {family.husband?.name || 'Founding Member'} & {family.wife?.name || 'Spouse'}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-slate-800 pb-2">
+                            <span className="font-bold text-xs sm:text-sm text-white">
+                              Family {family.branch_no || (idx + 1)}: {family.husband?.name || 'Founding Member'} &amp; {family.wife?.name || 'Spouse'}
                             </span>
                           </div>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-800">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-300">
                             <div>
-                              <span className="font-semibold text-slate-600">Founding Husband: </span>
+                              <span className="font-semibold text-slate-400">Founding Husband: </span>
                               <strong>{family.husband?.name || 'N/A'}</strong>
                             </div>
                             <div>
-                              <span className="font-semibold text-slate-600">Founding Wife: </span>
+                              <span className="font-semibold text-slate-400">Founding Wife: </span>
                               <strong>{family.wife?.name || 'N/A'}</strong>
                             </div>
                           </div>
 
                           {/* 3 Action Buttons per Card */}
-                          <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100">
+                          <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-800/80">
                             <button
                               type="button"
                               onClick={() => onNavigate('add-member', { surname_ref_id: family.surname_ref_id })}
-                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center space-x-1.5"
+                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center space-x-1.5"
                             >
                               <UserPlus className="w-3.5 h-3.5" />
                               <span>Add members</span>
@@ -687,17 +687,17 @@ export default function OnboardSurnamePage({ onNavigate }) {
                             <button
                               type="button"
                               onClick={() => openSameSurnameLink(family)}
-                              className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 font-semibold text-xs rounded-xl transition-all flex items-center space-x-1.5"
+                              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-xs rounded-xl transition-all flex items-center space-x-1.5"
                             >
-                              <GitMerge className="w-3.5 h-3.5 text-emerald-600" />
+                              <GitMerge className="w-3.5 h-3.5 text-emerald-400" />
                               <span>Link a same-surname family</span>
                             </button>
                             <button
                               type="button"
                               onClick={() => openDiffSurnameLink(family)}
-                              className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 font-semibold text-xs rounded-xl transition-all flex items-center space-x-1.5"
+                              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-xs rounded-xl transition-all flex items-center space-x-1.5"
                             >
-                              <Link2 className="w-3.5 h-3.5 text-blue-600" />
+                              <Link2 className="w-3.5 h-3.5 text-blue-400" />
                               <span>Link a different-surname family</span>
                             </button>
                           </div>
@@ -706,18 +706,18 @@ export default function OnboardSurnamePage({ onNavigate }) {
                     </div>
 
                     {/* Separate option: My family is different */}
-                    <div className="p-4 bg-white border-2 border-dashed border-slate-300 rounded-2xl space-y-2">
-                      <span className="text-xs font-bold text-slate-800 block">
+                    <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-2xl space-y-1.5">
+                      <span className="text-xs font-bold text-slate-200 block">
                         My family is different - add my family as a new family with the same surname
                       </span>
-                      <label className="flex items-start space-x-2.5 cursor-pointer pt-1">
+                      <label className="flex items-start space-x-2 cursor-pointer pt-0.5">
                         <input
                           type="checkbox"
                           checked={confirmedDifferentFamily}
                           onChange={(e) => setConfirmedDifferentFamily(e.target.checked)}
-                          className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 mt-0.5"
+                          className="w-4 h-4 text-emerald-600 rounded border-slate-700 bg-slate-900 focus:ring-emerald-500 mt-0.5"
                         />
-                        <span className="text-xs font-semibold text-slate-700">
+                        <span className="text-xs font-semibold text-slate-300">
                           I confirm my family is not one of the families listed above.
                         </span>
                       </label>
@@ -733,12 +733,12 @@ export default function OnboardSurnamePage({ onNavigate }) {
             <div className="space-y-6 pt-2 animate-in fade-in duration-200">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Husband Section */}
-                <div className="border border-slate-200/80 rounded-2xl p-5 bg-slate-50/50 space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">
+                <div className="border border-slate-800 rounded-2xl p-4 bg-slate-950/60 space-y-3.5">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
                     Founding Member 1 (Husband)
                   </span>
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800">
                     FOUNDING HUSBAND
                   </span>
                 </div>
@@ -746,7 +746,7 @@ export default function OnboardSurnamePage({ onNavigate }) {
                 {/* Split Name Fields */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">First Name *</label>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">First Name *</label>
                     <input
                       type="text"
                       required
@@ -754,63 +754,63 @@ export default function OnboardSurnamePage({ onNavigate }) {
                       value={husbandFirstName}
                       onBlur={() => markTouched('hFirst')}
                       onChange={(e) => setHusbandFirstName(e.target.value)}
-                      className={`w-full px-3.5 py-2 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 ${
-                        touched.hFirst && !hFirstVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                      className={`w-full px-3 py-2 bg-slate-900 border rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 ${
+                        touched.hFirst && !hFirstVal.valid ? 'border-rose-400 bg-rose-950/30' : 'border-slate-700'
                       }`}
                     />
                     {touched.hFirst && !hFirstVal.valid && (
-                      <p className="text-[11px] text-rose-600 mt-1">{hFirstVal.error}</p>
+                      <p className="text-[11px] text-rose-400 mt-1">{hFirstVal.error}</p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Middle Name</label>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Middle Name</label>
                     <input
                       type="text"
                       placeholder="e.g. Kumar (optional)"
                       value={husbandMiddleName}
                       onBlur={() => markTouched('hMid')}
                       onChange={(e) => setHusbandMiddleName(e.target.value)}
-                      className={`w-full px-3.5 py-2 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 ${
-                        touched.hMid && !hMidVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                      className={`w-full px-3 py-2 bg-slate-900 border rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 ${
+                        touched.hMid && !hMidVal.valid ? 'border-rose-400 bg-rose-950/30' : 'border-slate-700'
                       }`}
                     />
                     {touched.hMid && !hMidVal.valid && (
-                      <p className="text-[11px] text-rose-600 mt-1">{hMidVal.error}</p>
+                      <p className="text-[11px] text-rose-400 mt-1">{hMidVal.error}</p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Last Name * (Auto-filled)</label>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Last Name * (Auto-filled)</label>
                     <input
                       type="text"
                       readOnly
                       value={surnameName}
                       placeholder="Auto from surname"
-                      className="w-full px-3.5 py-2 bg-slate-100 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 cursor-not-allowed"
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm font-medium text-slate-400 cursor-not-allowed"
                     />
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2 pt-1 pb-1">
+                <div className="flex items-center space-x-2 pt-0.5 pb-0.5">
                   <input
                     type="checkbox"
                     id="hDeceased"
                     checked={hDeceased}
                     onChange={(e) => setHDeceased(e.target.checked)}
-                    className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                    className="w-4 h-4 text-emerald-600 bg-slate-900 rounded border-slate-700 focus:ring-emerald-500"
                   />
-                  <label htmlFor="hDeceased" className="text-xs font-medium text-slate-700 cursor-pointer">
+                  <label htmlFor="hDeceased" className="text-xs font-medium text-slate-300 cursor-pointer">
                     This family member is deceased (no phone/email required; linked by parent identity)
                   </label>
                 </div>
 
                 {/* Contact & Email OTP Verification (if alive) */}
                 {!hDeceased && (
-                  <div className="space-y-3 pt-1 border-t border-slate-100">
+                  <div className="space-y-2.5 pt-1 border-t border-slate-800">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">Phone Number *</label>
+                        <label className="block text-xs font-medium text-slate-300 mb-1">Phone Number *</label>
                         <input
                           type="tel"
                           required
@@ -819,19 +819,19 @@ export default function OnboardSurnamePage({ onNavigate }) {
                           value={husbandPhone}
                           onBlur={() => markTouched('hPhone')}
                           onChange={(e) => setHusbandPhone(e.target.value)}
-                          className={`w-full px-3.5 py-2 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 font-mono ${
-                            touched.hPhone && !hPhoneVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                          className={`w-full px-3 py-2 bg-slate-900 border rounded-xl text-xs sm:text-sm font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 ${
+                            touched.hPhone && !hPhoneVal.valid ? 'border-rose-400 bg-rose-950/30' : 'border-slate-700'
                           }`}
                         />
                         {touched.hPhone && !hPhoneVal.valid ? (
-                          <p className="text-[11px] text-rose-600 mt-1">{hPhoneVal.error}</p>
+                          <p className="text-[11px] text-rose-400 mt-1">{hPhoneVal.error}</p>
                         ) : (
-                          <p className="text-[10px] text-slate-400 mt-0.5">10 digits starting with 9, 8, 7, or 6</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5">10 digits starting with 9, 8, 7, or 6</p>
                         )}
                       </div>
 
                       <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">Email Address *</label>
+                        <label className="block text-xs font-medium text-slate-300 mb-1">Email Address *</label>
                         <input
                           type="email"
                           required
@@ -839,12 +839,12 @@ export default function OnboardSurnamePage({ onNavigate }) {
                           value={husbandEmail}
                           onBlur={() => markTouched('hEmail')}
                           onChange={(e) => setHusbandEmail(e.target.value)}
-                          className={`w-full px-3.5 py-2 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 ${
-                            touched.hEmail && !hEmailVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                          className={`w-full px-3 py-2 bg-slate-900 border rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 ${
+                            touched.hEmail && !hEmailVal.valid ? 'border-rose-400 bg-rose-950/30' : 'border-slate-700'
                           }`}
                         />
                         {touched.hEmail && !hEmailVal.valid && (
-                          <p className="text-[11px] text-rose-600 mt-1">{hEmailVal.error}</p>
+                          <p className="text-[11px] text-rose-400 mt-1">{hEmailVal.error}</p>
                         )}
                       </div>
                     </div>
@@ -861,12 +861,12 @@ export default function OnboardSurnamePage({ onNavigate }) {
 
                 {/* Remaining Member Details (Locked until email OTP verified or deceased) */}
                 {hDeceased || husbandOtpToken ? (
-                  <div className="pt-3 border-t border-slate-200 space-y-3">
-                    <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
+                  <div className="pt-2.5 border-t border-slate-800 space-y-2.5">
+                    <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider block">
                       Founding Husband Details
                     </span>
                     <div className="max-w-xs">
-                      <label className="block text-xs font-medium text-slate-600 mb-1">Date of Birth (DD/MM/YYYY) *</label>
+                      <label className="block text-xs font-medium text-slate-300 mb-1">Date of Birth (DD/MM/YYYY) *</label>
                       <input
                         type="text"
                         required
@@ -875,18 +875,18 @@ export default function OnboardSurnamePage({ onNavigate }) {
                         value={husbandDob}
                         onBlur={() => markTouched('hDob')}
                         onChange={(e) => setHusbandDob(formatDobMask(e.target.value))}
-                        className={`w-full px-3.5 py-2 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 font-mono ${
-                          touched.hDob && !hDobVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                        className={`w-full px-3 py-2 bg-slate-900 border rounded-xl text-xs sm:text-sm font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 ${
+                          touched.hDob && !hDobVal.valid ? 'border-rose-400 bg-rose-950/30' : 'border-slate-700'
                         }`}
                       />
                       {touched.hDob && !hDobVal.valid && (
-                        <p className="text-[11px] text-rose-600 mt-1">{hDobVal.error}</p>
+                        <p className="text-[11px] text-rose-400 mt-1">{hDobVal.error}</p>
                       )}
                     </div>
                   </div>
                 ) : (
-                  <div className="p-3.5 bg-slate-50 border border-dashed border-slate-300 rounded-xl flex items-center space-x-3 text-xs text-slate-600">
-                    <span className="text-base">🔒</span>
+                  <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-xl flex items-center space-x-2 text-xs text-slate-400">
+                    <span className="text-sm">🔒</span>
                     <p>
                       Please verify Founding Husband's email with OTP above to enter Date of Birth.
                     </p>
@@ -895,12 +895,12 @@ export default function OnboardSurnamePage({ onNavigate }) {
               </div>
 
               {/* Wife Section */}
-              <div className="border border-slate-200/80 rounded-2xl p-5 bg-slate-50/50 space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-pink-800">
+              <div className="border border-slate-800 rounded-2xl p-4 bg-slate-950/60 space-y-3.5">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-pink-400">
                     Founding Member 2 (Wife)
                   </span>
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-pink-100 text-pink-800">
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-pink-950 text-pink-300 border border-pink-800">
                     FOUNDING WIFE
                   </span>
                 </div>
@@ -908,7 +908,7 @@ export default function OnboardSurnamePage({ onNavigate }) {
                 {/* Split Name Fields */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">First Name *</label>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">First Name *</label>
                     <input
                       type="text"
                       required
@@ -916,34 +916,34 @@ export default function OnboardSurnamePage({ onNavigate }) {
                       value={wifeFirstName}
                       onBlur={() => markTouched('wFirst')}
                       onChange={(e) => setWifeFirstName(e.target.value)}
-                      className={`w-full px-3.5 py-2 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 ${
-                        touched.wFirst && !wFirstVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                      className={`w-full px-3 py-2 bg-slate-900 border rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 ${
+                        touched.wFirst && !wFirstVal.valid ? 'border-rose-400 bg-rose-950/30' : 'border-slate-700'
                       }`}
                     />
                     {touched.wFirst && !wFirstVal.valid && (
-                      <p className="text-[11px] text-rose-600 mt-1">{wFirstVal.error}</p>
+                      <p className="text-[11px] text-rose-400 mt-1">{wFirstVal.error}</p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Middle Name</label>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Middle Name</label>
                     <input
                       type="text"
                       placeholder="e.g. Devi (optional)"
                       value={wifeMiddleName}
                       onBlur={() => markTouched('wMid')}
                       onChange={(e) => setWifeMiddleName(e.target.value)}
-                      className={`w-full px-3.5 py-2 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 ${
-                        touched.wMid && !wMidVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                      className={`w-full px-3 py-2 bg-slate-900 border rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 ${
+                        touched.wMid && !wMidVal.valid ? 'border-rose-400 bg-rose-950/30' : 'border-slate-700'
                       }`}
                     />
                     {touched.wMid && !wMidVal.valid && (
-                      <p className="text-[11px] text-rose-600 mt-1">{wMidVal.error}</p>
+                      <p className="text-[11px] text-rose-400 mt-1">{wMidVal.error}</p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Last Name * (Editable)</label>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Last Name * (Editable)</label>
                     <input
                       type="text"
                       required
@@ -954,35 +954,35 @@ export default function OnboardSurnamePage({ onNavigate }) {
                         setWifeLastName(e.target.value);
                         setWifeLastNameManuallyEdited(true);
                       }}
-                      className={`w-full px-3.5 py-2 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 ${
-                        touched.wLast && !wLastVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                      className={`w-full px-3 py-2 bg-slate-900 border rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 ${
+                        touched.wLast && !wLastVal.valid ? 'border-rose-400 bg-rose-950/30' : 'border-slate-700'
                       }`}
                     />
                     {touched.wLast && !wLastVal.valid && (
-                      <p className="text-[11px] text-rose-600 mt-1">{wLastVal.error}</p>
+                      <p className="text-[11px] text-rose-400 mt-1">{wLastVal.error}</p>
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2 pt-1 pb-1">
+                <div className="flex items-center space-x-2 pt-0.5 pb-0.5">
                   <input
                     type="checkbox"
                     id="wDeceased"
                     checked={wDeceased}
                     onChange={(e) => setWDeceased(e.target.checked)}
-                    className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                    className="w-4 h-4 text-emerald-600 bg-slate-900 rounded border-slate-700 focus:ring-emerald-500"
                   />
-                  <label htmlFor="wDeceased" className="text-xs font-medium text-slate-700 cursor-pointer">
+                  <label htmlFor="wDeceased" className="text-xs font-medium text-slate-300 cursor-pointer">
                     This family member is deceased (no phone/email required; linked by parent identity)
                   </label>
                 </div>
 
                 {/* Contact & Email OTP Verification (if alive) */}
                 {!wDeceased && (
-                  <div className="space-y-3 pt-1 border-t border-slate-100">
+                  <div className="space-y-2.5 pt-1 border-t border-slate-800">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">Phone Number *</label>
+                        <label className="block text-xs font-medium text-slate-300 mb-1">Phone Number *</label>
                         <input
                           type="tel"
                           required
@@ -991,19 +991,19 @@ export default function OnboardSurnamePage({ onNavigate }) {
                           value={wifePhone}
                           onBlur={() => markTouched('wPhone')}
                           onChange={(e) => setWifePhone(e.target.value)}
-                          className={`w-full px-3.5 py-2 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 font-mono ${
-                            touched.wPhone && !wPhoneVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                          className={`w-full px-3 py-2 bg-slate-900 border rounded-xl text-xs sm:text-sm font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 ${
+                            touched.wPhone && !wPhoneVal.valid ? 'border-rose-400 bg-rose-950/30' : 'border-slate-700'
                           }`}
                         />
                         {touched.wPhone && !wPhoneVal.valid ? (
-                          <p className="text-[11px] text-rose-600 mt-1">{wPhoneVal.error}</p>
+                          <p className="text-[11px] text-rose-400 mt-1">{wPhoneVal.error}</p>
                         ) : (
-                          <p className="text-[10px] text-slate-400 mt-0.5">10 digits starting with 9, 8, 7, or 6</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5">10 digits starting with 9, 8, 7, or 6</p>
                         )}
                       </div>
 
                       <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">Email Address *</label>
+                        <label className="block text-xs font-medium text-slate-300 mb-1">Email Address *</label>
                         <input
                           type="email"
                           required
@@ -1011,12 +1011,12 @@ export default function OnboardSurnamePage({ onNavigate }) {
                           value={wifeEmail}
                           onBlur={() => markTouched('wEmail')}
                           onChange={(e) => setWifeEmail(e.target.value)}
-                          className={`w-full px-3.5 py-2 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 ${
-                            touched.wEmail && !wEmailVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                          className={`w-full px-3 py-2 bg-slate-900 border rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 ${
+                            touched.wEmail && !wEmailVal.valid ? 'border-rose-400 bg-rose-950/30' : 'border-slate-700'
                           }`}
                         />
                         {touched.wEmail && !wEmailVal.valid && (
-                          <p className="text-[11px] text-rose-600 mt-1">{wEmailVal.error}</p>
+                          <p className="text-[11px] text-rose-400 mt-1">{wEmailVal.error}</p>
                         )}
                       </div>
                     </div>
@@ -1033,13 +1033,13 @@ export default function OnboardSurnamePage({ onNavigate }) {
 
                 {/* Remaining Member Details (Locked until email OTP verified or deceased) */}
                 {wDeceased || wifeOtpToken ? (
-                  <div className="pt-3 border-t border-slate-200 space-y-3">
-                    <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
+                  <div className="pt-2.5 border-t border-slate-800 space-y-2.5">
+                    <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider block">
                       Founding Wife Details
                     </span>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">Date of Birth (DD/MM/YYYY) *</label>
+                        <label className="block text-xs font-medium text-slate-300 mb-1">Date of Birth (DD/MM/YYYY) *</label>
                         <input
                           type="text"
                           required
@@ -1048,17 +1048,17 @@ export default function OnboardSurnamePage({ onNavigate }) {
                           value={wifeDob}
                           onBlur={() => markTouched('wDob')}
                           onChange={(e) => setWifeDob(formatDobMask(e.target.value))}
-                          className={`w-full px-3.5 py-2 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 font-mono ${
-                            touched.wDob && !wDobVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                          className={`w-full px-3 py-2 bg-slate-900 border rounded-xl text-xs sm:text-sm font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 ${
+                            touched.wDob && !wDobVal.valid ? 'border-rose-400 bg-rose-950/30' : 'border-slate-700'
                           }`}
                         />
                         {touched.wDob && !wDobVal.valid && (
-                          <p className="text-[11px] text-rose-600 mt-1">{wDobVal.error}</p>
+                          <p className="text-[11px] text-rose-400 mt-1">{wDobVal.error}</p>
                         )}
                       </div>
 
                       <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">
+                        <label className="block text-xs font-medium text-slate-300 mb-1">
                           Prior Marriage Surname (Maiden Name)
                         </label>
                         <input
@@ -1066,7 +1066,7 @@ export default function OnboardSurnamePage({ onNavigate }) {
                           placeholder="e.g. Kulkarni, Deshpande (optional)"
                           value={wifeBeforeMarriageSurname}
                           onChange={(e) => setWifeBeforeMarriageSurname(e.target.value)}
-                          className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                          className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                         />
                         <p className="text-[10px] text-slate-400 mt-0.5">
                           Wife's maiden surname before marriage for maternal lineage preservation.
@@ -1075,8 +1075,8 @@ export default function OnboardSurnamePage({ onNavigate }) {
                     </div>
                   </div>
                 ) : (
-                  <div className="p-3.5 bg-slate-50 border border-dashed border-slate-300 rounded-xl flex items-center space-x-3 text-xs text-slate-600">
-                    <span className="text-base">🔒</span>
+                  <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-xl flex items-center space-x-2 text-xs text-slate-400">
+                    <span className="text-sm">🔒</span>
                     <p>
                       Please verify Founding Wife's email with OTP above to enter Date of Birth and Prior Marriage Surname.
                     </p>
@@ -1085,23 +1085,25 @@ export default function OnboardSurnamePage({ onNavigate }) {
               </div>
             </div>
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={!canSubmit}
-                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-emerald-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-              >
-                {loading ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <span>Submit Surname Onboarding Request</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-            </div>
-          )}
+            {/* Submit Button */}
+          <div className="pt-2 flex justify-end">
+            <button
+              type="submit"
+              disabled={!canSubmit}
+              className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+            >
+              {loading ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <span>Submit Surname Onboarding Request</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
         </form>
       </div>
 
@@ -1113,83 +1115,83 @@ export default function OnboardSurnamePage({ onNavigate }) {
         maxWidth="max-w-xl"
       >
         {linkSuccessTicket ? (
-          <div className="space-y-4 text-center py-2">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-100">
+          <div className="space-y-3.5 text-center py-2 text-slate-100">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-950 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-800">
               <CheckCircle2 className="w-6 h-6" />
             </div>
-            <h4 className="text-base font-bold text-slate-900">Link Request Created!</h4>
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-[11px] uppercase tracking-wider text-slate-500 font-bold">Ticket ID</span>
-              <p className="text-xl font-mono font-extrabold text-emerald-700 mt-0.5 select-all">{linkSuccessTicket}</p>
+            <h4 className="text-sm sm:text-base font-bold text-white">Link Request Created!</h4>
+            <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
+              <span className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Ticket ID</span>
+              <p className="text-xl font-mono font-extrabold text-emerald-400 mt-0.5 select-all">{linkSuccessTicket}</p>
             </div>
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-left text-xs text-amber-900 space-y-1">
-              <div className="flex items-center space-x-1.5 font-bold text-amber-800">
+            <div className="p-3 bg-amber-950/60 border border-amber-800 rounded-xl text-left text-xs text-amber-200 space-y-1">
+              <div className="flex items-center space-x-1.5 font-bold text-amber-300">
                 <Mail className="w-3.5 h-3.5" />
                 <span>Dual Mail Verification Required</span>
               </div>
               <p>
                 Both parties (Family A and Family B registered emails) must send an email to <strong className="font-mono">support.familytree@gmail.com</strong> with subject:
               </p>
-              <p className="font-mono bg-white p-1.5 rounded border border-amber-200 select-all font-semibold text-slate-800">
+              <p className="font-mono bg-slate-950 p-1.5 rounded border border-amber-800 select-all font-semibold text-amber-200">
                 Verify Ticket: {linkSuccessTicket}
               </p>
-              <p className="text-[11px] text-amber-700">The Administrator will verify both before approving.</p>
+              <p className="text-[11px] text-amber-300/80">The Administrator will verify both before approving.</p>
             </div>
             <button
               type="button"
               onClick={() => { setLinkModalOpen(false); setLinkSuccessTicket(null); }}
-              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl"
+              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl"
             >
               Close
             </button>
           </div>
         ) : (
-          <form onSubmit={handleLinkSubmit} className="space-y-4 text-xs">
+          <form onSubmit={handleLinkSubmit} className="space-y-3.5 text-xs text-slate-200">
             {linkError && (
-              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl flex items-center space-x-2 text-xs">
-                <AlertCircle className="w-4 h-4 shrink-0" />
+              <div className="p-3 bg-rose-950/70 border border-rose-800 text-rose-300 rounded-xl flex items-center space-x-2 text-xs">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
                 <span>{linkError}</span>
               </div>
             )}
 
             {/* Family A Info */}
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-slate-500 font-bold block mb-1">Family A (Selected)</span>
+            <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800">
+              <span className="text-slate-400 font-bold block mb-1">Family A (Selected)</span>
               <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-900 text-sm">
+                <span className="font-bold text-white text-sm">
                   Family {linkFamilyA?.branch_no || 1}
                 </span>
-                <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                <span className="font-mono font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800">
                   {linkFamilyA?.surname_ref_id}
                 </span>
               </div>
-              <p className="text-slate-600 mt-1">
-                Founding: {linkFamilyA?.husband?.name || 'N/A'} & {linkFamilyA?.wife?.name || 'N/A'}
+              <p className="text-slate-400 mt-1">
+                Founding: {linkFamilyA?.husband?.name || 'N/A'} &amp; {linkFamilyA?.wife?.name || 'N/A'}
               </p>
             </div>
 
             {/* Family B Selection */}
             {linkMode === 'SAME_SURNAME' ? (
               <div>
-                <label className="block font-bold text-slate-700 mb-1">
+                <label className="block font-bold text-slate-300 mb-1">
                   Select Family B to link with *
                 </label>
                 {searchResults.filter(f => f.surname_ref_id !== linkFamilyA?.surname_ref_id).length === 0 ? (
-                  <p className="text-slate-500 italic p-2 bg-slate-50 rounded-lg">
+                  <p className="text-slate-400 italic p-2 bg-slate-950/60 rounded-lg border border-slate-800">
                     No other family with the surname '{lastSearchedSurname}' found.
                   </p>
                 ) : (
                   <select
                     value={targetFamilyRefId}
                     onChange={(e) => handleSelectSameFamilyB(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl font-semibold text-slate-100 focus:outline-none focus:border-emerald-500"
                   >
                     <option value="">-- Choose Family B --</option>
                     {searchResults
                       .filter(f => f.surname_ref_id !== linkFamilyA?.surname_ref_id)
                       .map((f, i) => (
                         <option key={f.surname_ref_id} value={f.surname_ref_id}>
-                          Family {f.branch_no || (i + 1)} ({f.surname_ref_id}) - {f.husband?.name} & {f.wife?.name}
+                          Family {f.branch_no || (i + 1)} ({f.surname_ref_id}) - {f.husband?.name} &amp; {f.wife?.name}
                         </option>
                       ))}
                   </select>
@@ -1197,7 +1199,7 @@ export default function OnboardSurnamePage({ onNavigate }) {
               </div>
             ) : (
               <div className="space-y-2">
-                <label className="block font-bold text-slate-700">
+                <label className="block font-bold text-slate-300">
                   Search Family B by Surname *
                 </label>
                 <div className="flex gap-2">
@@ -1206,38 +1208,38 @@ export default function OnboardSurnamePage({ onNavigate }) {
                     placeholder="Enter surname to search (min 3 chars)..."
                     value={diffSurnameQuery}
                     onChange={(e) => setDiffSurnameQuery(e.target.value)}
-                    className="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 focus:outline-none focus:border-emerald-500"
+                    className="flex-1 px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-xl font-semibold text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                   />
                   <button
                     type="button"
                     onClick={handleSearchDiffSurname}
                     disabled={diffSurnameQuery.trim().length < 3 || diffSurnameLoading}
-                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all disabled:opacity-50"
+                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all disabled:opacity-50"
                   >
                     {diffSurnameLoading ? 'Searching...' : 'Search'}
                   </button>
                 </div>
 
                 {diffSurnameSearched && (
-                  <div className="max-h-36 overflow-y-auto space-y-1.5 border border-slate-200 rounded-xl p-2 bg-slate-50">
+                  <div className="max-h-36 overflow-y-auto space-y-1.5 border border-slate-800 rounded-xl p-2 bg-slate-950">
                     {diffSurnameResults.length === 0 ? (
-                      <p className="text-slate-500 text-[11px] text-center py-2">No matching families found.</p>
+                      <p className="text-slate-400 text-[11px] text-center py-2">No matching families found.</p>
                     ) : (
                       diffSurnameResults.map((fb, idx) => (
                         <div
                           key={fb.surname_ref_id}
                           className={`p-2 rounded-lg border flex items-center justify-between cursor-pointer transition-colors ${
                             targetFamilyRefId === fb.surname_ref_id
-                              ? 'bg-emerald-50 border-emerald-300 ring-1 ring-emerald-400'
-                              : 'bg-white border-slate-200 hover:bg-slate-100'
+                              ? 'bg-emerald-950/60 border-emerald-500 ring-1 ring-emerald-500'
+                              : 'bg-slate-900 border-slate-800 hover:bg-slate-800'
                           }`}
                           onClick={() => handleSelectDiffFamilyB(fb)}
                         >
                           <div>
-                            <span className="font-bold text-slate-800">Family {fb.branch_no || idx + 1} ({fb.surname_ref_id})</span>
-                            <p className="text-[11px] text-slate-600">{fb.husband?.name} & {fb.wife?.name}</p>
+                            <span className="font-bold text-white">Family {fb.branch_no || idx + 1} ({fb.surname_ref_id})</span>
+                            <p className="text-[11px] text-slate-400">{fb.husband?.name} &amp; {fb.wife?.name}</p>
                           </div>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${targetFamilyRefId === fb.surname_ref_id ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${targetFamilyRefId === fb.surname_ref_id ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300'}`}>
                             {targetFamilyRefId === fb.surname_ref_id ? 'Selected' : 'Select'}
                           </span>
                         </div>
@@ -1250,13 +1252,13 @@ export default function OnboardSurnamePage({ onNavigate }) {
 
             {/* Link Type Choice */}
             <div>
-              <label className="block font-bold text-slate-700 mb-1">
+              <label className="block font-bold text-slate-300 mb-1">
                 Link Type *
               </label>
               <select
                 value={selectedLinkType}
                 onChange={(e) => setSelectedLinkType(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 focus:outline-none focus:border-emerald-500"
+                className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl font-semibold text-slate-100 focus:outline-none focus:border-emerald-500"
               >
                 {linkMode === 'SAME_SURNAME' && (
                   <option value="MERGE_FAMILIES">MERGE_FAMILIES (Combines Family B into Family A)</option>
@@ -1265,19 +1267,19 @@ export default function OnboardSurnamePage({ onNavigate }) {
                 <option value="PARENT_CHILD">PARENT_CHILD (Parent-child link across families)</option>
               </select>
               {linkMode === 'DIFF_SURNAME' && (
-                <p className="text-[11px] text-slate-500 mt-1">Note: Merging families is only permitted between families sharing the exact same surname.</p>
+                <p className="text-[11px] text-slate-400 mt-1">Note: Merging families is only permitted between families sharing the exact same surname.</p>
               )}
             </div>
 
             {/* If PARENT_CHILD or SAME_PERSON: Person Dropdowns */}
             {(selectedLinkType === 'SAME_PERSON' || selectedLinkType === 'PARENT_CHILD') && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-950/60 rounded-xl border border-slate-800">
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Person in Family A *</label>
+                  <label className="block font-bold text-slate-300 mb-1">Person in Family A *</label>
                   <select
                     value={personAId}
                     onChange={(e) => setPersonAId(e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800"
+                    className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100"
                   >
                     <option value="">-- Choose person --</option>
                     {familyAMembers.map(m => (
@@ -1288,11 +1290,11 @@ export default function OnboardSurnamePage({ onNavigate }) {
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Person in Family B *</label>
+                  <label className="block font-bold text-slate-300 mb-1">Person in Family B *</label>
                   <select
                     value={personBId}
                     onChange={(e) => setPersonBId(e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800"
+                    className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100"
                   >
                     <option value="">-- Choose person --</option>
                     {familyBMembers.map(m => (
@@ -1307,19 +1309,19 @@ export default function OnboardSurnamePage({ onNavigate }) {
 
             {/* Relation note */}
             <div>
-              <label className="block font-bold text-slate-700 mb-1">Relation Note / Explanation (Optional)</label>
+              <label className="block font-bold text-slate-300 mb-1">Relation Note / Explanation (Optional)</label>
               <input
                 type="text"
                 placeholder="e.g. Ramesh moved to another city and was recorded in both branches"
                 value={relationNote}
                 onChange={(e) => setRelationNote(e.target.value)}
-                className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-emerald-500"
+                className="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
               />
             </div>
 
             {/* Submitter Contact */}
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-              <span className="font-bold text-slate-800 block">Submitter Contact Information</span>
+            <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800 space-y-2">
+              <span className="font-bold text-slate-200 block">Submitter Contact Information</span>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <input
                   type="text"
@@ -1327,7 +1329,7 @@ export default function OnboardSurnamePage({ onNavigate }) {
                   placeholder="Your Name *"
                   value={linkSubmitterName}
                   onChange={(e) => setLinkSubmitterName(e.target.value)}
-                  className="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg"
+                  className="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500"
                 />
                 <input
                   type="email"
@@ -1335,7 +1337,7 @@ export default function OnboardSurnamePage({ onNavigate }) {
                   placeholder="Your Email *"
                   value={linkSubmitterEmail}
                   onChange={(e) => setLinkSubmitterEmail(e.target.value)}
-                  className="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg"
+                  className="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500"
                 />
                 <input
                   type="tel"
@@ -1343,59 +1345,59 @@ export default function OnboardSurnamePage({ onNavigate }) {
                   placeholder="Your Phone (10 digits) *"
                   value={linkSubmitterPhone}
                   onChange={(e) => setLinkSubmitterPhone(e.target.value)}
-                  className="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg font-mono"
+                  className="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 font-mono"
                 />
               </div>
             </div>
 
             {/* Dual Registered Emails (typed by user, never revealed on screen) */}
-            <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl space-y-2">
-              <div className="flex items-center space-x-1.5 font-bold text-amber-900">
-                <ShieldCheck className="w-4 h-4 text-amber-700" />
+            <div className="p-3 bg-amber-950/60 border border-amber-800 rounded-xl space-y-2">
+              <div className="flex items-center space-x-1.5 font-bold text-amber-300">
+                <ShieldCheck className="w-4 h-4 text-amber-400" />
                 <span>Dual Registered Email Verification Required</span>
               </div>
-              <p className="text-[11px] text-amber-800">
+              <p className="text-[11px] text-amber-300/80">
                 To protect privacy, registered emails are never displayed. Enter the registered emails of both parties below.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Family A Registered Email *</label>
+                  <label className="block text-[11px] font-bold text-slate-300 mb-0.5">Family A Registered Email *</label>
                   <input
                     type="email"
                     required
                     placeholder="familyA_member@example.com"
                     value={partyAEmail}
                     onChange={(e) => setPartyAEmail(e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg"
+                    className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Family B Registered Email *</label>
+                  <label className="block text-[11px] font-bold text-slate-300 mb-0.5">Family B Registered Email *</label>
                   <input
                     type="email"
                     required
                     placeholder="familyB_member@example.com"
                     value={partyBEmail}
                     onChange={(e) => setPartyBEmail(e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg"
+                    className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500"
                   />
                 </div>
               </div>
             </div>
 
             {/* Modal Actions */}
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
               <button
                 type="button"
                 onClick={() => setLinkModalOpen(false)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl"
+                className="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl border border-slate-700"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={linkSubmitting}
-                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all shadow-sm disabled:opacity-50"
+                className="px-5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all shadow-sm disabled:opacity-50"
               >
                 {linkSubmitting ? 'Submitting...' : 'Submit Link Request'}
               </button>

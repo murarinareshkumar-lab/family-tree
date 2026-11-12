@@ -553,6 +553,8 @@ export default async function handler(req, res) {
               marital_status: person.marital_status || (person.relationship_type === 'SPOUSE' || relType === 'SPOUSE' || relType === 'SPOUSE_OF' ? 'Married' : ''),
               surname_before_marriage: person.prior_marriage_surname || person.surname_before_marriage || person.maiden_surname || '',
               prior_marriage_surname: person.prior_marriage_surname || person.surname_before_marriage || person.maiden_surname || '',
+              occupation: person.occupation || '',
+              location: person.location || '',
               email: person.email || '',
               email_norm: normalizeEmail(person.email),
               phone: person.phone || '',

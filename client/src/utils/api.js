@@ -1,4 +1,52 @@
-// API utility wrapper
+// API utility wrapper with AES-256-GCM in-transit payload encryption
+
+const PII_SECRET = 'family-tree-portal-gcm256-pii-default-master-key';
+
+/**
+ * Encrypts an object in-transit using standard browser Web Crypto AES-256-GCM.
+ * Compatible with backend decryptPii format: enc:gcm:v1:<iv>:<tag>:<ciphertext>
+ */
+async function encryptPayloadInTransit(dataObj) {
+  try {
+    if (typeof window === 'undefined' || !window.crypto || !window.crypto.subtle) {
+      return null;
+    }
+    const jsonStr = typeof dataObj === 'string' ? dataObj : JSON.stringify(dataObj);
+    const enc = new TextEncoder();
+    const keyHash = await window.crypto.subtle.digest('SHA-256', enc.encode(PII_SECRET));
+    const cryptoKey = await window.crypto.subtle.importKey(
+      'raw',
+      keyHash,
+      { name: 'AES-GCM' },
+      false,
+      ['encrypt']
+    );
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const cipherBuffer = await window.crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv },
+      cryptoKey,
+      enc.encode(jsonStr)
+    );
+    const cipherBytes = new Uint8Array(cipherBuffer);
+    const ciphertext = cipherBytes.slice(0, -16);
+    const authTag = cipherBytes.slice(-16);
+
+    const b64 = (buf) => {
+      let binary = '';
+      const bytes = new Uint8Array(buf);
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return btoa(binary);
+    };
+
+    return `enc:gcm:v1:${b64(iv)}:${b64(authTag)}:${b64(ciphertext)}`;
+  } catch (err) {
+    console.warn('[In-Transit Encryption] Fallback to standard payload:', err?.message);
+    return null;
+  }
+}
+
 export async function apiRequest(endpoint, options = {}) {
   const url = endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`;
   
@@ -16,8 +64,26 @@ export async function apiRequest(endpoint, options = {}) {
     ...(options.headers || {})
   };
 
+  let body = options.body;
+  const method = (options.method || 'GET').toUpperCase();
+
+  // In-transit AES-256-GCM payload encryption for mutating requests
+  if (body && ['POST', 'PUT', 'PATCH'].includes(method)) {
+    try {
+      const parsed = typeof body === 'string' ? JSON.parse(body) : body;
+      const encrypted = await encryptPayloadInTransit(parsed);
+      if (encrypted) {
+        body = JSON.stringify({ encrypted_payload: encrypted });
+        headers['x-payload-encrypted'] = 'true';
+      }
+    } catch (_) {
+      // Keep original body
+    }
+  }
+
   const response = await fetch(url, {
     ...options,
+    body,
     headers,
     credentials: 'include'
   });

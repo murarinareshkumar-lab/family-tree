@@ -1,4 +1,5 @@
 import express from 'express';
+import { decryptPii } from '../lib/crypto-pii.js';
 import healthRouter from './routes/health.js';
 import surnamesRouter from './routes/surnames.js';
 import familiesRouter from './routes/families.js';
@@ -12,6 +13,21 @@ const app = express();
 // Parse JSON and form bodies
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// In-transit payload decryption middleware (transparently handles AES-256-GCM encrypted bodies)
+app.use((req, res, next) => {
+  if (req.body && typeof req.body === 'object' && req.body.encrypted_payload) {
+    try {
+      const decrypted = decryptPii(req.body.encrypted_payload);
+      if (decrypted) {
+        req.body = JSON.parse(decrypted);
+      }
+    } catch (err) {
+      console.warn('[In-Transit Decryption] Error parsing decrypted body:', err.message);
+    }
+  }
+  next();
+});
 
 // Sub-router containing all API routes
 const apiRouter = express.Router();

@@ -556,6 +556,8 @@ router.post('/', async (req, res, next) => {
             marital_status: targetPerson.marital_status || (relType === 'SPOUSE' || relType === 'SPOUSE_OF' ? 'Married' : ''),
             surname_before_marriage: targetPerson.prior_marriage_surname || targetPerson.surname_before_marriage || '',
             prior_marriage_surname: targetPerson.prior_marriage_surname || targetPerson.surname_before_marriage || '',
+            occupation: targetPerson.occupation || '',
+            location: targetPerson.location || '',
             email: targetPerson.email || '',
             email_norm: normalizeEmail(targetPerson.email),
             phone: targetPerson.phone || '',

@@ -12,15 +12,17 @@ import {
   Minimize2,
   List,
   Layers,
-  Crosshair
+  Crosshair,
+  Heart
 } from 'lucide-react';
 import Modal from './Modal';
 
 /**
  * Interactive Tree Component
- * Strict public view: names and tree connecting lines only.
- * No gender icons, no reference IDs, no relationship words, no privacy footer text.
- * Enhanced navigation: expand/collapse, depth selector, mobile indented list, focus action.
+ * Visual connections:
+ * - Spouse link indicator between partners
+ * - Sibling link connection bar for brothers & sisters
+ * - Clean dark mode UI
  */
 export default function InteractiveTree({
   treeData,
@@ -79,10 +81,10 @@ export default function InteractiveTree({
 
   if (!treeData || (!rawTree.length && memberList.length === 0)) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-sm">
-        <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-        <h3 className="text-base font-semibold text-slate-700">No members found for this family</h3>
-        <p className="text-sm text-slate-500 mt-1">
+      <div className="bg-slate-900 rounded-2xl border border-slate-800 p-10 text-center shadow-sm">
+        <Users className="w-10 h-10 text-slate-600 mx-auto mb-2.5" />
+        <h3 className="text-sm font-semibold text-slate-200">No members found for this family</h3>
+        <p className="text-xs text-slate-400 mt-1">
           Once the administrator approves submitted members, they will appear here.
         </p>
       </div>
@@ -90,18 +92,18 @@ export default function InteractiveTree({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3.5">
       {/* Connected Families Banner */}
       {treeData.connected_families && treeData.connected_families.length > 0 && (
-        <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+        <div className="bg-emerald-950/50 border border-emerald-800/80 rounded-xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 shadow-sm">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold text-slate-700">Family Connections:</span>
+            <span className="text-[11px] font-bold text-slate-300">Family Connections:</span>
             {treeData.connected_families.map((cf, idx) => (
               <span
                 key={idx}
-                className="inline-flex items-center space-x-1.5 px-3 py-1 bg-white border-2 border-dashed border-emerald-500 text-emerald-800 rounded-xl text-xs font-bold shadow-sm"
+                className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 bg-slate-900 border border-emerald-500/80 text-emerald-300 rounded-lg text-[10px] font-bold"
               >
-                <GitBranch className="w-3.5 h-3.5 text-emerald-600" />
+                <GitBranch className="w-3 h-3 text-emerald-400" />
                 <span>{cf.badge || 'Connected Family'}</span>
               </span>
             ))}
@@ -111,10 +113,10 @@ export default function InteractiveTree({
             <button
               type="button"
               onClick={onToggleConnected}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all shrink-0 ${
                 showConnected
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'bg-slate-900 hover:bg-slate-800 text-emerald-300 border border-emerald-700/60'
               }`}
             >
               {showConnected ? 'Hide Connected Tree' : 'Show Connected Tree'}
@@ -124,25 +126,25 @@ export default function InteractiveTree({
       )}
 
       {/* Main Controls Bar */}
-      <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
+      <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800 shadow-sm flex flex-col lg:flex-row gap-2.5 items-stretch lg:items-center justify-between">
         {/* Search */}
         <div className="relative flex-1 max-w-xs">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search member name..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 text-sm bg-slate-50 rounded-xl border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+            className="w-full pl-8 pr-3 py-1 text-xs bg-slate-950 rounded-lg border border-slate-700 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-all"
           />
         </div>
 
         {/* Depth and Navigation Controls */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           {/* Depth Selector */}
-          <div className="flex items-center bg-slate-100 rounded-xl p-1 text-xs font-medium text-slate-600">
-            <span className="px-2 text-slate-500 flex items-center gap-1">
-              <Layers className="w-3.5 h-3.5" />
+          <div className="flex items-center bg-slate-950 rounded-lg p-0.5 text-xs font-medium text-slate-400 border border-slate-800">
+            <span className="px-1.5 text-slate-500 flex items-center gap-1 text-[11px]">
+              <Layers className="w-3 h-3" />
               Depth:
             </span>
             {['1', '2', '3', 'ALL'].map((d) => (
@@ -150,10 +152,10 @@ export default function InteractiveTree({
                 key={d}
                 type="button"
                 onClick={() => setDepthLimit(d)}
-                className={`px-2 py-1 rounded-lg transition-colors ${
+                className={`px-2 py-0.5 rounded text-[11px] transition-colors ${
                   depthLimit === d
-                    ? 'bg-white text-emerald-700 font-bold shadow-sm'
-                    : 'hover:text-slate-900'
+                    ? 'bg-emerald-600 text-white font-bold'
+                    : 'hover:text-slate-200'
                 }`}
               >
                 {d === 'ALL' ? 'All' : `${d} Gen`}
@@ -162,34 +164,34 @@ export default function InteractiveTree({
           </div>
 
           {/* Expand/Collapse All */}
-          <div className="flex items-center bg-slate-100 rounded-xl p-1 text-xs">
+          <div className="flex items-center bg-slate-950 rounded-lg p-0.5 text-[11px] border border-slate-800">
             <button
               type="button"
               onClick={expandAll}
               title="Expand all nodes"
-              className="px-2 py-1 hover:bg-white rounded-lg text-slate-700 flex items-center gap-1 font-medium transition"
+              className="px-2 py-0.5 hover:bg-slate-800 rounded text-slate-300 flex items-center gap-1 transition"
             >
-              <Maximize2 className="w-3.5 h-3.5" />
+              <Maximize2 className="w-3 h-3" />
               Expand
             </button>
             <button
               type="button"
               onClick={collapseAll}
               title="Collapse all nodes"
-              className="px-2 py-1 hover:bg-white rounded-lg text-slate-700 flex items-center gap-1 font-medium transition ml-1"
+              className="px-2 py-0.5 hover:bg-slate-800 rounded text-slate-300 flex items-center gap-1 transition ml-0.5"
             >
-              <Minimize2 className="w-3.5 h-3.5" />
+              <Minimize2 className="w-3 h-3" />
               Collapse
             </button>
           </div>
 
           {/* View Mode (Tree vs Indented List for mobile) */}
-          <div className="flex items-center bg-slate-100 rounded-xl p-1 text-xs">
+          <div className="flex items-center bg-slate-950 rounded-lg p-0.5 text-[11px] border border-slate-800">
             <button
               type="button"
               onClick={() => setViewMode('tree')}
-              className={`px-2 py-1 rounded-lg transition ${
-                viewMode === 'tree' ? 'bg-white text-emerald-700 font-bold shadow-sm' : 'text-slate-600'
+              className={`px-2 py-0.5 rounded transition ${
+                viewMode === 'tree' ? 'bg-emerald-600 text-white font-bold' : 'text-slate-400'
               }`}
             >
               Tree
@@ -197,42 +199,42 @@ export default function InteractiveTree({
             <button
               type="button"
               onClick={() => setViewMode('list')}
-              className={`px-2 py-1 rounded-lg transition flex items-center gap-1 ${
-                viewMode === 'list' ? 'bg-white text-emerald-700 font-bold shadow-sm' : 'text-slate-600'
+              className={`px-2 py-0.5 rounded transition flex items-center gap-1 ${
+                viewMode === 'list' ? 'bg-emerald-600 text-white font-bold' : 'text-slate-400'
               }`}
             >
-              <List className="w-3.5 h-3.5" />
+              <List className="w-3 h-3" />
               List
             </button>
           </div>
 
           {/* Zoom controls (Tree mode only) */}
           {viewMode === 'tree' && (
-            <div className="flex items-center bg-slate-100 rounded-xl p-1 text-slate-600">
+            <div className="flex items-center bg-slate-950 rounded-lg p-0.5 text-slate-400 border border-slate-800">
               <button
                 type="button"
                 onClick={() => handleZoom(-0.1)}
                 title="Zoom Out"
-                className="p-1.5 rounded-lg hover:bg-white hover:text-slate-900 transition-colors"
+                className="p-1 rounded hover:bg-slate-800 hover:text-white transition-colors"
               >
-                <ZoomOut className="w-4 h-4" />
+                <ZoomOut className="w-3.5 h-3.5" />
               </button>
-              <span className="text-xs font-semibold px-2 min-w-[42px] text-center">
+              <span className="text-[10px] font-semibold px-1.5 min-w-[36px] text-center text-slate-300">
                 {Math.round(zoomLevel * 100)}%
               </span>
               <button
                 type="button"
                 onClick={() => handleZoom(0.1)}
                 title="Zoom In"
-                className="p-1.5 rounded-lg hover:bg-white hover:text-slate-900 transition-colors"
+                className="p-1 rounded hover:bg-slate-800 hover:text-white transition-colors"
               >
-                <ZoomIn className="w-4 h-4" />
+                <ZoomIn className="w-3.5 h-3.5" />
               </button>
               <button
                 type="button"
                 onClick={() => setZoomLevel(1)}
                 title="Reset Zoom"
-                className="p-1.5 rounded-lg hover:bg-white hover:text-slate-900 transition-colors ml-1 border-l border-slate-200"
+                className="p-1 rounded hover:bg-slate-800 hover:text-white transition-colors ml-0.5 border-l border-slate-800"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
@@ -243,14 +245,14 @@ export default function InteractiveTree({
             <button
               type="button"
               onClick={() => setFocusedMemberId(null)}
-              className="px-2.5 py-1 text-xs bg-amber-100 text-amber-800 hover:bg-amber-200 rounded-xl font-medium transition"
+              className="px-2 py-0.5 text-[11px] bg-amber-950 text-amber-300 hover:bg-amber-900 border border-amber-800 rounded-lg font-medium transition"
             >
               Clear Focus
             </button>
           )}
 
           {memberList.length > 0 && (
-            <span className="text-xs font-medium px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100 shrink-0">
+            <span className="text-[10px] font-semibold px-2 py-0.5 bg-emerald-950 text-emerald-300 rounded-lg border border-emerald-800/80 shrink-0">
               {memberList.length} Members
             </span>
           )}
@@ -259,13 +261,13 @@ export default function InteractiveTree({
 
       {/* Visual Canvas Area */}
       {viewMode === 'tree' ? (
-        <div className="bg-slate-900/5 rounded-2xl border border-slate-200 p-6 overflow-x-auto min-h-[480px] flex justify-center items-start shadow-inner">
+        <div className="bg-slate-950 rounded-2xl border border-slate-800 p-6 overflow-x-auto min-h-[440px] flex justify-center items-start shadow-inner">
           <div
             className="transition-transform duration-200 ease-out origin-top flex flex-col items-center space-y-12"
             style={{ transform: `scale(${zoomLevel})` }}
           >
             {rawTree.length === 0 ? (
-              <div className="text-center py-8 text-slate-500 text-sm">
+              <div className="text-center py-8 text-slate-500 text-xs">
                 Tree hierarchy is being processed.
               </div>
             ) : (
@@ -281,6 +283,7 @@ export default function InteractiveTree({
                   onSetFocus={(id) => setFocusedMemberId(id)}
                   focusedMemberId={focusedMemberId}
                   searchTerm={searchTerm}
+                  siblings={[]}
                 />
               ))
             )}
@@ -288,12 +291,12 @@ export default function InteractiveTree({
         </div>
       ) : (
         /* Mobile Indented List View */
-        <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm divide-y divide-slate-100">
-          <div className="pb-3 text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center justify-between">
+        <div className="bg-slate-900 rounded-2xl border border-slate-800 p-3.5 shadow-sm divide-y divide-slate-800">
+          <div className="pb-2.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
             <span>Indented Family Lineage</span>
-            <span>Names Only</span>
+            <span>Brothers &amp; Sisters Hierarchy</span>
           </div>
-          <div className="pt-3 space-y-2">
+          <div className="pt-2.5 space-y-1.5">
             {rawTree.map((rootNode) => (
               <IndentedListNode
                 key={rootNode.id}
@@ -310,7 +313,7 @@ export default function InteractiveTree({
         </div>
       )}
 
-      {/* Whitelisted Details Modal: Name only */}
+      {/* Whitelisted Details Modal: Shows connections (Spouse, Brothers & Sisters) */}
       <Modal
         isOpen={Boolean(selectedMember)}
         onClose={() => setSelectedMember(null)}
@@ -318,15 +321,55 @@ export default function InteractiveTree({
         maxWidth="max-w-md"
       >
         {selectedMember && (
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3 p-4 bg-emerald-50/60 rounded-2xl border border-emerald-100">
-              <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-800 font-bold text-lg flex items-center justify-center shrink-0">
+          <div className="space-y-3.5 text-slate-100">
+            <div className="flex items-center space-x-3 p-3 bg-emerald-950/60 rounded-xl border border-emerald-800/80">
+              <div className="w-10 h-10 rounded-lg bg-emerald-800 text-white font-bold text-base flex items-center justify-center shrink-0">
                 {selectedMember.display_name?.charAt(0) || 'M'}
               </div>
               <div className="min-w-0 flex-1">
-                <h4 className="font-bold text-slate-900 text-base truncate">{selectedMember.display_name}</h4>
-                <p className="text-xs text-slate-500 mt-0.5">Verified Lineage Member</p>
+                <h4 className="font-bold text-white text-sm truncate">{selectedMember.display_name}</h4>
+                <p className="text-[11px] text-emerald-400 mt-0.5">Verified Lineage Member</p>
               </div>
+            </div>
+
+            {/* Visual Connections Summary */}
+            <div className="p-3 bg-slate-950/90 rounded-xl border border-slate-800 space-y-2 text-xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block border-b border-slate-800 pb-1">
+                Immediate Family Connections
+              </span>
+
+              {selectedMember.spouses && selectedMember.spouses.length > 0 && (
+                <div className="flex items-center gap-1.5 text-slate-300">
+                  <span className="px-1.5 py-0.5 text-[9px] font-bold bg-pink-950 text-pink-300 border border-pink-800 rounded">
+                    Spouse
+                  </span>
+                  <span className="font-medium text-slate-200">
+                    {selectedMember.spouses.map(s => s.display_name).join(', ')}
+                  </span>
+                </div>
+              )}
+
+              {selectedMember.siblings && selectedMember.siblings.length > 0 ? (
+                <div className="flex items-start gap-1.5 text-slate-300">
+                  <span className="px-1.5 py-0.5 text-[9px] font-bold bg-indigo-950 text-indigo-300 border border-indigo-800 rounded shrink-0">
+                    Brothers &amp; Sisters
+                  </span>
+                  <span className="font-medium text-slate-200">
+                    {selectedMember.siblings.map(s => s.display_name).join(', ')}
+                  </span>
+                </div>
+              ) : null}
+
+              {selectedMember.children && selectedMember.children.length > 0 && (
+                <div className="flex items-start gap-1.5 text-slate-300">
+                  <span className="px-1.5 py-0.5 text-[9px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800 rounded shrink-0">
+                    Children
+                  </span>
+                  <span className="font-medium text-slate-200">
+                    {selectedMember.children.map(c => c.display_name).join(', ')}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -336,16 +379,16 @@ export default function InteractiveTree({
                   setFocusedMemberId(selectedMember.id);
                   setSelectedMember(null);
                 }}
-                className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5"
+                className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm"
               >
-                <Crosshair className="w-3.5 h-3.5" />
+                <Crosshair className="w-3 h-3" />
                 Focus on This Branch
               </button>
             </div>
 
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-1">
-              <p className="font-semibold text-slate-700">Public Record Notice</p>
-              <p>This lineage tree is public. To protect family privacy, contact details and personal records are restricted to portal administrators.</p>
+            <div className="p-2.5 bg-slate-950 rounded-lg border border-slate-800 text-[11px] text-slate-400 space-y-0.5">
+              <p className="font-semibold text-slate-300">Privacy Notice</p>
+              <p>This lineage tree is public. Contact details and personal records are restricted to verified members and portal administrators.</p>
             </div>
           </div>
         )}
@@ -363,7 +406,8 @@ function TreeNode({
   onSelectMember,
   onSetFocus,
   focusedMemberId,
-  searchTerm
+  searchTerm,
+  siblings = []
 }) {
   const children = node.children || [];
   const spouses = node.spouses || [];
@@ -374,25 +418,48 @@ function TreeNode({
   const hasChildren = children.length > 0;
   const isFocused = focusedMemberId && (node.id === focusedMemberId || spouses.some(s => s.id === focusedMemberId));
 
+  const handleSelectSelf = () => {
+    onSelectMember({
+      ...node,
+      spouses,
+      children,
+      siblings: siblings.filter(s => s.id !== node.id)
+    });
+  };
+
   return (
-    <div className={`flex flex-col items-center ${isFocused ? 'ring-2 ring-amber-400 rounded-3xl p-2 bg-amber-50/30' : ''}`}>
-      {/* Node Card with Spouse and Expand/Collapse Button */}
-      <div className="flex items-center space-x-3 relative z-10">
+    <div className={`flex flex-col items-center ${isFocused ? 'ring-2 ring-amber-400 rounded-2xl p-2 bg-amber-950/30' : ''}`}>
+      {/* Node Card with Spouse Connection */}
+      <div className="flex items-center relative z-10">
         <MemberCard
           member={node}
-          onClick={() => onSelectMember(node)}
+          onClick={handleSelectSelf}
           highlight={searchTerm && node.display_name?.toLowerCase().includes(searchTerm.toLowerCase())}
           hasChildren={hasChildren}
           isCollapsed={isCollapsed}
           onToggleCollapse={() => onToggleCollapse(node.id)}
+          hasSiblingLink={siblings.length > 1}
         />
 
+        {/* Spouse Connection Line with Badge */}
         {spouses.map((spouse) => (
           <React.Fragment key={spouse.id}>
-            <div className="w-4 h-0.5 bg-slate-400" />
+            <div className="flex items-center px-1 shrink-0">
+              <div className="w-2.5 sm:w-4 h-0.5 bg-pink-500/80" />
+              <span className="px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider bg-pink-950 text-pink-300 border border-pink-700/80 rounded-full shadow-xs whitespace-nowrap">
+                Spouse Link
+              </span>
+              <div className="w-2.5 sm:w-4 h-0.5 bg-pink-500/80" />
+            </div>
+
             <MemberCard
               member={spouse}
-              onClick={() => onSelectMember(spouse)}
+              isSpouse
+              onClick={() => onSelectMember({
+                ...spouse,
+                spouses: [node],
+                siblings: []
+              })}
               highlight={searchTerm && spouse.display_name?.toLowerCase().includes(searchTerm.toLowerCase())}
             />
           </React.Fragment>
@@ -403,25 +470,34 @@ function TreeNode({
       {hasChildren && !isCollapsed && (
         <div className="flex flex-col items-center mt-3 animate-fadeIn">
           {/* Vertical drop line from parents */}
-          <div className="w-0.5 h-6 bg-slate-300" />
+          <div className="w-0.5 h-6 bg-indigo-500/80" />
 
-          {/* Children container with horizontal connecting bar */}
+          {/* Children container with horizontal connecting bar for Brothers & Sisters */}
           <div className="relative pt-6">
             {children.length > 1 && (
-              <div
-                className="absolute top-0 h-0.5 bg-slate-300"
-                style={{
-                  left: `${(1 / (children.length * 2)) * 100}%`,
-                  right: `${(1 / (children.length * 2)) * 100}%`
-                }}
-              />
+              <>
+                {/* Brothers & Sisters Link Line */}
+                <div
+                  className="absolute top-0 h-0.5 bg-indigo-500/80"
+                  style={{
+                    left: `${(1 / (children.length * 2)) * 100}%`,
+                    right: `${(1 / (children.length * 2)) * 100}%`
+                  }}
+                />
+
+                {/* Sibling (Brothers & Sisters) Badge on connecting bar */}
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider bg-indigo-950 text-indigo-300 border border-indigo-700/80 rounded-full shadow-xs flex items-center gap-1 z-10 whitespace-nowrap">
+                  <Users className="w-2.5 h-2.5 text-indigo-400" />
+                  <span>Siblings Link (Brothers &amp; Sisters)</span>
+                </div>
+              </>
             )}
 
-            <div className="flex items-start justify-center space-x-8 sm:space-x-12">
+            <div className="flex items-start justify-center space-x-6 sm:space-x-10">
               {children.map((child) => (
                 <div key={child.id} className="flex flex-col items-center relative">
                   {/* Vertical drop line to child */}
-                  <div className="w-0.5 h-6 bg-slate-300 absolute -top-6" />
+                  <div className="w-0.5 h-6 bg-indigo-500/80 absolute -top-6" />
                   <TreeNode
                     node={child}
                     level={level + 1}
@@ -432,6 +508,7 @@ function TreeNode({
                     onSetFocus={onSetFocus}
                     focusedMemberId={focusedMemberId}
                     searchTerm={searchTerm}
+                    siblings={children}
                   />
                 </div>
               ))}
@@ -443,7 +520,7 @@ function TreeNode({
   );
 }
 
-function MemberCard({ member, onClick, highlight, hasChildren, isCollapsed, onToggleCollapse }) {
+function MemberCard({ member, onClick, highlight, hasChildren, isCollapsed, onToggleCollapse, isSpouse, hasSiblingLink }) {
   const displayName = member.display_name || member.full_name || 'Member';
 
   return (
@@ -451,20 +528,38 @@ function MemberCard({ member, onClick, highlight, hasChildren, isCollapsed, onTo
       <button
         type="button"
         onClick={onClick}
-        className={`group relative text-left bg-white border rounded-2xl p-3 shadow-sm hover:shadow-md transition-all w-44 hover:-translate-y-0.5 ${
+        className={`group relative text-left bg-slate-900 border rounded-xl p-2.5 shadow-sm hover:shadow-md transition-all w-40 sm:w-44 hover:-translate-y-0.5 ${
           highlight
-            ? 'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-50/20'
-            : 'border-slate-200 hover:border-emerald-300'
+            ? 'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-950/40'
+            : isSpouse
+            ? 'border-pink-800/80 hover:border-pink-500'
+            : 'border-slate-800 hover:border-emerald-600'
         }`}
       >
-        <div className="flex items-center space-x-2.5">
-          <div className="w-8 h-8 rounded-xl bg-slate-100 group-hover:bg-emerald-100 text-slate-700 group-hover:text-emerald-800 flex items-center justify-center font-bold text-xs shrink-0 transition-colors">
+        <div className="flex items-center space-x-2">
+          <div className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 transition-colors ${
+            isSpouse
+              ? 'bg-pink-950 text-pink-300 border border-pink-800/60'
+              : 'bg-slate-800 text-slate-300 group-hover:bg-emerald-950 group-hover:text-emerald-300'
+          }`}>
             {displayName.charAt(0) || 'M'}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-bold text-slate-800 truncate group-hover:text-emerald-700 transition-colors" title={displayName}>
+            <p className="text-xs font-bold text-slate-100 truncate group-hover:text-emerald-400 transition-colors" title={displayName}>
               {displayName}
             </p>
+            <div className="flex items-center gap-1 mt-0.5">
+              {isSpouse && (
+                <span className="text-[9px] font-semibold text-pink-400 bg-pink-950/70 border border-pink-800/60 px-1 rounded">
+                  Spouse
+                </span>
+              )}
+              {hasSiblingLink && !isSpouse && (
+                <span className="text-[9px] font-semibold text-indigo-400 bg-indigo-950/70 border border-indigo-800/60 px-1 rounded">
+                  Sibling
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </button>
@@ -477,7 +572,7 @@ function MemberCard({ member, onClick, highlight, hasChildren, isCollapsed, onTo
             onToggleCollapse();
           }}
           title={isCollapsed ? 'Expand branch' : 'Collapse branch'}
-          className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-slate-100 hover:bg-emerald-100 text-slate-600 hover:text-emerald-800 border border-slate-300 flex items-center justify-center shadow-sm z-20 transition"
+          className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-slate-800 hover:bg-emerald-700 text-slate-300 hover:text-white border border-slate-600 flex items-center justify-center shadow-xs z-20 transition"
         >
           {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
         </button>
@@ -504,40 +599,40 @@ function IndentedListNode({
   const isMatch = searchTerm && node.display_name?.toLowerCase().includes(searchTerm.toLowerCase());
 
   return (
-    <div className="space-y-1.5" style={{ paddingLeft: `${level * 20}px` }}>
-      <div className="flex items-center gap-2">
+    <div className="space-y-1" style={{ paddingLeft: `${level * 16}px` }}>
+      <div className="flex items-center gap-1.5">
         {hasChildren ? (
           <button
             type="button"
             onClick={() => onToggleCollapse(node.id)}
-            className="p-1 rounded hover:bg-slate-100 text-slate-500"
+            className="p-1 rounded hover:bg-slate-800 text-slate-400"
           >
-            {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
         ) : (
-          <div className="w-5" />
+          <div className="w-4" />
         )}
 
         <button
           type="button"
-          onClick={() => onSelectMember(node)}
-          className={`px-3 py-1.5 rounded-xl border text-left text-xs font-bold transition flex items-center gap-2 ${
+          onClick={() => onSelectMember({ ...node, spouses, children, siblings: [] })}
+          className={`px-2.5 py-1 rounded-lg border text-left text-xs font-bold transition flex items-center gap-2 ${
             isMatch
-              ? 'bg-emerald-50 border-emerald-400 text-emerald-800 ring-1 ring-emerald-400'
-              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
+              ? 'bg-emerald-950 border-emerald-500 text-emerald-300'
+              : 'bg-slate-950 hover:bg-slate-800 border-slate-800 text-slate-200'
           }`}
         >
           <span>{node.display_name}</span>
           {spouses.length > 0 && (
-            <span className="text-slate-400 font-normal">
-              & {spouses.map(s => s.display_name).join(', ')}
+            <span className="text-pink-400 font-medium text-[11px]">
+              &amp; {spouses.map(s => s.display_name).join(', ')}
             </span>
           )}
         </button>
       </div>
 
       {hasChildren && !isCollapsed && (
-        <div className="border-l-2 border-slate-200 ml-2.5 pl-2 space-y-1.5">
+        <div className="border-l-2 border-indigo-800/80 ml-2 pl-2 space-y-1">
           {children.map(child => (
             <IndentedListNode
               key={child.id}

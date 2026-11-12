@@ -17,6 +17,24 @@ export default function App() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [adminUser, setAdminUser] = useState(null);
 
+  const [isDarkMode, setIsDarkMode] = useState(true);
+
+  useEffect(() => {
+    document.documentElement.classList.add('dark');
+  }, []);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(prev => {
+      const next = !prev;
+      if (next) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      return next;
+    });
+  };
+
   const resolveTargetPage = (pathname, hash, search) => {
     const cleanPath = pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
     const cleanHash = hash.replace(/^#+/, '').toLowerCase();
@@ -118,15 +136,17 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 selection:bg-emerald-100 selection:text-emerald-900">
+    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-emerald-900 selection:text-emerald-100">
       <Navbar
         activePage={activePage}
         setActivePage={handlePageChange}
         isAdminLoggedIn={isAdminLoggedIn}
         onLogout={handleLogout}
+        isDarkMode={isDarkMode}
+        onToggleDarkMode={toggleDarkMode}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
         {activePage === 'tree' && <HomePage onNavigate={handlePageChange} initialParams={pageParams} />}
         {activePage === 'onboard' && <OnboardSurnamePage onNavigate={handlePageChange} initialParams={pageParams} />}
         {activePage === 'add-member' && <AddMemberPage onNavigate={handlePageChange} initialParams={pageParams} />}
@@ -150,24 +170,24 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white py-6 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
+      <footer className="border-t border-slate-800 bg-slate-900/90 py-5 mt-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-4">
           <div className="flex items-center space-x-2">
-            <GitBranch className="w-4 h-4 text-emerald-600" />
-            <span className="font-semibold text-slate-700">Family Tree Portal</span>
+            <GitBranch className="w-4 h-4 text-emerald-400" />
+            <span className="font-semibold text-slate-200">Family Tree Portal</span>
             <span>•</span>
             <span>Google Sheets Architecture</span>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <button onClick={() => handlePageChange('tree')} className="hover:text-emerald-700">Lineages</button>
-            <button onClick={() => handlePageChange('onboard')} className="hover:text-emerald-700">Onboard Surname</button>
-            <button onClick={() => handlePageChange('ticket-status')} className="hover:text-emerald-700">Track Ticket</button>
-            <button onClick={() => handlePageChange('admin')} className="hover:text-emerald-700 font-medium">Admin Portal</button>
+          <div className="flex items-center space-x-4 text-slate-400">
+            <button onClick={() => handlePageChange('tree')} className="hover:text-emerald-400 transition-colors">Lineages</button>
+            <button onClick={() => handlePageChange('onboard')} className="hover:text-emerald-400 transition-colors">Onboard Surname</button>
+            <button onClick={() => handlePageChange('ticket-status')} className="hover:text-emerald-400 transition-colors">Track Ticket</button>
+            <button onClick={() => handlePageChange('admin')} className="hover:text-emerald-400 transition-colors font-medium">Admin Portal</button>
           </div>
 
-          <div className="flex items-center space-x-1 text-slate-400">
-            <span>Formula-sanitized & strictly whitelisted</span>
+          <div className="flex items-center space-x-1 text-slate-500">
+            <span>Formula-sanitized &amp; strictly whitelisted</span>
           </div>
         </div>
       </footer>

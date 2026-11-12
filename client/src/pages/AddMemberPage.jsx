@@ -37,6 +37,8 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
   const [isDeceased, setIsDeceased] = useState(false);
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [occupation, setOccupation] = useState('');
+  const [location, setLocation] = useState('');
 
   // Minor / Deceased parent link
   const [fatherPersonId, setFatherPersonId] = useState('');
@@ -281,6 +283,8 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
           marital_status: isFemaleAndMarried ? 'Married' : maritalStatus,
           surname_before_marriage: maidenSurname,
           prior_marriage_surname: maidenSurname,
+          occupation: occupation.trim(),
+          location: location.trim(),
           dob: dobVal.value, // YYYY-MM-DD
           is_deceased: isDeceased,
           email: memberEmail,
@@ -294,6 +298,8 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
         is_deceased: isDeceased,
         surname_before_marriage: maidenSurname,
         prior_marriage_surname: maidenSurname,
+        occupation: occupation.trim(),
+        location: location.trim(),
         email: memberEmail,
         phone: memberPhone,
         father_person_id: fatherPersonId || null,
@@ -332,33 +338,33 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
   if (ticketResult) {
     if (ticketResult.direct_linked) {
       return (
-        <div className="max-w-4xl mx-auto bg-white rounded-3xl border border-emerald-200 p-8 shadow-sm">
-          <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 border border-emerald-100">
-            <CheckCircle2 className="w-8 h-8" />
+        <div className="max-w-4xl mx-auto bg-slate-900 rounded-3xl border border-emerald-800/80 p-6 sm:p-8 shadow-sm text-slate-100">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-950 text-emerald-400 flex items-center justify-center mx-auto mb-3.5 border border-emerald-800/80">
+            <CheckCircle2 className="w-7 h-7" />
           </div>
-          <h2 className="text-2xl font-bold text-center text-slate-900">Directly Linked to Family Tree!</h2>
-          <p className="text-center text-sm text-slate-600 mt-2">
+          <h2 className="text-xl sm:text-2xl font-bold text-center text-white">Directly Linked to Family Tree!</h2>
+          <p className="text-center text-xs sm:text-sm text-slate-300 mt-2">
             <strong>{firstName} {lastName}</strong> has been verified via relative email ownership and directly added to <strong>{selectedMember?.full_name || 'the family lineage'}</strong>.
           </p>
 
-          <div className="mt-6 p-4 bg-emerald-50/60 rounded-2xl border border-emerald-200 text-center">
-            <span className="text-xs uppercase tracking-wider text-emerald-700 font-bold">Your Permanent Member Reference ID</span>
-            <p className="text-2xl font-mono font-extrabold text-emerald-800 mt-1 select-all">
+          <div className="mt-5 p-3.5 bg-emerald-950/60 rounded-xl border border-emerald-800 text-center">
+            <span className="text-[11px] uppercase tracking-wider text-emerald-400 font-bold">Your Permanent Member Reference ID</span>
+            <p className="text-xl sm:text-2xl font-mono font-extrabold text-emerald-300 mt-1 select-all">
               {ticketResult.member_ref_id}
             </p>
           </div>
 
-          <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-1">
-            <p className="font-semibold text-slate-700">Instant Lineage Verification</p>
+          <div className="mt-5 p-3.5 bg-slate-950 rounded-xl border border-slate-800 text-xs text-slate-400 space-y-1">
+            <p className="font-semibold text-slate-200">Instant Lineage Verification</p>
             <p>
               Your record was authenticated against registered member email records in Google Sheets and published immediately without administrative delay.
             </p>
           </div>
 
-          <div className="mt-8 flex justify-center space-x-3">
+          <div className="mt-6 flex justify-center space-x-3">
             <button
               onClick={() => onNavigate('tree', { surname_ref_id: selectedSurnameId })}
-              className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-emerald-600/20"
+              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm"
             >
               View in Family Tree
             </button>
@@ -370,7 +376,7 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                 setParentEmail('');
                 setParentVerified(false);
               }}
-              className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-xl transition-all"
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs sm:text-sm rounded-xl transition-all border border-slate-700"
             >
               Add Another Member
             </button>
@@ -380,45 +386,45 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
     }
 
     return (
-      <div className="max-w-4xl mx-auto bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
-        <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-4 border border-amber-100">
-          <Clock className="w-8 h-8" />
+      <div className="max-w-4xl mx-auto bg-slate-900 rounded-3xl border border-slate-800 p-6 sm:p-8 shadow-sm text-slate-100">
+        <div className="w-14 h-14 rounded-2xl bg-amber-950 text-amber-400 flex items-center justify-center mx-auto mb-3.5 border border-amber-800">
+          <Clock className="w-7 h-7" />
         </div>
-        <h2 className="text-2xl font-bold text-center text-slate-900">Exception Request Submitted!</h2>
-        <p className="text-center text-sm text-slate-600 mt-2">
+        <h2 className="text-xl sm:text-2xl font-bold text-center text-white">Exception Request Submitted!</h2>
+        <p className="text-center text-xs sm:text-sm text-slate-300 mt-2">
           Your request to add <strong>{firstName} {lastName}</strong> has been submitted as an exception for Administrator review.
         </p>
 
-        <div className="mt-6 p-4 bg-slate-50 rounded-2xl border border-slate-200 text-center">
-          <span className="text-xs uppercase tracking-wider text-slate-500 font-bold">Your Tracking Ticket ID</span>
-          <p className="text-2xl font-mono font-extrabold text-slate-800 mt-1 select-all">
+        <div className="mt-5 p-3.5 bg-slate-950 rounded-xl border border-slate-800 text-center">
+          <span className="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Your Tracking Ticket ID</span>
+          <p className="text-xl sm:text-2xl font-mono font-extrabold text-white mt-1 select-all">
             {ticketResult.ticket_id}
           </p>
         </div>
 
-        <div className="mt-6 p-5 bg-amber-50/70 border border-amber-200 rounded-2xl text-xs sm:text-sm text-slate-700 space-y-2">
-          <div className="flex items-center space-x-2 font-bold text-amber-800">
-            <AlertCircle className="w-4 h-4 text-amber-600" />
+        <div className="mt-5 p-4 bg-amber-950/60 border border-amber-800 rounded-xl text-xs sm:text-sm text-slate-300 space-y-1.5">
+          <div className="flex items-center space-x-2 font-bold text-amber-300">
+            <AlertCircle className="w-4 h-4 text-amber-400" />
             <span>Administrator Review Required</span>
           </div>
           <p>
-            Your request has been registered with Ticket ID: <strong className="font-mono select-all text-slate-800">{ticketResult.ticket_id}</strong>.
+            Your request has been registered with Ticket ID: <strong className="font-mono select-all text-white">{ticketResult.ticket_id}</strong>.
           </p>
-          <p className="text-xs text-slate-600">
+          <p className="text-xs text-slate-400">
             The administrator will review your submission and link the member to the family lineage. You can track ticket progress using the button below.
           </p>
         </div>
 
-        <div className="mt-8 flex justify-center space-x-3">
+        <div className="mt-6 flex justify-center space-x-3">
           <button
             onClick={() => onNavigate('ticket-status')}
-            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-emerald-600/20"
+            className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm"
           >
             Track Status
           </button>
           <button
             onClick={() => onNavigate('tree')}
-            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-xl transition-all"
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs sm:text-sm rounded-xl transition-all border border-slate-700"
           >
             Return to Tree
           </button>
@@ -429,41 +435,41 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center">
-            <UserPlus className="w-6 h-6" />
+      <div className="bg-slate-900 rounded-3xl border border-slate-800 p-5 sm:p-7 shadow-sm text-slate-100">
+        <div className="flex items-center space-x-3 mb-5">
+          <div className="w-10 h-10 rounded-xl bg-emerald-950 text-emerald-400 border border-emerald-800/80 flex items-center justify-center shrink-0">
+            <UserPlus className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Add Family Member</h1>
-            <p className="text-xs sm:text-sm text-slate-500">
+            <h1 className="text-lg sm:text-xl font-bold text-white">Add Family Member</h1>
+            <p className="text-xs text-slate-400">
               Submit a member record to extend an approved lineage. Permanent Ref ID assigned after Admin approval.
             </p>
           </div>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl flex items-center space-x-3 text-sm">
-            <AlertCircle className="w-5 h-5 shrink-0" />
+          <div className="mb-4 p-3 bg-rose-950/60 border border-rose-800 text-rose-300 rounded-xl flex items-center space-x-2 text-xs">
+            <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Family Connection Grid: Lineage, Related To, Relationship */}
-          <div className="border border-slate-200 rounded-2xl p-5 bg-slate-50/50 space-y-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">
+          <div className="border border-slate-800 rounded-2xl p-4 bg-slate-950/60 space-y-2.5">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">
               Family Connection
             </span>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
                   Select Family Lineage *
                 </label>
                 <select
                   value={selectedSurnameId}
                   onChange={(e) => handleSurnameSelect(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm font-semibold text-slate-100 focus:outline-none focus:border-emerald-500"
                 >
                   <option value="">-- Select Family Lineage --</option>
                   {surnames.map((s, idx) => (
@@ -475,14 +481,14 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                <label className="block text-xs font-medium text-slate-300 mb-1">
                   Related To (Existing Member) *
                 </label>
                 <select
                   value={targetPersonId}
                   onChange={(e) => handleTargetPersonChange(e.target.value)}
                   disabled={!selectedSurnameId || loadingMembers}
-                  className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-500 disabled:bg-slate-100 disabled:cursor-not-allowed"
+                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs font-semibold text-slate-100 focus:outline-none focus:border-emerald-500 disabled:bg-slate-950 disabled:text-slate-600 disabled:cursor-not-allowed"
                 >
                   {!selectedSurnameId ? (
                     <option value="">-- Select a family lineage first --</option>
@@ -507,13 +513,13 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                <label className="block text-xs font-medium text-slate-300 mb-1">
                   Your Relationship to Relative *
                 </label>
                 <select
                   value={relationshipType}
                   onChange={(e) => handleRelationshipChange(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-emerald-800 focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs font-bold text-emerald-400 focus:outline-none focus:border-emerald-500"
                 >
                   <option value="SON">SON</option>
                   <option value="DAUGHTER">DAUGHTER</option>
@@ -526,14 +532,14 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
           </div>
 
           {/* POST THIS: Verify Relative Email to Link Directly */}
-          <div className="border border-slate-200 bg-slate-50/70 rounded-2xl p-5 space-y-3">
+          <div className="border border-slate-800 bg-slate-950/60 rounded-2xl p-4 space-y-2.5">
             <div className="flex items-center space-x-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-800">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
                 Verify Relative Email to Link Directly
               </span>
             </div>
-            <p className="text-xs text-slate-600 leading-relaxed">
+            <p className="text-xs text-slate-400 leading-relaxed">
               To link directly without waiting for admin approval, enter the registered &amp; verified email address of <strong>{selectedMember?.full_name || 'the selected family member'}</strong>.
             </p>
 
@@ -547,37 +553,37 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                   setParentVerified(false);
                   setParentVerificationError('');
                 }}
-                className={`flex-1 px-3.5 py-2.5 bg-white border rounded-xl text-xs sm:text-sm font-mono focus:outline-none ${
+                className={`flex-1 px-3 py-2 bg-slate-900 border rounded-xl text-xs sm:text-sm font-mono text-slate-100 placeholder-slate-500 focus:outline-none ${
                   parentVerified
-                    ? 'border-emerald-500 bg-emerald-50/20'
+                    ? 'border-emerald-500 bg-emerald-950/30'
                     : parentVerificationError
-                    ? 'border-rose-400 bg-rose-50/20'
-                    : 'border-slate-200'
+                    ? 'border-rose-400 bg-rose-950/30'
+                    : 'border-slate-700'
                 }`}
               />
               <button
                 type="button"
                 onClick={handleVerifyParentEmail}
                 disabled={!parentEmail || verifyingParent}
-                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-xs font-bold rounded-xl shrink-0 transition shadow-sm"
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-600 text-white text-xs font-bold rounded-xl shrink-0 transition shadow-xs"
               >
                 {verifyingParent ? 'Verifying...' : parentVerified ? 'Verified' : 'Verify Email'}
               </button>
             </div>
 
             {parentVerified && (
-              <div className="flex items-center gap-1.5 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-medium">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <div className="flex items-center gap-1.5 p-2.5 bg-emerald-950/70 border border-emerald-800 rounded-xl text-emerald-300 text-xs font-medium">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>Verified! Email matches records for {selectedMember?.full_name}. You will be linked directly to this family.</span>
               </div>
             )}
 
             {parentVerificationError && (
-              <div className="flex items-start gap-1.5 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs leading-relaxed">
-                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-1.5 p-2.5 bg-amber-950/70 border border-amber-800 rounded-xl text-amber-200 text-xs leading-relaxed">
+                <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold">{parentVerificationError}</p>
-                  <p className="text-[11px] text-amber-700 mt-0.5">
+                  <p className="text-[11px] text-amber-300/80 mt-0.5">
                     You can still proceed by clicking "Send Request to Admin" below as an exception case.
                   </p>
                 </div>
@@ -585,22 +591,22 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
             )}
 
             {selectedMember && !selectedMember.has_registered_email && (
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs">
+              <div className="p-2.5 bg-amber-950/60 border border-amber-800 rounded-xl text-amber-300 text-xs">
                 Note: {selectedMember.full_name} does not have an active email on file (deceased or elder record). You can submit this as an exception request for administrator review.
               </div>
             )}
           </div>
 
           {/* THEN: User Entry Details */}
-          <div className="border border-slate-200 rounded-2xl p-5 bg-white space-y-4">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-800">
+          <div className="border border-slate-800 rounded-2xl p-4 bg-slate-950/40 space-y-3.5">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
               New Member Details
             </span>
 
             {/* Step 1: Name, Contact & Deceased status */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">First Name *</label>
+                <label className="block text-xs font-medium text-slate-300 mb-1">First Name *</label>
                 <input
                   type="text"
                   required
@@ -608,34 +614,34 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                   value={firstName}
                   onBlur={() => markTouched('firstName')}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className={`w-full px-3.5 py-2.5 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 ${
-                    touched.firstName && !firstVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                  className={`w-full px-3 py-2 bg-slate-900 border rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 ${
+                    touched.firstName && !firstVal.valid ? 'border-rose-400 bg-rose-950/30' : 'border-slate-700'
                   }`}
                 />
                 {touched.firstName && !firstVal.valid && (
-                  <p className="text-[11px] text-rose-600 mt-1">{firstVal.error}</p>
+                  <p className="text-[11px] text-rose-400 mt-1">{firstVal.error}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Middle Name</label>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Middle Name</label>
                 <input
                   type="text"
                   placeholder="e.g. Kumar (optional)"
                   value={middleName}
                   onBlur={() => markTouched('middleName')}
                   onChange={(e) => setMiddleName(e.target.value)}
-                  className={`w-full px-3.5 py-2.5 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 ${
-                    touched.middleName && !midVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                  className={`w-full px-3 py-2 bg-slate-900 border rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 ${
+                    touched.middleName && !midVal.valid ? 'border-rose-400 bg-rose-950/30' : 'border-slate-700'
                   }`}
                 />
                 {touched.middleName && !midVal.valid && (
-                  <p className="text-[11px] text-rose-600 mt-1">{midVal.error}</p>
+                  <p className="text-[11px] text-rose-400 mt-1">{midVal.error}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Last Name *</label>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Last Name *</label>
                 <input
                   type="text"
                   required
@@ -646,41 +652,41 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                     setLastName(e.target.value);
                     setLastNameManuallyEdited(true);
                   }}
-                  className={`w-full px-3.5 py-2.5 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 ${
-                    touched.lastName && !lastVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                  className={`w-full px-3 py-2 bg-slate-900 border rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 ${
+                    touched.lastName && !lastVal.valid ? 'border-rose-400 bg-rose-950/30' : 'border-slate-700'
                   }`}
                 />
                 {touched.lastName && !lastVal.valid && (
-                  <p className="text-[11px] text-rose-600 mt-1">{lastVal.error}</p>
+                  <p className="text-[11px] text-rose-400 mt-1">{lastVal.error}</p>
                 )}
               </div>
             </div>
 
-            <div className="flex items-center space-x-2 pt-1 pb-1">
+            <div className="flex items-center space-x-2 pt-0.5 pb-0.5">
               <input
                 type="checkbox"
                 id="isDeceased"
                 checked={isDeceased}
                 onChange={(e) => setIsDeceased(e.target.checked)}
-                className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                className="w-4 h-4 text-emerald-600 bg-slate-900 rounded border-slate-700 focus:ring-emerald-500"
               />
-              <label htmlFor="isDeceased" className="text-xs font-medium text-slate-700 cursor-pointer">
+              <label htmlFor="isDeceased" className="text-xs font-medium text-slate-300 cursor-pointer">
                 This family member is deceased (no phone/email required; linked by parent identity)
               </label>
             </div>
 
             {/* If not deceased: Phone, Email & Email OTP Verification */}
             {!isDeceased && (
-              <div className="border border-emerald-100 bg-emerald-50/40 rounded-2xl p-4 space-y-3">
-                <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">
+              <div className="border border-slate-800 bg-slate-950/70 rounded-2xl p-3.5 space-y-2.5">
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
                   Contact Identity &amp; Email Verification
                 </span>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-400">
                   Enter your mobile number and email. Email OTP verification is mandatory to unlock remaining details.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Phone Number *</label>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Phone Number *</label>
                     <input
                       type="tel"
                       required
@@ -689,19 +695,19 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                       value={phone}
                       onBlur={() => markTouched('phone')}
                       onChange={(e) => setPhone(e.target.value)}
-                      className={`w-full px-3.5 py-2 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 font-mono ${
-                        touched.phone && !phoneVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                      className={`w-full px-3 py-2 bg-slate-900 border rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono ${
+                        touched.phone && !phoneVal.valid ? 'border-rose-400 bg-rose-950/30' : 'border-slate-700'
                       }`}
                     />
                     {touched.phone && !phoneVal.valid ? (
-                      <p className="text-[11px] text-rose-600 mt-1">{phoneVal.error}</p>
+                      <p className="text-[11px] text-rose-400 mt-1">{phoneVal.error}</p>
                     ) : (
-                      <p className="text-[10px] text-slate-400 mt-0.5">10 digits starting with 9, 8, 7, or 6</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5">10 digits starting with 9, 8, 7, or 6</p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Email Address *</label>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Email Address *</label>
                     <input
                       type="email"
                       required
@@ -709,16 +715,16 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                       value={email}
                       onBlur={() => markTouched('email')}
                       onChange={(e) => setEmail(e.target.value)}
-                      className={`w-full px-3.5 py-2 bg-white border rounded-xl text-sm focus:outline-none focus:border-emerald-500 ${
-                        touched.email && !emailVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                      className={`w-full px-3 py-2 bg-slate-900 border rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 ${
+                        touched.email && !emailVal.valid ? 'border-rose-400 bg-rose-950/30' : 'border-slate-700'
                       }`}
                     />
                     {touched.email && !emailVal.valid && (
-                      <p className="text-[11px] text-rose-600 mt-1">{emailVal.error}</p>
+                      <p className="text-[11px] text-rose-400 mt-1">{emailVal.error}</p>
                     )}
                   </div>
 
-                  <div className="col-span-1 sm:col-span-2 pt-2">
+                  <div className="col-span-1 sm:col-span-2 pt-1">
                     <EmailOtpVerification
                       email={email}
                       purpose="NEW_PERSON_EMAIL_VERIFICATION"
@@ -733,18 +739,18 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
 
             {/* Step 2: Remaining All Details (Unlocked once email is verified or if deceased) */}
             {(isDeceased || memberOtpToken) ? (
-              <div className="border border-slate-200 rounded-2xl p-5 bg-slate-50/40 space-y-4 animate-in fade-in duration-200">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Remaining Member Details
+              <div className="border border-slate-800 rounded-2xl p-4 bg-slate-950/60 space-y-3.5 animate-in fade-in duration-200">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
+                  Remaining Member Details (Personal &amp; Occupation)
                 </span>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Gender *</label>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Gender *</label>
                     <select
                       value={gender}
                       onChange={(e) => setGender(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-emerald-500"
                     >
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
@@ -753,7 +759,7 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Date of Birth (DD/MM/YYYY) *</label>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Date of Birth (DD/MM/YYYY) *</label>
                     <input
                       type="text"
                       required
@@ -762,22 +768,44 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                       value={dob}
                       onBlur={() => markTouched('dob')}
                       onChange={(e) => setDob(formatDobMask(e.target.value))}
-                      className={`w-full px-3.5 py-2.5 bg-white border rounded-xl text-sm font-mono focus:outline-none focus:border-emerald-500 ${
-                        touched.dob && !dobVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
+                      className={`w-full px-3 py-2 bg-slate-900 border rounded-xl text-xs sm:text-sm font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 ${
+                        touched.dob && !dobVal.valid ? 'border-rose-400 bg-rose-950/30' : 'border-slate-700'
                       }`}
                     />
                     {touched.dob && !dobVal.valid && (
-                      <p className="text-[11px] text-rose-600 mt-1">{dobVal.error}</p>
+                      <p className="text-[11px] text-rose-400 mt-1">{dobVal.error}</p>
                     )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Occupation / Profession</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Engineer, Business, Doctor"
+                      value={occupation}
+                      onChange={(e) => setOccupation(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">City / Location</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Bangalore, London"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                    />
                   </div>
 
                   {gender === 'Female' && relationshipType !== 'SPOUSE' && (
                     <div>
-                      <label className="block text-xs font-medium text-slate-600 mb-1">Marital Status *</label>
+                      <label className="block text-xs font-medium text-slate-300 mb-1">Marital Status *</label>
                       <select
                         value={maritalStatus}
                         onChange={(e) => setMaritalStatus(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-emerald-500"
                       >
                         <option value="Single">Single</option>
                         <option value="Married">Married</option>
@@ -789,7 +817,7 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
 
                   {gender === 'Female' && (relationshipType === 'SPOUSE' || maritalStatus === 'Married') && (
                     <div className={relationshipType === 'SPOUSE' ? 'sm:col-span-2' : ''}>
-                      <label className="block text-xs font-medium text-slate-600 mb-1">
+                      <label className="block text-xs font-medium text-slate-300 mb-1">
                         Prior Marriage Surname (Maiden Name)
                       </label>
                       <input
@@ -797,7 +825,7 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                         placeholder="e.g. Kulkarni, Patil"
                         value={beforeMarriageSurname}
                         onChange={(e) => setBeforeMarriageSurname(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                       />
                       <p className="text-[10px] text-slate-400 mt-0.5">
                         Maiden surname before marriage for maternal lineage preservation. Stored in Google Sheets under prior_marriage_surname.
@@ -808,20 +836,20 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
 
                 {/* Minor / Deceased Parent Linking */}
                 {(!isAdult || isDeceased) && (
-                  <div className="border border-slate-200 bg-slate-50/70 rounded-2xl p-4 space-y-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                  <div className="border border-slate-800 bg-slate-950/60 rounded-xl p-3.5 space-y-2.5">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
                       Parent Linking (Required for Minors &amp; Deceased)
                     </span>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-400">
                       Must link to at least one parent (Father or Mother) in the lineage.
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">Father</label>
+                        <label className="block text-xs font-medium text-slate-300 mb-1">Father</label>
                         <select
                           value={fatherPersonId}
                           onChange={(e) => setFatherPersonId(e.target.value)}
-                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500"
+                          className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
                         >
                           <option value="">-- Select Father --</option>
                           {familyMembers.map(m => {
@@ -835,11 +863,11 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">Mother</label>
+                        <label className="block text-xs font-medium text-slate-300 mb-1">Mother</label>
                         <select
                           value={motherPersonId}
                           onChange={(e) => setMotherPersonId(e.target.value)}
-                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500"
+                          className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
                         >
                           <option value="">-- Select Mother --</option>
                           {familyMembers.map(m => {
@@ -857,30 +885,35 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                 )}
               </div>
             ) : (
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center space-x-3 text-slate-600 text-xs">
-                <div className="w-8 h-8 rounded-xl bg-slate-200/80 flex items-center justify-center shrink-0">
-                  <ShieldCheck className="w-4 h-4 text-slate-500" />
+              <div className="p-3.5 bg-slate-950/60 border border-slate-800 rounded-xl flex items-center space-x-3 text-slate-400 text-xs">
+                <div className="w-7 h-7 rounded-lg bg-slate-800 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-4 h-4 text-slate-400" />
                 </div>
                 <div>
-                  <p className="font-bold text-slate-800">Remaining Details Locked</p>
-                  <p className="text-slate-500 mt-0.5">Please verify the member email address with OTP above to enter Date of Birth, Gender, and Prior Marriage Surname.</p>
+                  <p className="font-bold text-slate-200">Remaining Details Locked</p>
+                  <p className="text-slate-400 mt-0.5">Please verify the member email address with OTP above to enter Date of Birth, Gender, Occupation, and Prior Marriage Surname.</p>
                 </div>
               </div>
             )}
           </div>
 
-          <div className="space-y-2">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+            {!isDirectLinkReady ? (
+              <p className="text-[11px] text-slate-400">
+                Relative email not verified directly. Submission will be sent to the administrator for manual review.
+              </p>
+            ) : <div />}
             <button
               type="submit"
               disabled={!isFormValid || loading}
-              className={`w-full py-3.5 text-white font-bold text-sm rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 ${
+              className={`px-6 py-2.5 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm flex items-center justify-center space-x-2 shrink-0 ${
                 isDirectLinkReady
-                  ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
-                  : 'bg-slate-800 hover:bg-slate-900 shadow-slate-800/20'
+                  ? 'bg-emerald-600 hover:bg-emerald-500'
+                  : 'bg-slate-800 hover:bg-slate-700 border border-slate-700'
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               {loading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : isDirectLinkReady ? (
                 <>
                   <CheckCircle2 className="w-4 h-4" />
@@ -893,11 +926,6 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                 </>
               )}
             </button>
-            {!isDirectLinkReady && (
-              <p className="text-[11px] text-center text-slate-500">
-                Relative email not verified directly. Submission will be sent to the administrator for manual review.
-              </p>
-            )}
           </div>
         </form>
 

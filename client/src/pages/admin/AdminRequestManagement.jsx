@@ -235,62 +235,62 @@ export default function AdminRequestManagement({
     switch (typeConfig.id) {
       case 'NEW_FAMILY_REGISTRATION':
         return (
-          <div className="space-y-4">
-            <div className="p-4 bg-emerald-50/70 border border-emerald-200 rounded-2xl">
-              <span className="text-xs font-semibold text-emerald-800 uppercase tracking-wider block mb-1">
+          <div className="space-y-3">
+            <div className="p-3 bg-emerald-950/60 border border-emerald-800 rounded-2xl">
+              <span className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider block mb-0.5">
                 Surname Lineage
               </span>
-              <p className="text-xl font-extrabold text-emerald-950 font-mono">
+              <p className="text-lg font-extrabold text-emerald-300 font-mono">
                 {payload.surname_name || payload.surname || 'N/A'}
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
               {/* Founding Husband */}
-              <div className="p-3.5 bg-white border border-slate-200 rounded-xl space-y-2">
-                <span className="font-bold text-slate-800 text-sm block border-b border-slate-100 pb-1">
+              <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-xl space-y-1.5">
+                <span className="font-bold text-white text-xs block border-b border-slate-800 pb-1">
                   Founding Husband
                 </span>
-                <p className="text-slate-700"><strong>Name:</strong> {payload.husband?.full_name || `${payload.husband?.first_name || ''} ${payload.husband?.last_name || ''}` || 'N/A'}</p>
-                <p className="text-slate-700"><strong>DOB:</strong> {payload.husband?.dob || 'N/A'}</p>
-                <p className="text-slate-700"><strong>Email:</strong> {payload.husband?.email || 'N/A'}</p>
-                <p className="text-slate-700"><strong>Phone:</strong> {payload.husband?.phone || 'N/A'}</p>
+                <p className="text-slate-300"><strong>Name:</strong> {payload.husband?.full_name || `${payload.husband?.first_name || ''} ${payload.husband?.last_name || ''}` || 'N/A'}</p>
+                <p className="text-slate-300"><strong>DOB:</strong> {payload.husband?.dob || 'N/A'}</p>
+                <p className="text-slate-300"><strong>Email:</strong> {payload.husband?.email || 'N/A'}</p>
+                <p className="text-slate-300"><strong>Phone:</strong> {payload.husband?.phone || 'N/A'}</p>
               </div>
 
               {/* Founding Wife */}
-              <div className="p-3.5 bg-white border border-slate-200 rounded-xl space-y-2">
-                <span className="font-bold text-slate-800 text-sm block border-b border-slate-100 pb-1">
+              <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-xl space-y-1.5">
+                <span className="font-bold text-white text-xs block border-b border-slate-800 pb-1">
                   Founding Wife
                 </span>
-                <p className="text-slate-700"><strong>Name:</strong> {payload.wife?.full_name || `${payload.wife?.first_name || ''} ${payload.wife?.last_name || ''}` || 'N/A'}</p>
-                <p className="text-slate-700"><strong>DOB:</strong> {payload.wife?.dob || 'N/A'}</p>
-                <p className="text-slate-700"><strong>Email:</strong> {payload.wife?.email || 'N/A'}</p>
-                <p className="text-slate-700"><strong>Phone:</strong> {payload.wife?.phone || 'N/A'}</p>
+                <p className="text-slate-300"><strong>Name:</strong> {payload.wife?.full_name || `${payload.wife?.first_name || ''} ${payload.wife?.last_name || ''}` || 'N/A'}</p>
+                <p className="text-slate-300"><strong>DOB:</strong> {payload.wife?.dob || 'N/A'}</p>
+                <p className="text-slate-300"><strong>Email:</strong> {payload.wife?.email || 'N/A'}</p>
+                <p className="text-slate-300"><strong>Phone:</strong> {payload.wife?.phone || 'N/A'}</p>
               </div>
             </div>
 
             {/* Same Surname Collision Check */}
             {req.existing_families?.length > 0 && (
-              <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl space-y-2 text-xs">
-                <div className="flex items-center gap-1.5 font-bold text-amber-900">
-                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+              <div className="p-3 bg-amber-950/60 border border-amber-800 rounded-xl space-y-2 text-xs">
+                <div className="flex items-center gap-1.5 font-bold text-amber-300">
+                  <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
                   <span>Existing Approved Families with this Surname ({req.existing_families.length})</span>
                 </div>
                 <div className="space-y-1.5 max-h-36 overflow-y-auto">
                   {req.existing_families.map(f => (
-                    <div key={f.surname_ref_id} className="p-2 bg-white rounded-lg border border-amber-200/70 text-[11px]">
-                      <span className="font-mono font-bold text-emerald-800">{f.surname_ref_id} (Branch #{f.branch_no || 1})</span>
-                      <p className="text-slate-600">Husband: {f.husband?.name || 'N/A'} | Wife: {f.wife?.name || 'N/A'}</p>
+                    <div key={f.surname_ref_id} className="p-2 bg-slate-900 rounded-lg border border-slate-800 text-[11px]">
+                      <span className="font-mono font-bold text-emerald-400">{f.surname_ref_id} (Branch #{f.branch_no || 1})</span>
+                      <p className="text-slate-400">Husband: {f.husband?.name || 'N/A'} | Wife: {f.wife?.name || 'N/A'}</p>
                     </div>
                   ))}
                 </div>
                 {req.status === 'Pending' && (
-                  <label className="flex items-start gap-2 pt-2 text-xs font-bold text-amber-950 cursor-pointer">
+                  <label className="flex items-start gap-2 pt-1 text-xs font-bold text-amber-200 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={diffFamilyConfirmed}
                       onChange={(e) => setDiffFamilyConfirmed(e.target.checked)}
-                      className="w-4 h-4 text-emerald-600 rounded border-amber-300 focus:ring-emerald-500 mt-0.5"
+                      className="w-4 h-4 text-emerald-600 rounded border-slate-700 bg-slate-900 focus:ring-emerald-500 mt-0.5"
                     />
                     <span>Admin Confirmation: This is a DIFFERENT family branch sharing the same surname.</span>
                   </label>
@@ -302,31 +302,34 @@ export default function AdminRequestManagement({
 
       case 'ADD_MEMBER':
         return (
-          <div className="space-y-4 text-xs">
+          <div className="space-y-3 text-xs">
             {/* Target Family & Relationship Connection */}
-            <div className="p-3.5 bg-blue-50/70 border border-blue-200 rounded-xl space-y-2">
-              <span className="text-[11px] font-semibold text-blue-800 uppercase tracking-wider block">
+            <div className="p-3 bg-blue-950/60 border border-blue-800 rounded-xl space-y-1.5">
+              <span className="text-[11px] font-semibold text-blue-400 uppercase tracking-wider block">
                 Lineage Relationship Connection
               </span>
-              <div className="flex items-center gap-2 text-sm font-bold text-slate-800 flex-wrap">
-                <span className="text-blue-900 font-extrabold">{payload.person?.full_name || 'New Person'}</span>
-                <span className="text-slate-400">→</span>
-                <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-md font-mono text-xs">{payload.relationship_type || payload.relationship || 'Related to'}</span>
-                <span className="text-slate-400">→</span>
-                <span className="text-emerald-800">{payload.related_to_name || payload.relative_person_id || 'Family Member'}</span>
+              <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-200 flex-wrap">
+                <span className="text-blue-300 font-extrabold">{payload.person?.full_name || 'New Person'}</span>
+                <span className="text-slate-500">→</span>
+                <span className="px-2 py-0.5 bg-blue-900/80 text-blue-200 rounded-md font-mono text-xs">{payload.relationship_type || payload.relationship || 'Related to'}</span>
+                <span className="text-slate-500">→</span>
+                <span className="text-emerald-400">{payload.related_to_name || payload.relative_person_id || 'Family Member'}</span>
               </div>
-              <p className="text-slate-600 font-mono text-[11px]">Target Family: <strong>{payload.surname_ref_id || payload.family_ref_id || 'N/A'}</strong></p>
+              <p className="text-slate-400 font-mono text-[11px]">Target Family: <strong className="text-slate-200">{payload.surname_ref_id || payload.family_ref_id || 'N/A'}</strong></p>
             </div>
 
             {/* New Member Personal Details */}
-            <div className="p-3.5 bg-white border border-slate-200 rounded-xl space-y-2">
-              <span className="font-bold text-slate-800 text-sm block border-b border-slate-100 pb-1">
+            <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-xl space-y-1.5">
+              <span className="font-bold text-white text-xs block border-b border-slate-800 pb-1">
                 New Member Information
               </span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-slate-300">
                 <p><strong>Full Name:</strong> {payload.person?.full_name || `${payload.person?.first_name || ''} ${payload.person?.last_name || ''}`}</p>
                 <p><strong>DOB:</strong> {payload.person?.dob || 'N/A'}</p>
                 <p><strong>Gender:</strong> {payload.person?.gender || 'N/A'}</p>
+                <p><strong>Occupation:</strong> {payload.person?.occupation || payload.occupation || 'N/A'}</p>
+                <p><strong>Location:</strong> {payload.person?.location || payload.location || 'N/A'}</p>
+                <p><strong>Prior Surname:</strong> {payload.person?.prior_marriage_surname || payload.prior_marriage_surname || 'N/A'}</p>
                 <p><strong>Email:</strong> {payload.person?.email || 'None'}</p>
                 <p><strong>Phone:</strong> {payload.person?.phone || 'None'}</p>
                 <p><strong>Deceased:</strong> {payload.person?.is_deceased ? 'Yes' : 'No'}</p>
@@ -335,12 +338,12 @@ export default function AdminRequestManagement({
 
             {/* A4 Warning Banner if applicable */}
             {payload.flags && payload.flags.length > 0 && (
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-1 text-xs">
-                <span className="font-bold text-amber-900 flex items-center gap-1.5">
-                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+              <div className="p-3 bg-amber-950/60 border border-amber-800 rounded-xl space-y-1 text-xs">
+                <span className="font-bold text-amber-300 flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
                   Potential Match Warning Flags
                 </span>
-                <ul className="list-disc pl-5 text-amber-800 space-y-0.5">
+                <ul className="list-disc pl-5 text-amber-200 space-y-0.5">
                   {payload.flags.map((fl, idx) => <li key={idx}>{fl}</li>)}
                 </ul>
               </div>
@@ -350,14 +353,14 @@ export default function AdminRequestManagement({
 
       case 'LINK_EXISTING_PERSON':
         return (
-          <div className="space-y-4 text-xs">
-            <div className="p-3.5 bg-purple-50 border border-purple-200 rounded-xl space-y-2">
-              <span className="font-bold text-purple-900 block text-sm">Link Existing Person to Target Family</span>
-              <p className="text-slate-700"><strong>Existing Member:</strong> {payload.person_name || payload.existing_member_name || 'N/A'}</p>
-              <p className="text-slate-700 font-mono"><strong>Member Reference ID:</strong> <span className="bg-purple-100 px-2 py-0.5 rounded font-bold text-purple-950">{payload.member_ref_id || payload.person_id || 'N/A'}</span></p>
-              <p className="text-slate-700"><strong>Target Family:</strong> {payload.target_family_ref_id || payload.family_ref_id || 'N/A'}</p>
-              <p className="text-slate-700"><strong>Relationship:</strong> {payload.relationship || 'N/A'}</p>
-              <p className="text-[11px] text-purple-800 font-medium">
+          <div className="space-y-3 text-xs">
+            <div className="p-3 bg-purple-950/60 border border-purple-800 rounded-xl space-y-1.5 text-slate-300">
+              <span className="font-bold text-purple-300 block text-xs">Link Existing Person to Target Family</span>
+              <p><strong>Existing Member:</strong> {payload.person_name || payload.existing_member_name || 'N/A'}</p>
+              <p className="font-mono"><strong>Member Reference ID:</strong> <span className="bg-purple-900/80 px-2 py-0.5 rounded font-bold text-purple-200">{payload.member_ref_id || payload.person_id || 'N/A'}</span></p>
+              <p><strong>Target Family:</strong> {payload.target_family_ref_id || payload.family_ref_id || 'N/A'}</p>
+              <p><strong>Relationship:</strong> {payload.relationship || 'N/A'}</p>
+              <p className="text-[11px] text-purple-300 font-medium">
                 Note: No new person will be created. The person will retain their permanent Member Reference ID.
               </p>
             </div>
@@ -367,25 +370,25 @@ export default function AdminRequestManagement({
       case 'LINK_SAME_SURNAME_FAMILY':
       case 'LINK_DIFFERENT_SURNAME_FAMILY':
         return (
-          <div className="space-y-4 text-xs">
-            <div className="p-3.5 bg-indigo-50 border border-indigo-200 rounded-xl space-y-3">
-              <span className="font-bold text-indigo-900 text-sm block">Family Connection Details</span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="p-2.5 bg-white rounded-lg border border-indigo-100">
-                  <span className="font-bold text-slate-800 block mb-1">Family A</span>
-                  <p className="font-mono text-emerald-700 font-bold">{req.family_a_details?.surname_name || payload.family_a_ref_id} ({payload.family_a_ref_id})</p>
-                  {req.person_a_details && <p className="text-slate-600 mt-1">Person A: <strong>{req.person_a_details.name}</strong> ({req.person_a_details.member_ref_id})</p>}
-                  <p className="text-[11px] text-slate-500 mt-1">Registered: {req.requester_email || payload.party_a_email || 'Entered'}</p>
+          <div className="space-y-3 text-xs">
+            <div className="p-3 bg-indigo-950/60 border border-indigo-800 rounded-xl space-y-2.5">
+              <span className="font-bold text-indigo-300 text-xs block">Family Connection Details</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="p-2.5 bg-slate-900 rounded-lg border border-indigo-900/60">
+                  <span className="font-bold text-slate-300 block mb-1">Family A</span>
+                  <p className="font-mono text-emerald-400 font-bold">{req.family_a_details?.surname_name || payload.family_a_ref_id} ({payload.family_a_ref_id})</p>
+                  {req.person_a_details && <p className="text-slate-300 mt-1">Person A: <strong>{req.person_a_details.name}</strong> ({req.person_a_details.member_ref_id})</p>}
+                  <p className="text-[11px] text-slate-400 mt-1">Registered: {req.requester_email || payload.party_a_email || 'Entered'}</p>
                 </div>
-                <div className="p-2.5 bg-white rounded-lg border border-indigo-100">
-                  <span className="font-bold text-slate-800 block mb-1">Family B</span>
-                  <p className="font-mono text-emerald-700 font-bold">{req.family_b_details?.surname_name || payload.family_b_ref_id} ({payload.family_b_ref_id})</p>
-                  {req.person_b_details && <p className="text-slate-600 mt-1">Person B: <strong>{req.person_b_details.name}</strong> ({req.person_b_details.member_ref_id})</p>}
-                  <p className="text-[11px] text-slate-500 mt-1">Registered: {req.second_party_email || payload.party_b_email || 'Entered'}</p>
+                <div className="p-2.5 bg-slate-900 rounded-lg border border-indigo-900/60">
+                  <span className="font-bold text-slate-300 block mb-1">Family B</span>
+                  <p className="font-mono text-emerald-400 font-bold">{req.family_b_details?.surname_name || payload.family_b_ref_id} ({payload.family_b_ref_id})</p>
+                  {req.person_b_details && <p className="text-slate-300 mt-1">Person B: <strong>{req.person_b_details.name}</strong> ({req.person_b_details.member_ref_id})</p>}
+                  <p className="text-[11px] text-slate-400 mt-1">Registered: {req.second_party_email || payload.party_b_email || 'Entered'}</p>
                 </div>
               </div>
               {payload.relation_note && (
-                <p className="text-slate-700 italic bg-white p-2 rounded-lg border border-indigo-100">
+                <p className="text-slate-300 italic bg-slate-900 p-2 rounded-lg border border-slate-800">
                   Relationship Note: "{payload.relation_note}"
                 </p>
               )}
@@ -396,13 +399,13 @@ export default function AdminRequestManagement({
       case 'DELINK_RELATIONSHIP':
         return (
           <div className="space-y-3 text-xs">
-            <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl space-y-2">
-              <span className="font-bold text-rose-900 text-sm block">Delink Relationship Request</span>
+            <div className="p-3 bg-rose-950/60 border border-rose-800 rounded-xl space-y-1.5 text-slate-300">
+              <span className="font-bold text-rose-300 text-xs block">Delink Relationship Request</span>
               <p><strong>Family A:</strong> {payload.family_a_ref_id || 'N/A'}</p>
               <p><strong>Family B:</strong> {payload.family_b_ref_id || 'N/A'}</p>
               {payload.link_id && <p className="font-mono"><strong>Link ID:</strong> {payload.link_id}</p>}
-              {payload.reason && <p className="italic text-slate-700">Reason: "{payload.reason}"</p>}
-              <p className="text-[11px] text-rose-700 font-semibold pt-1">
+              {payload.reason && <p className="italic text-slate-300">Reason: "{payload.reason}"</p>}
+              <p className="text-[11px] text-rose-400 font-semibold pt-1">
                 Notice: Approving this removes the relationship cross-link. Individual person and family records are preserved.
               </p>
             </div>
@@ -413,28 +416,28 @@ export default function AdminRequestManagement({
         const changes = payload.requested_changes || payload.updated_details || {};
         const current = payload.current_details || {};
         return (
-          <div className="space-y-4 text-xs">
-            <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
-              <span className="font-bold text-amber-900 text-sm block">Edit / Update Member Profile</span>
+          <div className="space-y-3 text-xs">
+            <div className="p-3 bg-amber-950/60 border border-amber-800 rounded-xl space-y-1.5 text-slate-300">
+              <span className="font-bold text-amber-300 text-xs block">Edit / Update Member Profile</span>
               <p className="font-mono">
-                <strong>Member Reference ID:</strong> <span className="bg-white px-2 py-0.5 rounded border border-amber-300 font-bold">{payload.member_ref_id || payload.member_ref || 'N/A'}</span>
+                <strong>Member Reference ID:</strong> <span className="bg-slate-900 px-2 py-0.5 rounded border border-amber-800 font-bold text-amber-200">{payload.member_ref_id || payload.member_ref || 'N/A'}</span>
               </p>
-              <p className="text-[11px] text-amber-800 font-medium">
+              <p className="text-[11px] text-amber-300 font-medium">
                 Important Rule: The Member Reference ID is permanent and will remain unchanged after approval.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
-                <span className="font-bold text-slate-700 block border-b border-slate-200 pb-1">Current Registered Record</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-xl space-y-1 text-slate-300">
+                <span className="font-bold text-slate-200 block border-b border-slate-800 pb-1">Current Registered Record</span>
                 <p><strong>Name:</strong> {current.full_name || 'N/A'}</p>
                 <p><strong>DOB:</strong> {current.dob || 'N/A'}</p>
                 <p><strong>Email:</strong> {current.email || 'N/A'}</p>
                 <p><strong>Phone:</strong> {current.phone || 'N/A'}</p>
               </div>
 
-              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl space-y-1.5">
-                <span className="font-bold text-emerald-800 block border-b border-emerald-200 pb-1">Requested Updates</span>
+              <div className="p-3 bg-emerald-950/60 border border-emerald-800 rounded-xl space-y-1 text-slate-300">
+                <span className="font-bold text-emerald-300 block border-b border-emerald-800 pb-1">Requested Updates</span>
                 <p><strong>Name:</strong> {changes.first_name ? `${changes.first_name} ${changes.last_name || ''}` : (current.full_name || 'Unchanged')}</p>
                 <p><strong>DOB:</strong> {changes.dob || current.dob || 'Unchanged'}</p>
                 <p><strong>Email:</strong> {changes.email || current.email || 'Unchanged'}</p>
@@ -447,11 +450,14 @@ export default function AdminRequestManagement({
       case 'JOIN_REQUEST':
         return (
           <div className="space-y-3 text-xs">
-            <div className="p-3.5 bg-teal-50 border border-teal-200 rounded-xl space-y-2">
-              <span className="font-bold text-teal-900 text-sm block">Join Family Lineage Request</span>
+            <div className="p-3 bg-teal-950/60 border border-teal-800 rounded-xl space-y-1.5 text-slate-300">
+              <span className="font-bold text-teal-300 text-xs block">Join Family Lineage Request</span>
               <p><strong>Target Lineage:</strong> {payload.surname_ref_id || payload.family_ref_id || 'N/A'}</p>
               <p><strong>Joiner Name:</strong> {payload.joiner_name || payload.person?.full_name || 'N/A'}</p>
               <p><strong>DOB:</strong> {payload.dob || payload.person?.dob || 'N/A'}</p>
+              <p><strong>Occupation:</strong> {payload.occupation || payload.person?.occupation || 'N/A'}</p>
+              <p><strong>Location:</strong> {payload.location || payload.person?.location || 'N/A'}</p>
+              <p><strong>Prior Surname:</strong> {payload.prior_marriage_surname || payload.person?.prior_marriage_surname || 'N/A'}</p>
               <p><strong>Email:</strong> {payload.email || payload.person?.email || 'N/A'}</p>
               <p><strong>Phone:</strong> {payload.phone || payload.person?.phone || 'N/A'}</p>
               <p><strong>Claimed Relationship:</strong> {payload.relationship_claimed || payload.relationship || 'N/A'}</p>
@@ -461,7 +467,7 @@ export default function AdminRequestManagement({
 
       default:
         return (
-          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 font-mono text-[11px] max-h-48 overflow-y-auto">
+          <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 font-mono text-[11px] max-h-48 overflow-y-auto text-slate-300">
             <pre className="whitespace-pre-wrap">{JSON.stringify(payload, null, 2)}</pre>
           </div>
         );
@@ -469,15 +475,15 @@ export default function AdminRequestManagement({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 text-slate-100">
       {/* Title & Subtitle */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <FileText className="w-6 h-6 text-emerald-600" />
+          <h1 className="text-lg sm:text-xl font-black text-white tracking-tight flex items-center gap-2">
+            <FileText className="w-5 h-5 text-emerald-400" />
             Request Management
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+          <p className="text-xs text-slate-400 mt-0.5">
             Review and manage all requests submitted through the Family Tree Portal.
           </p>
         </div>
@@ -485,34 +491,34 @@ export default function AdminRequestManagement({
         <button
           onClick={onRefresh}
           disabled={loading || actionLoading}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-semibold shadow-sm transition"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold shadow-xs transition"
         >
-          <RotateCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-emerald-600' : ''}`} />
+          <RotateCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-emerald-400' : ''}`} />
           <span>Refresh</span>
         </button>
       </div>
 
       {/* CRISP & INTUITIVE ADMIN FILTER BAR */}
-      <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+      <div className="bg-slate-900 p-3 sm:p-3.5 rounded-2xl border border-slate-800 shadow-sm space-y-2.5">
         {/* Main Row: Search + Quick Status Pills + Type Selector + Action Buttons */}
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5">
           {/* Search Box with instant clear */}
-          <div className="relative flex-1 min-w-[240px]">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <div className="relative flex-1 min-w-[220px]">
+            <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
               placeholder="Search Ticket, Requester Name, Email, or Lineage..."
-              className="w-full pl-10 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              className="w-full pl-9 pr-7 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
             />
             {searchTerm && (
               <button
                 type="button"
                 onClick={() => { setSearchTerm(''); setCurrentPage(1); }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-full"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-200 rounded-full"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-3 h-3" />
               </button>
             )}
           </div>
@@ -520,10 +526,10 @@ export default function AdminRequestManagement({
           {/* Quick Status Pills: All, Pending, Approved, Rejected */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 shrink-0">
             {[
-              { id: 'ALL', label: 'All', count: statusCounts.ALL, badgeClass: 'bg-slate-200 text-slate-700' },
-              { id: 'Pending', label: 'Pending', count: statusCounts.Pending, badgeClass: 'bg-amber-100 text-amber-800' },
-              { id: 'Approved', label: 'Approved', count: statusCounts.Approved, badgeClass: 'bg-emerald-100 text-emerald-800' },
-              { id: 'Rejected', label: 'Rejected', count: statusCounts.Rejected, badgeClass: 'bg-rose-100 text-rose-800' }
+              { id: 'ALL', label: 'All', count: statusCounts.ALL, badgeClass: 'bg-slate-800 text-slate-300' },
+              { id: 'Pending', label: 'Pending', count: statusCounts.Pending, badgeClass: 'bg-amber-950 text-amber-300 border border-amber-800' },
+              { id: 'Approved', label: 'Approved', count: statusCounts.Approved, badgeClass: 'bg-emerald-950 text-emerald-300 border border-emerald-800' },
+              { id: 'Rejected', label: 'Rejected', count: statusCounts.Rejected, badgeClass: 'bg-rose-950 text-rose-300 border border-rose-800' }
             ].map(pill => {
               const isActive = statusFilter === pill.id;
               return (
@@ -533,8 +539,8 @@ export default function AdminRequestManagement({
                   onClick={() => { setStatusFilter(pill.id); setCurrentPage(1); }}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
                     isActive
-                      ? 'bg-slate-900 text-white shadow-sm'
-                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                      ? 'bg-slate-800 text-white shadow-xs border border-slate-600'
+                      : 'bg-slate-950 hover:bg-slate-800 text-slate-400 border border-slate-800'
                   }`}
                 >
                   <span>{pill.label}</span>
@@ -553,7 +559,7 @@ export default function AdminRequestManagement({
             <select
               value={typeFilter}
               onChange={(e) => { setTypeFilter(e.target.value); setCurrentPage(1); }}
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              className="px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-xs font-semibold text-slate-100 focus:outline-none focus:border-emerald-500"
             >
               {Object.keys(REQUEST_TYPE_CONFIG).map(k => (
                 <option key={k} value={REQUEST_TYPE_CONFIG[k].id}>
@@ -566,14 +572,14 @@ export default function AdminRequestManagement({
             <button
               type="button"
               onClick={() => setShowAdvancedFilters(prev => !prev)}
-              className={`p-2 rounded-xl border text-xs font-semibold flex items-center gap-1 transition ${
+              className={`p-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1 transition ${
                 showAdvancedFilters || fromDate || toDate || familyFilter !== 'ALL'
-                  ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
-                  : 'border-slate-200 hover:bg-slate-50 text-slate-600'
+                  ? 'border-emerald-500 bg-emerald-950/60 text-emerald-300'
+                  : 'border-slate-700 bg-slate-950 hover:bg-slate-800 text-slate-300'
               }`}
               title="More Filters"
             >
-              <Filter className="w-3.5 h-3.5 text-emerald-600" />
+              <Filter className="w-3.5 h-3.5 text-emerald-400" />
               <span className="hidden sm:inline">More</span>
             </button>
 
@@ -582,25 +588,25 @@ export default function AdminRequestManagement({
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="px-2.5 py-2 text-rose-600 hover:bg-rose-50 rounded-xl transition text-xs font-semibold flex items-center gap-1"
+                className="px-2 py-1.5 text-rose-400 hover:bg-rose-950/40 rounded-xl transition text-xs font-semibold flex items-center gap-1"
                 title="Reset Filters"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
+                <RotateCcw className="w-3 h-3" />
                 <span className="hidden sm:inline">Reset</span>
               </button>
             )}
           </div>
         </div>
 
-        {/* Collapsible Secondary Row: Family, Date Range, Page Size (only when opened or active) */}
+        {/* Collapsible Secondary Row: Family, Date Range, Page Size */}
         {(showAdvancedFilters || fromDate || toDate || familyFilter !== 'ALL') && (
-          <div className="pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs animate-in fade-in duration-150">
+          <div className="pt-2.5 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-4 gap-2.5 text-xs animate-in fade-in duration-150">
             <div>
-              <label className="block text-slate-500 font-semibold mb-1">Family</label>
+              <label className="block text-slate-400 font-semibold mb-1">Family</label>
               <select
                 value={familyFilter}
                 onChange={(e) => { setFamilyFilter(e.target.value); setCurrentPage(1); }}
-                className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none"
+                className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 focus:outline-none"
               >
                 <option value="ALL">All Families</option>
                 {uniqueFamilies.map(fam => (
@@ -610,31 +616,31 @@ export default function AdminRequestManagement({
             </div>
 
             <div>
-              <label className="block text-slate-500 font-semibold mb-1">From Date</label>
+              <label className="block text-slate-400 font-semibold mb-1">From Date</label>
               <input
                 type="date"
                 value={fromDate}
                 onChange={(e) => { setFromDate(e.target.value); setCurrentPage(1); }}
-                className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none"
+                className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-slate-500 font-semibold mb-1">To Date</label>
+              <label className="block text-slate-400 font-semibold mb-1">To Date</label>
               <input
                 type="date"
                 value={toDate}
                 onChange={(e) => { setToDate(e.target.value); setCurrentPage(1); }}
-                className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none"
+                className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-slate-500 font-semibold mb-1">Rows per Page</label>
+              <label className="block text-slate-400 font-semibold mb-1">Rows per Page</label>
               <select
                 value={pageSize}
                 onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}
-                className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none"
+                className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 focus:outline-none"
               >
                 <option value={10}>10 per page</option>
                 <option value={20}>20 per page</option>
@@ -646,34 +652,34 @@ export default function AdminRequestManagement({
       </div>
 
       {/* SINGLE CONSOLIDATED REQUEST TABLE */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-slate-900 rounded-2xl border border-slate-800 shadow-sm overflow-hidden text-slate-100">
         {loading ? (
-          <div className="p-12 text-center text-slate-500 space-y-3">
-            <div className="w-8 h-8 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-sm font-semibold">Loading requests...</p>
+          <div className="p-10 text-center text-slate-400 space-y-2">
+            <div className="w-6 h-6 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-xs font-semibold">Loading requests...</p>
           </div>
         ) : error ? (
-          <div className="p-12 text-center text-rose-600 space-y-3">
-            <AlertTriangle className="w-8 h-8 mx-auto text-rose-500" />
-            <p className="text-sm font-semibold">{error}</p>
+          <div className="p-10 text-center text-rose-400 space-y-2">
+            <AlertTriangle className="w-6 h-6 mx-auto text-rose-400" />
+            <p className="text-xs font-semibold">{error}</p>
             <button
               onClick={onRefresh}
-              className="px-4 py-2 bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold text-xs rounded-xl"
+              className="px-3.5 py-1.5 bg-rose-950/70 text-rose-300 hover:bg-rose-900 border border-rose-800 font-bold text-xs rounded-xl"
             >
               Try Again
             </button>
           </div>
         ) : filteredRequests.length === 0 ? (
-          <div className="p-12 text-center text-slate-500 space-y-3">
-            <FileText className="w-10 h-10 mx-auto text-slate-300" />
+          <div className="p-10 text-center text-slate-500 space-y-2">
+            <FileText className="w-8 h-8 mx-auto text-slate-600" />
             {requests.length === 0 ? (
-              <p className="text-sm font-semibold text-slate-600">No requests found in the system.</p>
+              <p className="text-xs font-semibold text-slate-400">No requests found in the system.</p>
             ) : (
               <div className="space-y-2">
-                <p className="text-sm font-semibold text-slate-600">No requests match the selected filters.</p>
+                <p className="text-xs font-semibold text-slate-400">No requests match the selected filters.</p>
                 <button
                   onClick={handleResetFilters}
-                  className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition"
+                  className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition border border-slate-700"
                 >
                   Clear Filters
                 </button>
@@ -684,17 +690,17 @@ export default function AdminRequestManagement({
           <div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
+                <thead className="bg-slate-950 border-b border-slate-800 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
                   <tr>
-                    <th className="py-3.5 px-4">Ticket / Request No.</th>
-                    <th className="py-3.5 px-4">Requested By</th>
-                    <th className="py-3.5 px-4">Timestamp</th>
-                    <th className="py-3.5 px-4">Request Type</th>
-                    <th className="py-3.5 px-4">Status</th>
-                    <th className="py-3.5 px-4 text-center">Action</th>
+                    <th className="py-2.5 px-3.5">Ticket / Request No.</th>
+                    <th className="py-2.5 px-3.5">Requested By</th>
+                    <th className="py-2.5 px-3.5">Timestamp</th>
+                    <th className="py-2.5 px-3.5">Request Type</th>
+                    <th className="py-2.5 px-3.5">Status</th>
+                    <th className="py-2.5 px-3.5 text-center">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-800/80">
                   {paginatedRequests.map((req) => {
                     let payload = {};
                     try {
@@ -705,29 +711,29 @@ export default function AdminRequestManagement({
                     const requesterName = payload.submitter_name || payload.requester_name || payload.husband?.full_name || payload.person?.full_name || 'Requester';
 
                     return (
-                      <tr key={req.ticket_id} className="hover:bg-slate-50/70 transition">
+                      <tr key={req.ticket_id} className="hover:bg-slate-800/40 transition">
                         {/* Ticket No */}
-                        <td className="py-3.5 px-4 font-mono font-bold text-slate-800">
-                          <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200/70">
+                        <td className="py-2.5 px-3.5 font-mono font-bold text-emerald-400">
+                          <span className="bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
                             {req.ticket_id}
                           </span>
                         </td>
 
                         {/* Requested By */}
-                        <td className="py-3.5 px-4">
-                          <div className="font-semibold text-slate-900">{requesterName}</div>
+                        <td className="py-2.5 px-3.5">
+                          <div className="font-semibold text-slate-200">{requesterName}</div>
                           {req.requester_email && (
                             <div className="text-[11px] text-slate-400 font-mono">{req.requester_email}</div>
                           )}
                         </td>
 
                         {/* Timestamp */}
-                        <td className="py-3.5 px-4 text-slate-500 whitespace-nowrap">
+                        <td className="py-2.5 px-3.5 text-slate-400 whitespace-nowrap">
                           {req.created_at ? (
                             <span>
                               {new Date(req.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                               {' '}
-                              <span className="text-[11px] text-slate-400 font-mono">
+                              <span className="text-[11px] text-slate-500 font-mono">
                                 {new Date(req.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                               </span>
                             </span>
@@ -735,24 +741,24 @@ export default function AdminRequestManagement({
                         </td>
 
                         {/* Request Type */}
-                        <td className="py-3.5 px-4">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold border ${typeConfig.badgeClass || 'bg-slate-50 text-slate-700 border-slate-200'}`}>
+                        <td className="py-2.5 px-3.5">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold border ${typeConfig.badgeClass || 'bg-slate-950 text-slate-300 border-slate-800'}`}>
                             {typeConfig.label}
                           </span>
                         </td>
 
                         {/* Status */}
-                        <td className="py-3.5 px-4">
+                        <td className="py-2.5 px-3.5">
                           <StatusBadge status={req.status} />
                         </td>
 
                         {/* View Action */}
-                        <td className="py-3.5 px-4 text-center">
+                        <td className="py-2.5 px-3.5 text-center">
                           <button
                             onClick={() => handleOpenView(req)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold rounded-xl transition text-xs shadow-sm"
+                            className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-800 font-bold rounded-xl transition text-xs shadow-xs"
                           >
-                            <Eye className="w-3.5 h-3.5" />
+                            <Eye className="w-3 h-3" />
                             <span>View</span>
                           </button>
                         </td>
@@ -764,28 +770,28 @@ export default function AdminRequestManagement({
             </div>
 
             {/* Pagination Controls */}
-            <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 bg-slate-50/50 border-t border-slate-200 text-xs text-slate-500 gap-3">
+            <div className="flex flex-col sm:flex-row items-center justify-between px-3.5 py-2.5 bg-slate-950/60 border-t border-slate-800 text-xs text-slate-400 gap-2.5">
               <div>
                 Showing <strong>{((currentPage - 1) * pageSize) + 1}</strong> to <strong>{Math.min(currentPage * pageSize, filteredRequests.length)}</strong> of <strong>{filteredRequests.length}</strong> requests
               </div>
 
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
                 <button
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-slate-700"
+                  className="px-2 py-1 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-slate-300"
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="w-3.5 h-3.5" />
                 </button>
 
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(num => (
                   <button
                     key={num}
                     onClick={() => setCurrentPage(num)}
-                    className={`w-7 h-7 rounded-lg text-xs font-bold transition ${
+                    className={`w-6 h-6 rounded-lg text-xs font-bold transition ${
                       currentPage === num
-                        ? 'bg-emerald-600 text-white shadow-sm'
-                        : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800'
                     }`}
                   >
                     {num}
@@ -795,9 +801,9 @@ export default function AdminRequestManagement({
                 <button
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-slate-700"
+                  className="px-2 py-1 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-slate-300"
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
@@ -823,15 +829,15 @@ export default function AdminRequestManagement({
           const isDual = selectedRequest.type === 'LINK_FAMILIES' || selectedRequest.type === 'MERGE_FAMILIES';
 
           return (
-            <div className="space-y-6">
+            <div className="space-y-4 text-slate-200">
               {/* COMMON HEADER */}
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-200 pb-2.5">
+              <div className="p-3.5 bg-slate-950/60 rounded-2xl border border-slate-800 space-y-2.5">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-800 pb-2">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-extrabold text-slate-800 bg-white px-2.5 py-1 rounded-lg border border-slate-200">
+                    <span className="font-mono text-xs font-extrabold text-emerald-400 bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-700">
                       {selectedRequest.ticket_id}
                     </span>
-                    <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold border ${typeConfig.badgeClass || 'bg-slate-100 text-slate-800'}`}>
+                    <span className={`px-2 py-0.5 rounded-lg text-xs font-bold border ${typeConfig.badgeClass || 'bg-slate-900 text-slate-200 border-slate-700'}`}>
                       {typeConfig.label}
                     </span>
                   </div>
@@ -841,12 +847,12 @@ export default function AdminRequestManagement({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div>
                     <span className="text-slate-400 block font-semibold">Requested By</span>
-                    <p className="font-bold text-slate-800">{payload.submitter_name || payload.requester_name || payload.husband?.full_name || selectedRequest.requester_email || 'N/A'}</p>
-                    <p className="font-mono text-slate-500 text-[11px]">{selectedRequest.requester_email || 'No email'}</p>
+                    <p className="font-bold text-white">{payload.submitter_name || payload.requester_name || payload.husband?.full_name || selectedRequest.requester_email || 'N/A'}</p>
+                    <p className="font-mono text-slate-400 text-[11px]">{selectedRequest.requester_email || 'No email'}</p>
                   </div>
                   <div>
                     <span className="text-slate-400 block font-semibold">Submitted Timestamp</span>
-                    <p className="font-bold text-slate-800">
+                    <p className="font-bold text-white">
                       {selectedRequest.created_at ? new Date(selectedRequest.created_at).toLocaleString() : 'N/A'}
                     </p>
                   </div>
@@ -854,42 +860,42 @@ export default function AdminRequestManagement({
               </div>
 
               {/* REQUEST INFORMATION (DYNAMIC CONTENT) */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                  <Info className="w-4 h-4 text-emerald-600" />
+              <div className="space-y-2.5">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                  <Info className="w-4 h-4 text-emerald-400" />
                   Request Information
                 </h4>
                 {renderRequestSpecificContent(selectedRequest)}
               </div>
 
               {/* VERIFICATION SECTION */}
-              <div className="p-4 bg-amber-50/70 border border-amber-200 rounded-2xl space-y-3 text-xs">
-                <span className="font-bold text-amber-900 block uppercase tracking-wider text-[11px]">
-                  Identity & Email Verification
+              <div className="p-3.5 bg-amber-950/50 border border-amber-800 rounded-2xl space-y-2.5 text-xs text-amber-200">
+                <span className="font-bold text-amber-300 block uppercase tracking-wider text-[11px]">
+                  Identity &amp; Email Verification
                 </span>
 
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 font-semibold text-slate-800 cursor-pointer">
+                  <label className="flex items-center gap-2 font-semibold text-slate-200 cursor-pointer">
                     <input
                       type="checkbox"
                       disabled={!isPending}
                       checked={mailVerified}
                       onChange={(e) => setMailVerified(e.target.checked)}
-                      className="w-4 h-4 text-emerald-600 rounded border-amber-300 focus:ring-emerald-500"
+                      className="w-4 h-4 text-emerald-600 rounded border-slate-700 bg-slate-900 focus:ring-emerald-500"
                     />
                     <span>Primary Party Mail Verified (SPF/DKIM/DMARC / OTP Confirmed)</span>
                     {mailVerified ? (
-                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full ml-auto">
+                      <span className="text-[10px] font-bold text-emerald-300 bg-emerald-950 px-2 py-0.5 rounded-full ml-auto border border-emerald-800">
                         VERIFIED
                       </span>
                     ) : (
-                      <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full ml-auto">
+                      <span className="text-[10px] font-bold text-amber-300 bg-amber-950 px-2 py-0.5 rounded-full ml-auto border border-amber-800">
                         PENDING VERIFICATION
                       </span>
                     )}
                   </label>
                   {!mailVerified && isPending && (
-                    <p className="text-[11px] text-amber-700 bg-amber-100/60 p-2 rounded-lg">
+                    <p className="text-[11px] text-amber-300 bg-amber-900/60 p-2 rounded-lg border border-amber-700">
                       Email OTP was not verified at submission. Check this box to confirm identity ownership and enable approval.
                     </p>
                   )}
@@ -899,19 +905,19 @@ export default function AdminRequestManagement({
                     value={mailNote}
                     onChange={(e) => setMailNote(e.target.value)}
                     placeholder="Verification remarks or SPF/DKIM check notes"
-                    className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-xs"
+                    className="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 text-xs"
                   />
                 </div>
 
                 {isDual && (
-                  <div className="pt-2 border-t border-amber-200/70 space-y-2">
-                    <label className="flex items-center gap-2 font-semibold text-slate-800 cursor-pointer">
+                  <div className="pt-2 border-t border-amber-800/80 space-y-2">
+                    <label className="flex items-center gap-2 font-semibold text-slate-200 cursor-pointer">
                       <input
                         type="checkbox"
                         disabled={!isPending}
                         checked={secondMailVerified}
                         onChange={(e) => setSecondMailVerified(e.target.checked)}
-                        className="w-4 h-4 text-emerald-600 rounded border-amber-300 focus:ring-emerald-500"
+                        className="w-4 h-4 text-emerald-600 rounded border-slate-700 bg-slate-900 focus:ring-emerald-500"
                       />
                       <span>Second Party Mail Verified (SPF/DKIM/DMARC / Dual Confirmation)</span>
                     </label>
@@ -921,7 +927,7 @@ export default function AdminRequestManagement({
                       value={secondMailNote}
                       onChange={(e) => setSecondMailNote(e.target.value)}
                       placeholder="Second party verification remarks"
-                      className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-xs"
+                      className="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 text-xs"
                     />
                   </div>
                 )}
@@ -929,26 +935,26 @@ export default function AdminRequestManagement({
 
               {/* DECISION HISTORY (IF PROCESSED) */}
               {!isPending && (
-                <div className={`p-4 rounded-2xl border text-xs space-y-1.5 ${
+                <div className={`p-3.5 rounded-2xl border text-xs space-y-1.5 ${
                   selectedRequest.status === 'Approved'
-                    ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-                    : 'bg-rose-50 border-rose-200 text-rose-900'
+                    ? 'bg-emerald-950/60 border-emerald-800 text-emerald-200'
+                    : 'bg-rose-950/60 border-rose-800 text-rose-200'
                 }`}>
                   <div className="flex items-center gap-1.5 font-bold">
                     {selectedRequest.status === 'Approved' ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                     ) : (
-                      <XCircle className="w-4 h-4 text-rose-600" />
+                      <XCircle className="w-4 h-4 text-rose-400" />
                     )}
                     <span>Request {selectedRequest.status}</span>
                   </div>
                   {selectedRequest.decided_at && (
-                    <p className="text-[11px] text-slate-600">
+                    <p className="text-[11px] text-slate-400">
                       Processed on {new Date(selectedRequest.decided_at).toLocaleString()}
                     </p>
                   )}
                   {selectedRequest.admin_remarks && (
-                    <p className="italic bg-white/70 p-2 rounded-lg border border-slate-200/50 mt-1">
+                    <p className="italic bg-slate-900 p-2 rounded-lg border border-slate-800 mt-1 text-slate-300">
                       Remarks: "{selectedRequest.admin_remarks}"
                     </p>
                   )}
@@ -956,11 +962,11 @@ export default function AdminRequestManagement({
               )}
 
               {/* MODAL ACTION BUTTONS */}
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-800">
                 <button
                   type="button"
                   onClick={() => setIsViewModalOpen(false)}
-                  className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                  className="px-4 py-1.5 border border-slate-700 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800 transition"
                 >
                   Close
                 </button>
@@ -971,7 +977,7 @@ export default function AdminRequestManagement({
                       type="button"
                       onClick={handleOpenRejectModal}
                       disabled={actionLoading}
-                      className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition disabled:opacity-50"
+                      className="px-4 py-1.5 bg-rose-950/70 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded-xl text-xs font-bold transition disabled:opacity-50"
                     >
                       Reject
                     </button>
@@ -980,7 +986,7 @@ export default function AdminRequestManagement({
                       type="button"
                       onClick={handleModalApprove}
                       disabled={actionLoading}
-                      className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/20 transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+                      className="px-5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-xs transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
                     >
                       {actionLoading ? (
                         <>
@@ -1009,15 +1015,15 @@ export default function AdminRequestManagement({
         title="Reject Request"
         maxWidth="max-w-md"
       >
-        <div className="space-y-4 text-xs">
-          <p className="text-slate-600">
+        <div className="space-y-3.5 text-xs text-slate-200">
+          <p className="text-slate-400">
             Please enter a mandatory reason for rejecting Ticket{' '}
-            <strong className="font-mono text-slate-900">{selectedRequest?.ticket_id}</strong>.
+            <strong className="font-mono text-white">{selectedRequest?.ticket_id}</strong>.
             This reason will be recorded in the audit log and emailed to the requester.
           </p>
 
           <div>
-            <label className="block text-slate-700 font-bold mb-1">
+            <label className="block text-slate-300 font-bold mb-1">
               Rejection Reason *
             </label>
             <textarea
@@ -1026,18 +1032,18 @@ export default function AdminRequestManagement({
               value={rejectionReason}
               onChange={(e) => { setRejectionReason(e.target.value); setRejectError(''); }}
               placeholder="Provide a clear explanation for rejection..."
-              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 text-xs font-medium"
+              className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-rose-500 text-xs font-medium"
             />
             {rejectError && (
-              <p className="text-rose-600 mt-1 font-semibold">{rejectError}</p>
+              <p className="text-rose-400 mt-1 font-semibold">{rejectError}</p>
             )}
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
             <button
               type="button"
               onClick={() => setIsRejectModalOpen(false)}
-              className="px-3.5 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold text-xs"
+              className="px-3.5 py-1.5 rounded-xl text-slate-400 hover:bg-slate-800 font-semibold text-xs border border-slate-700"
             >
               Cancel
             </button>
@@ -1045,7 +1051,7 @@ export default function AdminRequestManagement({
               type="button"
               onClick={handleConfirmReject}
               disabled={actionLoading}
-              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-md shadow-rose-600/20 transition disabled:opacity-50"
+              className="px-4 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow-xs transition disabled:opacity-50"
             >
               {actionLoading ? 'Rejecting...' : 'Confirm Reject'}
             </button>
