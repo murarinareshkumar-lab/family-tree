@@ -27,15 +27,21 @@ export function formatMemberDropdownLabel(member, allMembers = []) {
     return otherName === normName;
   });
 
-  // If the name is unique within this family, show ONLY the name
-  if (similarMembers.length <= 1) {
-    return name;
-  }
-
   // Duplicate / similar name found -> disambiguate using relatives
   const gender = String(member.gender || '').toUpperCase();
   const isFemale = gender === 'FEMALE';
   const isMale = gender === 'MALE';
+  const maiden = (member.surname_before_marriage || member.maiden_surname || '').trim();
+  const isMarried = member.marital_status === 'Married' || member.founding_role === 'WIFE' || Boolean(member.spouse_name);
+  const maidenSuffix = maiden ? `, Before Marriage: ${maiden}` : '';
+
+  // If unique within family, show name (with before marriage surname for married women if available)
+  if (similarMembers.length <= 1) {
+    if (isFemale && isMarried && maiden) {
+      return `${name} (Before Marriage: ${maiden})`;
+    }
+    return name;
+  }
 
   // 1. Resolve Spouse first
   let spouseName = (member.spouse_name || '').trim();
@@ -52,7 +58,7 @@ export function formatMemberDropdownLabel(member, allMembers = []) {
 
   if (spouseName) {
     if (isFemale) {
-      return `${name} (Wife of ${spouseName})`;
+      return `${name} (Wife of ${spouseName}${maidenSuffix})`;
     }
     if (isMale) {
       return `${name} (Husband of ${spouseName})`;
@@ -74,7 +80,7 @@ export function formatMemberDropdownLabel(member, allMembers = []) {
 
   if (parentName) {
     if (isFemale) {
-      return `${name} (Daughter of ${parentName})`;
+      return `${name} (Daughter of ${parentName}${maidenSuffix})`;
     }
     if (isMale) {
       return `${name} (Son of ${parentName})`;
@@ -83,6 +89,9 @@ export function formatMemberDropdownLabel(member, allMembers = []) {
   }
 
   // 3. Fallback if neither spouse nor parent is recorded
+  if (isFemale && maiden) {
+    return `${name} (Before Marriage: ${maiden})`;
+  }
   if (member.founding_role) {
     return `${name} (Founding ${member.founding_role})`;
   }

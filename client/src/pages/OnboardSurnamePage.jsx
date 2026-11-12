@@ -78,7 +78,8 @@ export default function OnboardSurnamePage({ onNavigate }) {
   const [wifeFirstName, setWifeFirstName] = useState('');
   const [wifeMiddleName, setWifeMiddleName] = useState('');
   const [wifeLastName, setWifeLastName] = useState('');
-  const [wifeLastNameManuallyEdited, setWifeLastNameManuallyEdited] = useState(false);
+  const [wifeBeforeMarriageSurname, setWifeBeforeMarriageSurname] = useState('');
+  const [wifeLastNameManuallyEdited, setWifeLastNameManuallyEdited] = useState(!1);
   const [wifeEmail, setWifeEmail] = useState('');
   const [wifePhone, setWifePhone] = useState('');
   const [wifeDob, setWifeDob] = useState(''); // Raw input DD/MM/YYYY
@@ -428,6 +429,7 @@ export default function OnboardSurnamePage({ onNavigate }) {
           phone: hDeceased ? '' : (hPhoneVal.valid ? hPhoneVal.value : ''),
           dob: hDobVal.value, // YYYY-MM-DD
           gender: 'Male',
+          marital_status: 'Married',
           is_deceased: Boolean(hDeceased),
           founding_role: 'HUSBAND',
           relationship: 'SPOUSE',
@@ -442,6 +444,8 @@ export default function OnboardSurnamePage({ onNavigate }) {
           phone: wDeceased ? '' : (wPhoneVal.valid ? wPhoneVal.value : ''),
           dob: wDobVal.value, // YYYY-MM-DD
           gender: 'Female',
+          marital_status: 'Married',
+          surname_before_marriage: wifeBeforeMarriageSurname.trim(),
           is_deceased: Boolean(wDeceased),
           founding_role: 'WIFE',
           relationship: 'SPOUSE',
@@ -951,6 +955,22 @@ export default function OnboardSurnamePage({ onNavigate }) {
                       <p className="text-[11px] text-rose-600 mt-1">{wLastVal.error}</p>
                     )}
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">
+                    Before Marriage Surname (Maiden Name)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Kulkarni, Deshpande (optional)"
+                    value={wifeBeforeMarriageSurname}
+                    onChange={(e) => setWifeBeforeMarriageSurname(e.target.value)}
+                    className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-0.5">
+                    Wife's maiden surname before marriage for maternal lineage preservation.
+                  </p>
                 </div>
 
                 <div className="flex items-center space-x-2 pt-1 pb-1">

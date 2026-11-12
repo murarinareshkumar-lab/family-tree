@@ -71,3 +71,30 @@ test('Dropdown Label - Similar names with spouse disambiguates with Husband of /
   assert.equal(labelAnita1.includes('MU-ANI'), false);
   assert.equal(labelAnita2.includes('MU-ANI'), false);
 });
+
+test('Dropdown Label - Women with before marriage surname displays maiden surname', () => {
+  const members = [
+    {
+      person_id: 'w1',
+      member_ref_id: 'MU-NEE-011950-001',
+      full_name: 'Neeraja Murari',
+      gender: 'FEMALE',
+      founding_role: 'WIFE',
+      spouse_name: 'Gurubheema Murari',
+      surname_before_marriage: 'Kulkarni'
+    },
+    {
+      person_id: 'w2',
+      member_ref_id: 'MU-NEE-011980-002',
+      full_name: 'Neeraja Murari',
+      gender: 'FEMALE',
+      father_name: 'Ramesh Murari'
+    }
+  ];
+
+  const labelWife = formatMemberDropdownLabel(members[0], members);
+  assert.equal(labelWife, 'Neeraja Murari (Wife of Gurubheema Murari, Before Marriage: Kulkarni)');
+
+  const labelDaughter = formatMemberDropdownLabel(members[1], members);
+  assert.equal(labelDaughter, 'Neeraja Murari (Daughter of Ramesh Murari)');
+});

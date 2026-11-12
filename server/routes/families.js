@@ -99,6 +99,9 @@ router.get('/members', async (req, res, next) => {
         last_name: p.last_name || '',
         gender: p.gender || '',
         founding_role: p.founding_role || '',
+        marital_status: p.marital_status || (p.founding_role === 'WIFE' || p.founding_role === 'HUSBAND' || spouseName ? 'Married' : ''),
+        surname_before_marriage: p.surname_before_marriage || p.maiden_surname || '',
+        has_registered_email: Boolean(p.email && p.email.trim()),
         spouse_name: spouseName,
         father_name: fatherName,
         mother_name: motherName,
@@ -107,6 +110,75 @@ router.get('/members', async (req, res, next) => {
     });
 
     res.json({ ok: true, members });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/families/verify-member-email
+ * Validates that the entered email matches the selected family member's registered email.
+ * Body: { person_id, email }
+ */
+router.post('/verify-member-email', async (req, res, next) => {
+  const { person_id, email } = req.body || {};
+  if (!person_id) {
+    return res.status(400).json({ ok: false, error: 'Please select a family member first.' });
+  }
+
+  try {
+    const sheetsClient = getSheetsClient();
+    const persons = await sheetsClient.getRows(TABS.PERSONS);
+    const target = persons.find(
+      p => (p.person_id === person_id || p.member_ref_id === person_id) && p.status === 'Approved'
+    );
+
+    if (!target) {
+      return res.status(404).json({ ok: false, error: 'Selected family member not found in records.' });
+    }
+
+    // If member has no registered email (e.g. deceased or elder added without email)
+    if (!target.email || !target.email.trim()) {
+      return res.json({
+        ok: true,
+        verified: false,
+        direct_link_eligible: false,
+        has_registered_email: false,
+        member_name: target.full_name,
+        message: 'This family member has no email registered (deceased or elder record). You can send an exception request for administrator review.'
+      });
+    }
+
+    if (!email || !email.trim()) {
+      return res.status(400).json({
+        ok: false,
+        verified: false,
+        direct_link_eligible: false,
+        error: `Please enter the registered email address for ${target.full_name}.`
+      });
+    }
+
+    const normTargetEmail = String(target.email).trim().toLowerCase();
+    const normEnteredEmail = String(email).trim().toLowerCase();
+
+    if (normTargetEmail === normEnteredEmail) {
+      return res.json({
+        ok: true,
+        verified: true,
+        direct_link_eligible: true,
+        has_registered_email: true,
+        member_name: target.full_name,
+        message: `Verified! Email matches records for ${target.full_name}. You can link directly to this family.`
+      });
+    } else {
+      return res.status(400).json({
+        ok: false,
+        verified: false,
+        direct_link_eligible: false,
+        has_registered_email: true,
+        error: `The email entered does not match the registered email for ${target.full_name}. Please check with your family member or send an exception request to the administrator.`
+      });
+    }
   } catch (err) {
     next(err);
   }

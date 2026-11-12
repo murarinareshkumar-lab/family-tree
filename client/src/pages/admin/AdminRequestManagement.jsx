@@ -937,7 +937,7 @@ export default function AdminRequestManagement({
                     <button
                       type="button"
                       onClick={handleModalApprove}
-                      disabled={actionLoading || !mailVerified || (isDual && !secondMailVerified)}
+                      disabled={actionLoading}
                       className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/20 transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
                     >
                       {actionLoading ? (

@@ -2,14 +2,15 @@ import express from 'express';
 import { randomUUID } from 'node:crypto';
 import { getSheetsClient } from '../../lib/sheets.js';
 import { TABS } from '../../lib/schema.js';
-import { checkDuplicates, checkA4FamilyMatch, normalizeEmail, normalizePhone, isMinor } from '../../lib/duplicates.js';
-import { normalizeSurnameLetters } from '../../lib/id-generator.js';
+import { checkDuplicates, checkA4FamilyMatch, normalizeEmail, normalizePhone, normalizeName, isMinor } from '../../lib/duplicates.js';
+import { generateMemberRefId, normalizeSurnameLetters } from '../../lib/id-generator.js';
+import { createLockManager } from '../../lib/lock.js';
 import { validateRelationship, convertDropdownToRelationships } from '../../lib/relationships.js';
 import { logAuditEvent } from '../../lib/audit.js';
 import { composeFullName } from '../../lib/security.js';
 import { validateName, validateEmail, validatePhone, parseAndValidateDob } from '../../lib/validation.js';
 import { verifyVerificationToken } from '../../lib/otp.js';
-import { sendTicketReceivedEmail } from '../../lib/email.js';
+import { sendTicketReceivedEmail, sendApprovalEmail } from '../../lib/email.js';
 
 const router = express.Router();
 
@@ -131,6 +132,9 @@ router.post('/', async (req, res, next) => {
       wife.email = wEmailRes.value;
       wife.phone = wPhoneRes.value;
       wife.dob = wDobRes.value;
+      wife.marital_status = 'Married';
+      wife.surname_before_marriage = wife.surname_before_marriage || wife.maiden_surname || '';
+      husband.marital_status = 'Married';
 
       // Husband duplicates check
       const dupH = checkDuplicates(husband, existingPersons, pendingRequests);
@@ -164,6 +168,7 @@ router.post('/', async (req, res, next) => {
     // ---------------------------------------------------------
     else if (type === 'ADD_MEMBER') {
       const person = payload.person || payload;
+      const relPersonId = payload.relative_person_id;
       const pFirstRes = validateName(person.first_name, true);
       if (!pFirstRes.valid) fieldErrors['first_name'] = pFirstRes.error;
       const pMidRes = validateName(person.middle_name, false);
@@ -206,6 +211,23 @@ router.post('/', async (req, res, next) => {
       person.dob = pDobRes.value;
       person.email = pEmailRes.value;
       person.phone = pPhoneRes.value;
+      person.marital_status = person.marital_status || (payload.relationship_type === 'SPOUSE' ? 'Married' : '');
+      person.surname_before_marriage = person.surname_before_marriage || person.maiden_surname || '';
+
+      // Selected relative email verification check (for direct link)
+      if (relPersonId && (payload.direct_link || payload.relative_email || payload.parent_email)) {
+        const targetRel = existingPersons.find(p => (p.person_id === relPersonId || p.member_ref_id === relPersonId) && p.status === 'Approved');
+        if (targetRel && targetRel.email && targetRel.email.trim()) {
+          const enteredRelativeEmail = payload.relative_email || payload.parent_email;
+          if (enteredRelativeEmail && String(enteredRelativeEmail).trim().toLowerCase() !== String(targetRel.email).trim().toLowerCase()) {
+            if (payload.direct_link) {
+              return res.status(400).json({
+                error: `Verification failed: The email entered does not match the verified email for ${targetRel.full_name}. You can submit this as an exception request for admin review.`
+              });
+            }
+          }
+        }
+      }
 
       const dupP = checkDuplicates(person, existingPersons, pendingRequests);
       if (dupP.blocked) return res.status(409).json({ error: dupP.reason });
@@ -267,6 +289,23 @@ router.post('/', async (req, res, next) => {
       person.dob = pDobRes.value;
       person.email = pEmailRes.value;
       person.phone = pPhoneRes.value;
+      person.marital_status = person.marital_status || (payload.relationship_type === 'SPOUSE' ? 'Married' : '');
+      person.surname_before_marriage = person.surname_before_marriage || person.maiden_surname || '';
+
+      // Selected relative email verification check (for direct link)
+      if (relPersonId && (payload.direct_link || payload.relative_email || payload.parent_email)) {
+        const targetRel = existingPersons.find(p => (p.person_id === relPersonId || p.member_ref_id === relPersonId) && p.status === 'Approved');
+        if (targetRel && targetRel.email && targetRel.email.trim()) {
+          const enteredRelativeEmail = payload.relative_email || payload.parent_email;
+          if (enteredRelativeEmail && String(enteredRelativeEmail).trim().toLowerCase() !== String(targetRel.email).trim().toLowerCase()) {
+            if (payload.direct_link) {
+              return res.status(400).json({
+                error: `Verification failed: The email entered does not match the verified email for ${targetRel.full_name}. You can submit this as an exception request for admin review.`
+              });
+            }
+          }
+        }
+      }
 
       const dupJ = checkDuplicates(person, existingPersons, pendingRequests);
       if (dupJ.blocked) return res.status(409).json({ error: dupJ.reason });
@@ -442,6 +481,156 @@ router.post('/', async (req, res, next) => {
       }
     }
 
+    // ---------------------------------------------------------
+    // DIRECT SELF-LINKING PATHWAY (When relative email is verified)
+    // ---------------------------------------------------------
+    const wantsDirectLink = Boolean(payload.direct_link || req.body.direct_link);
+    if ((type === 'ADD_MEMBER' || type === 'JOIN_REQUEST') && wantsDirectLink) {
+      const relPersonId = payload.relative_person_id;
+      const targetPerson = (payload.person || payload);
+      const relative = existingPersons.find(
+        p => (p.person_id === relPersonId || p.member_ref_id === relPersonId) && p.status === 'Approved'
+      );
+
+      const enteredRelEmail = String(payload.relative_email || payload.parent_email || '').trim().toLowerCase();
+      const relativeHasEmail = Boolean(relative && relative.email && relative.email.trim());
+      const relativeEmailMatches = relativeHasEmail && (enteredRelEmail === String(relative.email).trim().toLowerCase());
+      const newMemberEmailVerified = isMailVerified || Boolean(targetPerson?.is_deceased);
+
+      if (relative && relativeEmailMatches && newMemberEmailVerified) {
+        const lockManager = createLockManager(sheetsClient);
+        const lock = await lockManager.acquire('ID_LOCK', 8000);
+        try {
+          const [curPersons, curRelationships] = await Promise.all([
+            sheetsClient.getRows(TABS.PERSONS),
+            sheetsClient.getRows(TABS.RELATIONSHIPS)
+          ]);
+
+          const allUsedMemberIds = new Set(curPersons.map(p => String(p.member_ref_id || '').toUpperCase()));
+          const newMemberRefId = generateMemberRefId({
+            surname: targetPerson.last_name || (targetPerson.full_name ? targetPerson.full_name.split(/\s+/).pop() : ''),
+            firstName: targetPerson.first_name || (targetPerson.full_name ? targetPerson.full_name.split(/\s+/)[0] : ''),
+            dob: targetPerson.dob
+          }, allUsedMemberIds);
+          const newPersonId = randomUUID();
+
+          const relType = String(payload.relationship_type || payload.relationship?.type || 'CHILD_OF').toUpperCase();
+          const primitiveRels = convertDropdownToRelationships(relType, newPersonId, relative.person_id);
+
+          for (const r of primitiveRels) {
+            const check = validateRelationship({
+              personAId: r.person_a_id,
+              personBId: r.person_b_id,
+              type: r.type,
+              existingRelationships: curRelationships,
+              persons: [...curPersons, { ...targetPerson, person_id: newPersonId }]
+            });
+            if (!check.valid) {
+              return res.status(400).json({ error: `Relationship validation failed: ${check.error}` });
+            }
+          }
+
+          const targetSurnameRefId = payload.surname_ref_id || relative.surname_ref_id;
+
+          // Append new person
+          await sheetsClient.appendRow(TABS.PERSONS, {
+            person_id: newPersonId,
+            member_ref_id: newMemberRefId,
+            surname_ref_id: targetSurnameRefId,
+            first_name: targetPerson.first_name || '',
+            middle_name: targetPerson.middle_name || '',
+            last_name: targetPerson.last_name || '',
+            full_name: targetPerson.full_name || composeFullName(targetPerson.first_name, targetPerson.middle_name, targetPerson.last_name),
+            former_name: '',
+            name_norm: normalizeName(targetPerson.full_name || composeFullName(targetPerson.first_name, targetPerson.middle_name, targetPerson.last_name)),
+            gender: targetPerson.gender || 'UNKNOWN',
+            founding_role: '',
+            dob: targetPerson.dob || '',
+            is_deceased: String(Boolean(targetPerson.is_deceased)),
+            marital_status: targetPerson.marital_status || (relType === 'SPOUSE' || relType === 'SPOUSE_OF' ? 'Married' : ''),
+            surname_before_marriage: targetPerson.surname_before_marriage || '',
+            email: targetPerson.email || '',
+            email_norm: normalizeEmail(targetPerson.email),
+            phone: targetPerson.phone || '',
+            phone_norm: normalizePhone(targetPerson.phone),
+            father_person_id: targetPerson.father_person_id || '',
+            mother_person_id: targetPerson.mother_person_id || '',
+            status: 'Approved',
+            verified_by_admin: 'false',
+            created_at: now
+          });
+
+          // Append relationships
+          for (const r of primitiveRels) {
+            await sheetsClient.appendRow(TABS.RELATIONSHIPS, {
+              rel_id: randomUUID(),
+              person_a_id: r.person_a_id,
+              person_b_id: r.person_b_id,
+              type: r.type,
+              status: 'Approved',
+              created_at: now
+            });
+          }
+
+          // Record in REQUESTS with Approved status for audit
+          await sheetsClient.appendRow(TABS.REQUESTS, {
+            ticket_id: ticketId,
+            type,
+            payload_json: JSON.stringify(payload),
+            requester_email: finalRequesterEmail,
+            status: 'Approved',
+            mail_verified: 'true',
+            mail_verified_note: 'Verified by OTP and relative email match (Direct Link)',
+            decided_at: now,
+            admin_remarks: 'Direct self-link: Relative email verified by member',
+            created_at: now
+          });
+
+          await logAuditEvent(sheetsClient, {
+            admin: 'SYSTEM_DIRECT_LINK',
+            action: `DIRECT_LINK_${type}`,
+            entity: 'Persons',
+            entity_id: newPersonId,
+            previous_value: null,
+            updated_value: {
+              ticket_id: ticketId,
+              member_ref_id: newMemberRefId,
+              person_id: newPersonId,
+              surname_ref_id: targetSurnameRefId,
+              relative_person_id: relative.person_id,
+              relationship_type: relType
+            },
+            ticket_id: ticketId
+          });
+
+          if (finalRequesterEmail) {
+            try {
+              await sendApprovalEmail({
+                toEmail: finalRequesterEmail,
+                fullName: targetPerson.full_name || '',
+                ticketId,
+                memberRefId: newMemberRefId
+              });
+            } catch (mailErr) {
+              console.warn('[Requests] Direct link confirmation email note:', mailErr.message);
+            }
+          }
+
+          return res.status(200).json({
+            success: true,
+            direct_linked: true,
+            ticket_id: ticketId,
+            member_ref_id: newMemberRefId,
+            person_id: newPersonId,
+            surname_ref_id: targetSurnameRefId,
+            message: `Successfully linked to ${relative.full_name}! Your Member Reference ID is ${newMemberRefId}.`
+          });
+        } finally {
+          await lock.release();
+        }
+      }
+    }
+
     await sheetsClient.appendRow(TABS.REQUESTS, {
       ticket_id: ticketId,
       type,
@@ -482,6 +671,7 @@ router.post('/', async (req, res, next) => {
 
     res.status(201).json({
       success: true,
+      direct_linked: false,
       ticket_id: ticketId,
       status: 'Pending',
       message: 'Request submitted successfully. To verify identity, email support with Ticket ID in subject.',
