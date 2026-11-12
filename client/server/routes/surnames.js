@@ -124,13 +124,29 @@ router.get('/', async (req, res, next) => {
 
   try {
     const sheetsClient = getSheetsClient();
-    const rows = await sheetsClient.getRows(TABS.SURNAMES);
+    const [rows, persons, familyLinks] = await Promise.all([
+      sheetsClient.getRows(TABS.SURNAMES),
+      sheetsClient.getRows(TABS.PERSONS),
+      sheetsClient.getRows(TABS.FAMILY_LINKS)
+    ]);
     const approvedSurnames = rows
       .filter(r => r.status === 'Approved')
-      .map(r => ({
-        surname_name: r.surname_name,
-        branch_no: r.branch_no || '1'
-      }));
+      .map(r => {
+        const familyPersons = persons.filter(p => p.surname_ref_id === r.surname_ref_id && p.status === 'Approved');
+        const husband = familyPersons.find(p => String(p.founding_role).toUpperCase() === 'HUSBAND' || String(p.member_ref_id).endsWith('-0001'));
+        const wife = familyPersons.find(p => String(p.founding_role).toUpperCase() === 'WIFE' || String(p.member_ref_id).endsWith('-0002'));
+        const linked = familyLinks.filter(l => l.status === 'Approved' && (l.family_a_ref_id === r.surname_ref_id || l.family_b_ref_id === r.surname_ref_id));
+        return {
+          surname_ref_id: r.surname_ref_id,
+          surname_name: r.surname_name,
+          surname_norm: r.surname_norm,
+          branch_no: r.branch_no || '1',
+          member_count: familyPersons.length,
+          founding_husband: husband ? (husband.full_name || `${husband.first_name || ''} ${husband.last_name || ''}`.trim()) : '',
+          founding_wife: wife ? (wife.full_name || `${wife.first_name || ''} ${wife.last_name || ''}`.trim()) : '',
+          linked_families_count: linked.length
+        };
+      });
     res.json({ surnames: approvedSurnames });
   } catch (err) {
     next(err);

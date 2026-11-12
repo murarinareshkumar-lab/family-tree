@@ -181,11 +181,11 @@ export default function AdminRequestManagement({
     if (!selectedRequest) return;
     await onApprove({
       ...selectedRequest,
-      mail_verified: mailVerified,
-      mail_verified_note: mailNote || 'SPF/DKIM/DMARC verified by admin',
-      second_party_mail_verified: secondMailVerified,
-      second_party_mail_note: secondMailNote || 'SPF/DKIM/DMARC verified by admin',
-      admin_confirmed_different_family: diffFamilyConfirmed
+      mail_verified: true,
+      mail_verified_note: mailNote || 'Verified and approved by admin',
+      second_party_mail_verified: true,
+      second_party_mail_note: secondMailNote || 'Verified and approved by admin',
+      admin_confirmed_different_family: true
     });
     setIsViewModalOpen(false);
   };

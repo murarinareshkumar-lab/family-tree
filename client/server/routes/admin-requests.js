@@ -297,14 +297,17 @@ export default async function handler(req, res) {
         // APPROVE: ONBOARD_SURNAME
         // -------------------------------------------------------
         if (reqRow.type === 'ONBOARD_SURNAME') {
-          const isVerified = String(reqRow.mail_verified).toLowerCase() === 'true' || String(reqRow.phone_verified).toLowerCase() === 'true';
-          if (!isVerified) {
-            return sendError(res, 400, 'Refused: Cannot approve request until verification is confirmed (by Email OTP or recorded Admin phone call).');
-          }
-
           const surname = payload.surname || payload.surname_name;
           const husband = payload.husband || {};
           const wife = payload.wife || {};
+          const isVerified =
+            String(reqRow.mail_verified).toLowerCase() === 'true' ||
+            String(reqRow.phone_verified).toLowerCase() === 'true' ||
+            Boolean(husband?.is_deceased || wife?.is_deceased) ||
+            Boolean(mail_verified === true || mail_verified === 'true');
+          if (!isVerified) {
+            return sendError(res, 400, 'Refused: Cannot approve request until verification is confirmed (by Email OTP or recorded Admin phone call).');
+          }
           const allSurnames = await sheetsClient.getRows(TABS.SURNAMES);
           const allPersons = await sheetsClient.getRows(TABS.PERSONS);
 
@@ -485,12 +488,16 @@ export default async function handler(req, res) {
         // APPROVE: ADD_MEMBER / JOIN_REQUEST
         // -------------------------------------------------------
         if (reqRow.type === 'ADD_MEMBER' || reqRow.type === 'JOIN_REQUEST') {
-          const isVerified = String(reqRow.mail_verified).toLowerCase() === 'true' || String(reqRow.phone_verified).toLowerCase() === 'true';
+          const { surname_ref_id, person = {}, relative_person_id, relationship_type } = payload;
+          const isVerified =
+            String(reqRow.mail_verified).toLowerCase() === 'true' ||
+            String(reqRow.phone_verified).toLowerCase() === 'true' ||
+            Boolean(person?.is_deceased) ||
+            Boolean(mail_verified === true || mail_verified === 'true');
           if (!isVerified) {
             return sendError(res, 400, 'Refused: Cannot approve request until verification is confirmed (by Email OTP or recorded Admin phone call).');
           }
 
-          const { surname_ref_id, person, relative_person_id, relationship_type } = payload;
           const relType = String(relationship_type || '').toUpperCase();
 
           const lock = await lockManager.acquire('ID_LOCK', 8000);

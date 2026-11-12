@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { apiRequest } from '../utils/api';
-import CaptchaWidget from '../components/CaptchaWidget';
 import EmailOtpVerification from '../components/EmailOtpVerification';
 import { FileText, Mail, CheckCircle2, AlertCircle, ArrowRight, GitMerge, UserCheck, Edit3 } from 'lucide-react';
 
@@ -42,17 +41,12 @@ export default function RequestTicketPage({ onNavigate, initialParams = {} }) {
     }
   }, [initialParams]);
 
-  const [captchaVerified, setCaptchaVerified] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [ticketResult, setTicketResult] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!captchaVerified) {
-      setError('Please complete the anti-bot verification check.');
-      return;
-    }
 
     if (!requesterOtpToken) {
       setError('Please verify your registered email address with the verification code first.');
@@ -308,8 +302,6 @@ export default function RequestTicketPage({ onNavigate, initialParams = {} }) {
               className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
             />
           </div>
-
-          <CaptchaWidget verified={captchaVerified} onVerify={setCaptchaVerified} />
 
           <button
             type="submit"

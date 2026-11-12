@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../utils/api';
-import CaptchaWidget from '../components/CaptchaWidget';
 import EmailOtpVerification from '../components/EmailOtpVerification';
 import A4WarningModal from '../components/A4WarningModal';
 import {
@@ -30,9 +29,9 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [otpToken, setOtpToken] = useState('');
+  const [isDeceased, setIsDeceased] = useState(false);
 
   const [touched, setTouched] = useState({});
-  const [captchaVerified, setCaptchaVerified] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [error, setError] = useState(null);
@@ -99,23 +98,21 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
   const firstVal = validateName(firstName, true);
   const midVal = validateName(middleName, false);
   const lastVal = validateName(lastName, true);
-  const dobVal = parseAndValidateDob(dob);
-  const emailVal = validateEmail(email, true);
-  const phoneVal = validatePhone(phone, true);
+  const dobVal = parseAndValidateDob(dob, { minAge: isDeceased ? 0 : 0 });
+  const emailVal = validateEmail(email, !isDeceased);
+  const phoneVal = validatePhone(phone, !isDeceased);
 
   const isFormValid =
     firstVal.valid &&
     midVal.valid &&
     lastVal.valid &&
     dobVal.valid &&
-    emailVal.valid &&
-    phoneVal.valid &&
-    Boolean(targetPersonId) &&
-    Boolean(otpToken);
+    (isDeceased ? true : (emailVal.valid && phoneVal.valid && Boolean(otpToken))) &&
+    Boolean(targetPersonId);
 
   const handleSubmit = async (e, proceedAnyway = false) => {
     if (e && e.preventDefault) e.preventDefault();
-    if (!isFormValid || !captchaVerified) return;
+    if (!isFormValid) return;
 
     setLoading(true);
     setError(null);
@@ -126,13 +123,13 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
 
     const payload = {
       type: 'JOIN_REQUEST',
-      requester_email: emailVal.value,
+      requester_email: isDeceased ? '' : (emailVal.valid ? emailVal.value : ''),
       captcha_token: 'valid',
       payload: {
         surname_ref_id: selectedSurnameId,
         relative_person_id: targetPersonId,
         relationship_type: relationshipType,
-        otp_token: otpToken,
+        otp_token: isDeceased ? '' : otpToken,
         proceed_anyway: proceedAnyway,
         person: {
           first_name: firstVal.value,
@@ -141,10 +138,10 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
           full_name: composedFullName,
           gender,
           dob: dobVal.value,
-          is_deceased: false,
-          email: emailVal.value,
-          phone: phoneVal.value,
-          otp_token: otpToken
+          is_deceased: Boolean(isDeceased),
+          email: isDeceased ? '' : (emailVal.valid ? emailVal.value : ''),
+          phone: isDeceased ? '' : (phoneVal.valid ? phoneVal.value : ''),
+          otp_token: isDeceased ? '' : otpToken
         }
       }
     };
@@ -359,65 +356,79 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Email Address *</label>
-                <input
-                  type="email"
-                  required
-                  placeholder="your.email@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Phone Number *</label>
-                <input
-                  type="tel"
-                  required
-                  placeholder="9876543210 (10 digits starting with 9, 8, 7, 6)"
-                  maxLength={14}
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:border-blue-500"
-                />
-                {!phoneVal.valid && phone ? (
-                  <p className="text-[11px] text-rose-600 mt-1">{phoneVal.error}</p>
-                ) : (
-                  <p className="text-[10px] text-slate-400 mt-0.5">10 digits starting with 9, 8, 7, or 6</p>
-                )}
-              </div>
-            </div>
-
-            {/* Email OTP Verification */}
-            <div className="pt-2">
-              <EmailOtpVerification
-                email={email}
-                purpose="NEW_PERSON_EMAIL_VERIFICATION"
-                label="Verify Your Email Address"
-                disabled={!emailVal.valid || !phoneVal.valid}
-                disabledReason={
-                  !emailVal.valid && !phoneVal.valid
-                    ? 'Enter a valid email address and a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
-                    : !phoneVal.valid
-                    ? 'Enter a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
-                    : !emailVal.valid
-                    ? 'Enter a valid email address to enable email verification.'
-                    : ''
-                }
-                onVerified={(token) => setOtpToken(token)}
+            <div className="flex items-center space-x-2 pt-1 pb-1">
+              <input
+                type="checkbox"
+                id="isDeceased"
+                checked={isDeceased}
+                onChange={(e) => setIsDeceased(e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
               />
+              <label htmlFor="isDeceased" className="text-xs font-medium text-slate-700 cursor-pointer">
+                This family member is deceased (no phone/email required; linked by parent identity)
+              </label>
             </div>
-          </div>
 
-          {/* Bot Protection */}
-          <CaptchaWidget verified={captchaVerified} onVerify={setCaptchaVerified} />
+            {!isDeceased && (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Email Address *</label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="your.email@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Phone Number *</label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="9876543210 (10 digits starting with 9, 8, 7, 6)"
+                      maxLength={14}
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:border-blue-500"
+                    />
+                    {!phoneVal.valid && phone ? (
+                      <p className="text-[11px] text-rose-600 mt-1">{phoneVal.error}</p>
+                    ) : (
+                      <p className="text-[10px] text-slate-400 mt-0.5">10 digits starting with 9, 8, 7, or 6</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Email OTP Verification */}
+                <div className="pt-2">
+                  <EmailOtpVerification
+                    email={email}
+                    purpose="NEW_PERSON_EMAIL_VERIFICATION"
+                    label="Verify Your Email Address"
+                    disabled={!emailVal.valid || !phoneVal.valid}
+                    disabledReason={
+                      !emailVal.valid && !phoneVal.valid
+                        ? 'Enter a valid email address and a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
+                        : !phoneVal.valid
+                        ? 'Enter a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
+                        : !emailVal.valid
+                        ? 'Enter a valid email address to enable email verification.'
+                        : ''
+                    }
+                    onVerified={(token) => setOtpToken(token)}
+                  />
+                </div>
+              </>
+            )}
+          </div>
 
           <button
             type="submit"
-            disabled={!isFormValid || !captchaVerified || loading}
+            disabled={!isFormValid || loading}
             className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
           >
             {loading ? (

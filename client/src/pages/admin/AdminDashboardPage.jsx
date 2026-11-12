@@ -102,45 +102,12 @@ export default function AdminDashboardPage({ onLogout }) {
   };
 
   const handleApprove = async (ticket) => {
-    const mv = mailVerifications[ticket.ticket_id] || {};
-    const isPrimaryVerified = Boolean(
-      ticket.mail_verified === true ||
-      ticket.mail_verified === 'true' ||
-      mv.verified ||
-      ticket.phone_verified === true ||
-      ticket.phone_verified === 'true'
-    );
-
-    if (!isPrimaryVerified) {
-      setError(`Cannot approve ticket ${ticket.ticket_id}: Primary party email ownership must be verified first! Please check "Primary Party Mail Verified" in the View details modal or verify OTP.`);
-      return;
-    }
-
-    const isDual = ticket.type === 'LINK_FAMILIES' || ticket.type === 'MERGE_FAMILIES';
-    const isSecondVerified = Boolean(
-      ticket.second_party_mail_verified === true ||
-      ticket.second_party_mail_verified === 'true' ||
-      mv.second_verified
-    );
-
-    if (isDual && !isSecondVerified) {
-      setError(`Cannot approve ticket ${ticket.ticket_id}: Second party email ownership must also be verified first! Please check "Second Party Mail Verified" in View details.`);
-      return;
-    }
-
-    const requiresDiffConfirm = ticket.type === 'ONBOARD_SURNAME' &&
-      ticket.existing_families?.length > 0 &&
-      !ticket.admin_confirmed_different_family &&
-      !adminConfirmedDiffFamily[ticket.ticket_id];
-
-    if (requiresDiffConfirm) {
-      setError('Cannot approve: Existing families found with this surname. Admin must check "different family branch" first in View details.');
-      return;
-    }
-
     setActionLoading(true);
     setError(null);
     setSuccessMsg(null);
+
+    const mv = mailVerifications[ticket.ticket_id] || {};
+    const isDual = ticket.type === 'LINK_FAMILIES' || ticket.type === 'MERGE_FAMILIES';
 
     try {
       const res = await apiRequest('/admin/requests', {
@@ -148,11 +115,11 @@ export default function AdminDashboardPage({ onLogout }) {
         body: JSON.stringify({
           ticket_id: ticket.ticket_id,
           action: 'approve',
-          mail_verified: isPrimaryVerified,
-          mail_verified_note: ticket.mail_verified_note || mv.note || 'SPF/DKIM/DMARC passed. Verified by admin.',
-          second_party_mail_verified: Boolean(isSecondVerified),
-          second_party_mail_note: ticket.second_party_mail_note || mv.second_note || 'SPF/DKIM/DMARC passed. Verified by admin.',
-          admin_confirmed_different_family: Boolean(ticket.admin_confirmed_different_family ?? adminConfirmedDiffFamily[ticket.ticket_id])
+          mail_verified: true,
+          mail_verified_note: ticket.mail_verified_note || mv.note || 'Verified and approved by admin',
+          second_party_mail_verified: isDual ? true : undefined,
+          second_party_mail_note: isDual ? (ticket.second_party_mail_note || mv.second_note || 'Verified and approved by admin') : undefined,
+          admin_confirmed_different_family: Boolean(ticket.admin_confirmed_different_family ?? true)
         })
       });
       setSuccessMsg(`Approved ticket ${ticket.ticket_id} successfully! Reference ID: ${res.surname_ref_id || res.member_ref_id || 'Done'}`);

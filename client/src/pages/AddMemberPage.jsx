@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../utils/api';
-import CaptchaWidget from '../components/CaptchaWidget';
 import EmailOtpVerification from '../components/EmailOtpVerification';
 import A4WarningModal from '../components/A4WarningModal';
 import {
@@ -36,18 +35,12 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
   const [fatherPersonId, setFatherPersonId] = useState('');
   const [motherPersonId, setMotherPersonId] = useState('');
 
-  // Submitter information
-  const [submitterName, setSubmitterName] = useState('');
-  const [submitterEmail, setSubmitterEmail] = useState('');
-  const [submitterPhone, setSubmitterPhone] = useState('');
-  const [submitterOtpToken, setSubmitterOtpToken] = useState('');
   const [memberOtpToken, setMemberOtpToken] = useState('');
   const [a4Warning, setA4Warning] = useState({ isOpen: false, message: '', matchedMember: '' });
 
   // Touched state for displaying inline errors
   const [touched, setTouched] = useState({});
 
-  const [captchaVerified, setCaptchaVerified] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [error, setError] = useState(null);
@@ -80,7 +73,11 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
   }, [initialParams?.surname_ref_id]);
 
   const loadFamilyMembers = async (surnameRefId) => {
-    if (!surnameRefId) return;
+    if (!surnameRefId) {
+      setFamilyMembers([]);
+      setTargetPersonId('');
+      return;
+    }
     setLoadingMembers(true);
     try {
       let members = [];
@@ -99,15 +96,20 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
           m => String(m.founding_role).toUpperCase() === 'HUSBAND' || String(m.member_ref_id).endsWith('-0001')
         );
         const defaultTarget = foundingHusband || members[0];
-        setTargetPersonId(defaultTarget.person_id);
+        const defId = defaultTarget.person_id || defaultTarget.member_ref_id || defaultTarget.id;
+        setTargetPersonId(defId);
 
         const father = members.find(m => m.gender === 'Male' || String(m.founding_role).toUpperCase() === 'HUSBAND');
         const mother = members.find(m => m.gender === 'Female' || String(m.founding_role).toUpperCase() === 'WIFE');
-        setFatherPersonId(father?.person_id || '');
-        setMotherPersonId(mother?.person_id || '');
+        setFatherPersonId(father ? (father.person_id || father.member_ref_id || father.id) : '');
+        setMotherPersonId(mother ? (mother.person_id || mother.member_ref_id || mother.id) : '');
+      } else {
+        setTargetPersonId('');
       }
     } catch (err) {
       console.error(err);
+      setFamilyMembers([]);
+      setTargetPersonId('');
     } finally {
       setLoadingMembers(false);
     }
@@ -134,10 +136,6 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
   const emailVal = validateEmail(email, isAdultAndAlive);
   const phoneVal = validatePhone(phone, isAdultAndAlive);
 
-  const subNameVal = validateName(submitterName, true);
-  const subEmailVal = validateEmail(submitterEmail, true);
-  const subPhoneVal = validatePhone(submitterPhone, true);
-
   // Minor or deceased must link to at least one parent
   const minorOrDeceasedParentValid =
     isAdultAndAlive ||
@@ -154,20 +152,12 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
     dobVal.valid &&
     Boolean(targetPersonId) &&
     (isAdultAndAlive ? (emailVal.valid && phoneVal.valid) : true) &&
-    minorOrDeceasedParentValid &&
-    subNameVal.valid &&
-    subEmailVal.valid &&
-    subPhoneVal.valid;
+    minorOrDeceasedParentValid;
 
   const handleSubmit = async (e, proceedAnyway = false) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!isFormValid) {
       setError('Please correct the validation errors in the form.');
-      return;
-    }
-
-    if (!captchaVerified) {
-      setError('Please complete the anti-bot verification check.');
       return;
     }
 
@@ -178,9 +168,12 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
       .filter(Boolean)
       .join(' ');
 
+    const memberEmail = isAdultAndAlive && emailVal.valid ? emailVal.value : '';
+    const memberPhone = isAdultAndAlive && phoneVal.valid ? phoneVal.value : '';
+
     const payload = {
       type: 'ADD_MEMBER',
-      requester_email: subEmailVal.value,
+      requester_email: memberEmail,
       captcha_token: 'valid',
       payload: {
         surname_ref_id: selectedSurnameId,
@@ -190,10 +183,7 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
         middle_name: midVal.value,
         last_name: lastVal.value,
         full_name: composedFullName,
-        submitter_name: subNameVal.value,
-        submitter_email: subEmailVal.value,
-        submitter_phone: subPhoneVal.value,
-        requester_otp_token: submitterOtpToken || '',
+        otp_token: memberOtpToken || '',
         member_otp_token: memberOtpToken || '',
         proceed_anyway: proceedAnyway,
         person: {
@@ -204,8 +194,8 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
           gender,
           dob: dobVal.value, // YYYY-MM-DD
           is_deceased: isDeceased,
-          email: emailVal.valid ? emailVal.value : '',
-          phone: phoneVal.valid ? phoneVal.value : '',
+          email: memberEmail,
+          phone: memberPhone,
           father_person_id: fatherPersonId || null,
           mother_person_id: motherPersonId || null,
           otp_token: memberOtpToken || ''
@@ -213,8 +203,8 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
         gender,
         dob: dobVal.value,
         is_deceased: isDeceased,
-        email: emailVal.valid ? emailVal.value : '',
-        phone: phoneVal.valid ? phoneVal.value : '',
+        email: memberEmail,
+        phone: memberPhone,
         father_person_id: fatherPersonId || null,
         mother_person_id: motherPersonId || null,
         relationship: {
@@ -266,19 +256,16 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
           </p>
         </div>
 
-        <div className="mt-6 p-5 bg-amber-50/70 border border-amber-200 rounded-2xl text-xs sm:text-sm text-amber-900 space-y-2">
-          <div className="flex items-center space-x-2 font-bold text-amber-800">
-            <Mail className="w-4 h-4" />
-            <span>Important Verification Step</span>
+        <div className="mt-6 p-5 bg-emerald-50/70 border border-emerald-200 rounded-2xl text-xs sm:text-sm text-slate-700 space-y-2">
+          <div className="flex items-center space-x-2 font-bold text-emerald-800">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <span>Request Submitted for Administrator Review</span>
           </div>
           <p>
-            To verify this request, please send an email from <strong>{submitterEmail}</strong> to:
+            Your request has been registered with Ticket ID: <strong className="font-mono select-all text-emerald-800">{ticketResult.ticket_id}</strong>.
           </p>
-          <p className="font-mono bg-white p-2 rounded-lg border border-amber-200 text-slate-800 font-semibold select-all">
-            support.familytree@gmail.com
-          </p>
-          <p>
-            With the subject: <strong className="font-mono select-all">Verify Ticket: {ticketResult.ticket_id}</strong>
+          <p className="text-xs text-slate-600">
+            The administrator will review your submission and link the member to the family lineage. You can track ticket progress using the button below.
           </p>
         </div>
 
@@ -356,13 +343,24 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                   onChange={(e) => setTargetPersonId(e.target.value)}
                   className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-500"
                 >
-                  {familyMembers.map(m => (
-                    <option key={m.person_id} value={m.person_id}>
-                      {m.name || m.full_name} ({m.member_ref_id}) {m.founding_role ? `[${m.founding_role}]` : ''}
-                    </option>
-                  ))}
+                  {loadingMembers ? (
+                    <option value="">Loading family members...</option>
+                  ) : familyMembers.length === 0 ? (
+                    <option value="">No existing members found in this family</option>
+                  ) : (
+                    familyMembers.map(m => {
+                      const pId = m.person_id || m.member_ref_id || m.id;
+                      const roleStr = m.founding_role ? ` [Founding ${m.founding_role}]` : '';
+                      const refStr = m.member_ref_id ? ` (${m.member_ref_id})` : '';
+                      return (
+                        <option key={pId} value={pId}>
+                          {m.full_name || m.display_name || m.name}{refStr}{roleStr}
+                        </option>
+                      );
+                    })
+                  )}
                 </select>
-                <p className="text-[10px] text-slate-400 mt-0.5">Defaults to founding husband.</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">Select the family member this person is related to (defaults to founding husband).</p>
               </div>
 
               <div>
@@ -580,11 +578,14 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                     className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500"
                   >
                     <option value="">-- Select Father --</option>
-                    {familyMembers.map(m => (
-                      <option key={m.person_id} value={m.person_id}>
-                        {m.name || m.full_name || m.display_name}
-                      </option>
-                    ))}
+                    {familyMembers.map(m => {
+                      const pId = m.person_id || m.member_ref_id || m.id;
+                      return (
+                        <option key={pId} value={pId}>
+                          {m.full_name || m.display_name || m.name} {m.member_ref_id ? `(${m.member_ref_id})` : ''}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
                 <div>
@@ -595,108 +596,23 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                     className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500"
                   >
                     <option value="">-- Select Mother --</option>
-                    {familyMembers.map(m => (
-                      <option key={m.person_id} value={m.person_id}>
-                        {m.name || m.full_name || m.display_name}
-                      </option>
-                    ))}
+                    {familyMembers.map(m => {
+                      const pId = m.person_id || m.member_ref_id || m.id;
+                      return (
+                        <option key={pId} value={pId}>
+                          {m.full_name || m.display_name || m.name} {m.member_ref_id ? `(${m.member_ref_id})` : ''}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Submitter Contact Information */}
-          <div className="border border-slate-200 bg-slate-50/60 rounded-2xl p-4 space-y-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
-              Submitter Contact Information
-            </span>
-            <p className="text-xs text-slate-500">
-              Your details will be used by the Administrator to communicate regarding ticket approval.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Submitter Name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Your Name"
-                  value={submitterName}
-                  onBlur={() => markTouched('subName')}
-                  onChange={(e) => setSubmitterName(e.target.value)}
-                  className={`w-full px-3 py-2 bg-white border rounded-xl text-xs focus:outline-none focus:border-emerald-500 ${
-                    touched.subName && !subNameVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
-                  }`}
-                />
-                {touched.subName && !subNameVal.valid && (
-                  <p className="text-[11px] text-rose-600 mt-1">{subNameVal.error}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Submitter Email *</label>
-                <input
-                  type="email"
-                  required
-                  placeholder="your.email@example.com"
-                  value={submitterEmail}
-                  onBlur={() => markTouched('subEmail')}
-                  onChange={(e) => setSubmitterEmail(e.target.value)}
-                  className={`w-full px-3 py-2 bg-white border rounded-xl text-xs focus:outline-none focus:border-emerald-500 ${
-                    touched.subEmail && !subEmailVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
-                  }`}
-                />
-                {touched.subEmail && !subEmailVal.valid && (
-                  <p className="text-[11px] text-rose-600 mt-1">{subEmailVal.error}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Submitter Phone *</label>
-                <input
-                  type="tel"
-                  required
-                  placeholder="9876543210 (10 digits starting with 9, 8, 7, 6)"
-                  maxLength={14}
-                  value={submitterPhone}
-                  onBlur={() => markTouched('subPhone')}
-                  onChange={(e) => setSubmitterPhone(e.target.value)}
-                  className={`w-full px-3 py-2 bg-white border rounded-xl text-xs focus:outline-none focus:border-emerald-500 font-mono ${
-                    touched.subPhone && !subPhoneVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
-                  }`}
-                />
-                {touched.subPhone && !subPhoneVal.valid ? (
-                  <p className="text-[11px] text-rose-600 mt-1">{subPhoneVal.error}</p>
-                ) : (
-                  <p className="text-[10px] text-slate-400 mt-0.5">10 digits starting with 9, 8, 7, or 6</p>
-                )}
-              </div>
-
-              <div className="col-span-1 sm:col-span-3 pt-2">
-                <EmailOtpVerification
-                  email={submitterEmail}
-                  purpose="ADD_MEMBER"
-                  label="Verify Submitter Email"
-                  disabled={!subEmailVal.valid || !subPhoneVal.valid}
-                  disabledReason={
-                    !subEmailVal.valid && !subPhoneVal.valid
-                      ? 'Enter a valid email address and a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
-                      : !subPhoneVal.valid
-                      ? 'Enter a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
-                      : !subEmailVal.valid
-                      ? 'Enter a valid email address to enable email verification.'
-                      : ''
-                  }
-                  onVerified={(token) => setSubmitterOtpToken(token)}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Bot Protection */}
-          <CaptchaWidget verified={captchaVerified} onVerify={setCaptchaVerified} />
-
           <button
             type="submit"
-            disabled={!isFormValid || !captchaVerified || loading}
+            disabled={!isFormValid || loading}
             className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-emerald-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
           >
             {loading ? (

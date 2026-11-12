@@ -37,7 +37,20 @@ router.get('/members', async (req, res, next) => {
       p => p.surname_ref_id?.toUpperCase() === targetRef.toUpperCase() && p.status === 'Approved'
     );
 
-    const members = familyPersons.map(p => whitelistPublicMember(p));
+    const members = familyPersons.map(p => {
+      const publicBase = whitelistPublicMember(p) || {};
+      return {
+        ...publicBase,
+        person_id: p.person_id,
+        member_ref_id: p.member_ref_id,
+        full_name: p.full_name || publicBase.display_name || '',
+        display_name: publicBase.display_name || p.full_name || '',
+        first_name: p.first_name || '',
+        last_name: p.last_name || '',
+        gender: p.gender || '',
+        founding_role: p.founding_role || ''
+      };
+    });
 
     res.json({ ok: true, members });
   } catch (err) {
