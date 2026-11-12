@@ -10,6 +10,7 @@ import {
   formatDobMask,
   parseAndValidateDob
 } from '../utils/validation';
+import { formatMemberDropdownLabel } from '../utils/memberDropdown';
 import {
   PlusCircle,
   Search,
@@ -1246,7 +1247,7 @@ export default function OnboardSurnamePage({ onNavigate }) {
                     <option value="">-- Choose person --</option>
                     {familyAMembers.map(m => (
                       <option key={m.person_id} value={m.person_id}>
-                        {m.name} ({m.member_ref_id}) {m.founding_role ? `[${m.founding_role}]` : ''}
+                        {formatMemberDropdownLabel(m, familyAMembers)}
                       </option>
                     ))}
                   </select>
@@ -1261,7 +1262,7 @@ export default function OnboardSurnamePage({ onNavigate }) {
                     <option value="">-- Choose person --</option>
                     {familyBMembers.map(m => (
                       <option key={m.person_id} value={m.person_id}>
-                        {m.name} ({m.member_ref_id}) {m.founding_role ? `[${m.founding_role}]` : ''}
+                        {formatMemberDropdownLabel(m, familyBMembers)}
                       </option>
                     ))}
                   </select>

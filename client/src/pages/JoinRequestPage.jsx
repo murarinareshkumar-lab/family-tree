@@ -9,6 +9,7 @@ import {
   formatDobMask,
   parseAndValidateDob
 } from '../utils/validation';
+import { formatMemberDropdownLabel } from '../utils/memberDropdown';
 import { UserCheck, CheckCircle2, AlertCircle, ArrowRight, ArrowLeft } from 'lucide-react';
 
 export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
@@ -261,7 +262,7 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
                   ) : (
                     familyMembers.map(m => (
                       <option key={m.person_id || m.id} value={m.person_id || m.id}>
-                        {m.display_name || m.name || m.full_name}
+                        {formatMemberDropdownLabel(m, familyMembers)}
                       </option>
                     ))
                   )}

@@ -9,6 +9,7 @@ import {
   formatDobMask,
   parseAndValidateDob
 } from '../utils/validation';
+import { formatMemberDropdownLabel } from '../utils/memberDropdown';
 import { UserPlus, ShieldCheck, Mail, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
 
 export default function AddMemberPage({ onNavigate, initialParams = {} }) {
@@ -350,11 +351,9 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                   ) : (
                     familyMembers.map(m => {
                       const pId = m.person_id || m.member_ref_id || m.id;
-                      const roleStr = m.founding_role ? ` [Founding ${m.founding_role}]` : '';
-                      const refStr = m.member_ref_id ? ` (${m.member_ref_id})` : '';
                       return (
                         <option key={pId} value={pId}>
-                          {m.full_name || m.display_name || m.name}{refStr}{roleStr}
+                          {formatMemberDropdownLabel(m, familyMembers)}
                         </option>
                       );
                     })
@@ -582,7 +581,7 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                       const pId = m.person_id || m.member_ref_id || m.id;
                       return (
                         <option key={pId} value={pId}>
-                          {m.full_name || m.display_name || m.name} {m.member_ref_id ? `(${m.member_ref_id})` : ''}
+                          {formatMemberDropdownLabel(m, familyMembers)}
                         </option>
                       );
                     })}
@@ -600,7 +599,7 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                       const pId = m.person_id || m.member_ref_id || m.id;
                       return (
                         <option key={pId} value={pId}>
-                          {m.full_name || m.display_name || m.name} {m.member_ref_id ? `(${m.member_ref_id})` : ''}
+                          {formatMemberDropdownLabel(m, familyMembers)}
                         </option>
                       );
                     })}

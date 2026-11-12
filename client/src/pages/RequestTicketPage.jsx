@@ -20,7 +20,7 @@ export default function RequestTicketPage({ onNavigate, initialParams = {} }) {
     initialParams?.surname_ref_id
       ? `Request link to existing family branch ${initialParams.surname_ref_id}. Founding Husband: ${initialParams.husband_ref_id || 'N/A'}, Founding Wife: ${initialParams.wife_ref_id || 'N/A'}`
       : initialParams?.display_name
-      ? `Request to link with family member ${initialParams.display_name} (${initialParams.member_ref_id || ''})`
+      ? `Request to link with family member ${initialParams.display_name}`
       : ''
   );
 
@@ -37,7 +37,7 @@ export default function RequestTicketPage({ onNavigate, initialParams = {} }) {
         `Request link to existing family branch ${initialParams.surname_ref_id}. Founding Husband: ${initialParams.husband_ref_id || 'N/A'}, Founding Wife: ${initialParams.wife_ref_id || 'N/A'}`
       );
     } else if (initialParams?.display_name) {
-      setChangeDetails(`Request to link with family member ${initialParams.display_name} (${initialParams.member_ref_id || ''})`);
+      setChangeDetails(`Request to link with family member ${initialParams.display_name}`);
     }
   }, [initialParams]);
 
