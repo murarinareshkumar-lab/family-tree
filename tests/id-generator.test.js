@@ -56,7 +56,7 @@ test('Member Reference ID - Collision avoidance against existing member IDs', ()
   assert.notStrictEqual(generated, 'FM-BBBBBBBB');
 });
 
-test('Member Reference ID - PRD v4.0 SS-FFF-MMYYYY-NNN format and sequence increment', () => {
+test('Member Reference ID - PRD v4.0 SS-FFF-MMYYYY-NNN format and global sequence increment', () => {
   const person1 = {
     surname: 'Murari',
     firstName: 'Naresh',
@@ -70,29 +70,49 @@ test('Member Reference ID - PRD v4.0 SS-FFF-MMYYYY-NNN format and sequence incre
   const id2 = generateMemberRefId(person1, existing);
   assert.strictEqual(id2, 'MU-NAR-071995-002');
 
-  // Short surname padded with X, short first name padded with X
+  // Short surname padded with X, short first name padded with X - globally increments to 003
   const person2 = {
     surname: 'O',
     firstName: 'Al',
     dob: '2000-01-01'
   };
   const id3 = generateMemberRefId(person2, existing);
-  assert.strictEqual(id3, 'OX-ALX-012000-001');
+  assert.strictEqual(id3, 'OX-ALX-012000-003');
 
-  // Unknown DOB defaults to 000000, year-only defaults to 00YYYY
+  // Unknown DOB defaults to 000000, year-only defaults to 00YYYY - globally increments to 004
   const person3 = {
     full_name: 'Suresh Patil',
     dob: ''
   };
   const id4 = generateMemberRefId(person3, existing);
-  assert.strictEqual(id4, 'PA-SUR-000000-001');
+  assert.strictEqual(id4, 'PA-SUR-000000-004');
 
   const personYearOnly = {
     full_name: 'Ramesh Patil',
     dob: '1960'
   };
   const id5 = generateMemberRefId(personYearOnly, existing);
-  assert.strictEqual(id5, 'PA-RAM-001960-001');
+  assert.strictEqual(id5, 'PA-RAM-001960-005');
+});
+
+test('Member Reference ID - Founding couple global sequence increment (MU-GUR-011946-001 and MU-NEE-011951-002)', () => {
+  const existing = new Set();
+  const husband = {
+    surname: 'Murari',
+    firstName: 'Gurubheema',
+    dob: '1946-01-01'
+  };
+  const wife = {
+    surname: 'Murari',
+    firstName: 'Neeraja',
+    dob: '1951-01-01'
+  };
+
+  const hId = generateMemberRefId(husband, existing);
+  assert.strictEqual(hId, 'MU-GUR-011946-001');
+
+  const wId = generateMemberRefId(wife, existing);
+  assert.strictEqual(wId, 'MU-NEE-011951-002');
 });
 
 test('Branch Number Calculation - Increments for same surname_norm among Approved/Merged', () => {

@@ -164,12 +164,12 @@ test('Admin Approval - Phone verification fallback allows approval when no email
   );
   assert.strictEqual(mockRes.statusCode, 200);
   assert.strictEqual(mockRes.data.success, true);
-  // Verify SS-FFF-MMYYYY-NNN Member Reference ID format
-  assert.strictEqual(mockRes.data.member_ref_id, 'MU-ANA-052015-001');
+  // Verify SS-FFF-MMYYYY-NNN Member Reference ID format with global sequence increment
+  assert.strictEqual(mockRes.data.member_ref_id, 'MU-ANA-052015-002');
 
   // Verify person was created in Persons tab
   const persons = await sheets.getRows(TABS.PERSONS);
-  const created = persons.find(p => p.member_ref_id === 'MU-ANA-052015-001');
+  const created = persons.find(p => p.member_ref_id === 'MU-ANA-052015-002');
   assert.ok(created);
   assert.strictEqual(created.status, 'Approved');
 });
