@@ -86,7 +86,9 @@ router.post('/send', async (req, res) => {
         ok: true,
         message: 'A verification code has been sent to your registered email address.',
         resendAfterSeconds: result.resendAfterSeconds || 30,
-        flow: 'EXISTING_MEMBER'
+        flow: 'EXISTING_MEMBER',
+        simulated: result.simulated,
+        previewCode: result.previewCode
       });
     }
 
@@ -153,7 +155,9 @@ router.post('/send', async (req, res) => {
       ok: true,
       message: 'A verification code has been sent to the email address provided.',
       resendAfterSeconds: result.resendAfterSeconds || 30,
-      flow: 'NEW_PERSON'
+      flow: 'NEW_PERSON',
+      simulated: result.simulated,
+      previewCode: result.previewCode
     });
   } catch (err) {
     if (err.code === 'RESEND_GAP') {

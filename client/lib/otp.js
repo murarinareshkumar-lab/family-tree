@@ -100,8 +100,8 @@ export async function createAndSendOtp({ email, purpose, request_ref = '', sheet
     status: 'PENDING'
   });
 
-  // Send real email via nodemailer
-  await sendOtpEmail({
+  // Send email via nodemailer (or simulated fallback)
+  const emailRes = await sendOtpEmail({
     toEmail: email,
     otpCode: code,
     purpose
@@ -111,7 +111,9 @@ export async function createAndSendOtp({ email, purpose, request_ref = '', sheet
     ok: true,
     otpId,
     resendAfterSeconds: 30,
-    resendsLeft: MAX_RESENDS - currentResends
+    resendsLeft: MAX_RESENDS - currentResends,
+    simulated: Boolean(emailRes.simulated),
+    previewCode: emailRes.simulated ? code : undefined
   };
 }
 

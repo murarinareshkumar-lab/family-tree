@@ -1,21 +1,21 @@
 import nodemailer from 'nodemailer';
 
-const APP_URL = (process.env.APP_URL || 'https://family-tree.vercel.app').replace(/\/+$/, '');
-const MAIL_FROM = process.env.MAIL_FROM || 'Family Tree Portal <noreply@family-tree.vercel.app>';
+const APP_URL = (process.env.APP_URL || 'https://family-tree-lineage.vercel.app').replace(/\/+$/, '');
+const MAIL_FROM = process.env.MAIL_FROM || 'Family Tree Portal <noreply@family-tree-lineage.vercel.app>';
 
 let transporter = null;
 
 function getTransporter() {
   if (transporter) return transporter;
 
-  const host = process.env.SMTP_HOST;
+  const host = process.env.SMTP_HOST || (process.env.GMAIL_USER ? 'smtp.gmail.com' : undefined);
   const port = parseInt(process.env.SMTP_PORT || '587', 10);
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
+  const user = process.env.SMTP_USER || process.env.GMAIL_USER;
+  const pass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD;
 
   if (!host || !user || !pass) {
     if (process.env.NODE_ENV === 'production') {
-      console.error('[Email] CRITICAL: SMTP configuration is missing in production (SMTP_HOST, SMTP_USER, SMTP_PASS)!');
+      console.warn('[Email] Note: SMTP credentials are not configured in environment variables (SMTP_HOST, SMTP_USER, SMTP_PASS). Using simulated mode.');
     } else {
       console.warn('[Email] Warning: SMTP configuration missing. Using simulated email transport for development and tests.');
     }
@@ -54,13 +54,13 @@ export async function sendEmail({ to, subject, html, text }) {
       text,
       html
     });
-    return { ok: true, messageId: info.messageId };
+    return { ok: true, messageId: info.messageId, simulated: false };
   } catch (err) {
     console.error(`[Email Error] Failed to send email to ${to}:`, err.message);
     if (process.env.NODE_ENV === 'production') {
       throw new Error(`Email delivery failed: ${err.message}`);
     }
-    return { ok: false, error: err.message };
+    return { ok: false, error: err.message, simulated: false };
   }
 }
 
@@ -83,7 +83,11 @@ export async function sendOtpEmail({ toEmail, otpCode, purpose }) {
     </div>
   `;
 
-  return sendEmail({ to: toEmail, subject, html, text });
+  const res = await sendEmail({ to: toEmail, subject, html, text });
+  if (res.simulated) {
+    return { ...res, previewCode: otpCode };
+  }
+  return res;
 }
 
 /**

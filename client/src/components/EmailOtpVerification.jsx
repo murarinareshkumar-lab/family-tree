@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, AlertCircle, Clock, Send } from 'lucide-react';
+import { CheckCircle, AlertCircle, Clock, Send, AlertTriangle } from 'lucide-react';
 
 export default function EmailOtpVerification({
   email,
@@ -17,6 +17,7 @@ export default function EmailOtpVerification({
   const [verified, setVerified] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [codeSent, setCodeSent] = useState(false);
+  const [previewCode, setPreviewCode] = useState('');
 
   useEffect(() => {
     let timer;
@@ -56,6 +57,7 @@ export default function EmailOtpVerification({
       setCodeSent(true);
       setMessage(data.message || 'A verification code has been sent to the email address provided.');
       setResendCooldown(data.resendAfterSeconds || 30);
+      setPreviewCode(data.previewCode || '');
     } catch (err) {
       setError(err.message || 'Failed to send verification code.');
     } finally {
@@ -163,6 +165,35 @@ export default function EmailOtpVerification({
               Resend
             </button>
           </div>
+        </div>
+      )}
+
+      {previewCode && (
+        <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-amber-800 flex items-center gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+              SMTP Not Configured - Test OTP:
+            </span>
+            <button
+              type="button"
+              onClick={() => setCode(previewCode)}
+              className="px-2 py-0.5 bg-amber-200 hover:bg-amber-300 text-amber-900 font-mono text-[11px] rounded transition font-medium"
+            >
+              Auto-fill Code
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-base font-bold text-amber-950 bg-amber-100 px-2.5 py-1 rounded border border-amber-300 tracking-widest">
+              {previewCode}
+            </span>
+            <span className="text-[11px] text-amber-700">
+              (Use this code or click Auto-fill to test immediately)
+            </span>
+          </div>
+          <p className="text-[10px] text-amber-700 leading-relaxed">
+            Note: To receive codes in your actual email inbox, configure SMTP_HOST, SMTP_USER, and SMTP_PASS in Vercel environment variables.
+          </p>
         </div>
       )}
 
