@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../../utils/api';
 import StatusBadge from '../../components/StatusBadge';
 import Modal from '../../components/Modal';
+import AdminRequestManagement from './AdminRequestManagement';
 import {
   Shield, Users, GitBranch, AlertTriangle, CheckCircle2, XCircle,
   RefreshCw, LogOut, Download, GitMerge, FileText, Search, Mail, ExternalLink
@@ -192,6 +193,28 @@ export default function AdminDashboardPage({ onLogout }) {
     }
   };
 
+  const handleRejectDirect = async (ticketId, reason) => {
+    setActionLoading(true);
+    setError(null);
+    setSuccessMsg(null);
+    try {
+      await apiRequest('/admin/requests', {
+        method: 'POST',
+        body: JSON.stringify({
+          ticket_id: ticketId,
+          action: 'reject',
+          admin_remarks: reason.trim()
+        })
+      });
+      setSuccessMsg(`Rejected ticket ${ticketId}.`);
+      await loadAllData();
+    } catch (err) {
+      setError(err.message || 'Rejection failed');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleExecuteMerge = async (e) => {
     e.preventDefault();
     if (!mergePrimaryId || !mergeSecondaryId) {
@@ -325,7 +348,7 @@ export default function AdminDashboardPage({ onLogout }) {
       {/* Tabs Navigation */}
       <div className="flex border-b border-slate-200 space-x-1 sm:space-x-2 overflow-x-auto pb-1">
         {[
-          { id: 'requests', label: 'Pending Requests', count: requests.filter(r => r.status === 'Pending').length },
+          { id: 'requests', label: 'Request Management', count: requests.filter(r => r.status === 'Pending').length },
           { id: 'duplicates', label: 'Duplicate Flags', count: duplicateFlags.length },
           { id: 'merge', label: 'Merge Tool' },
           { id: 'members', label: 'Member Directory', count: members.length },
@@ -351,215 +374,17 @@ export default function AdminDashboardPage({ onLogout }) {
         ))}
       </div>
 
-      {/* TAB CONTENT 1: Pending Requests */}
+      {/* TAB CONTENT 1: Consolidated Single Request Table & Filters */}
       {activeTab === 'requests' && (
-        <div className="space-y-4">
-          {requests.length === 0 ? (
-            <div className="bg-white p-12 text-center rounded-2xl border border-slate-200 text-slate-500">
-              No requests found in the queue.
-            </div>
-          ) : (
-            requests.map(req => {
-              const mv = mailVerifications[req.ticket_id] || { verified: false, note: '' };
-              const isPending = req.status === 'Pending';
-              let parsedPayload = {};
-              try {
-                parsedPayload = typeof req.payload_json === 'string' ? JSON.parse(req.payload_json) : req.payload_json;
-              } catch (_) { }
-
-              return (
-                <div key={req.ticket_id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-mono text-xs font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-lg">
-                        {req.ticket_id}
-                      </span>
-                      <span className="text-sm font-extrabold text-slate-900">{req.type}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs text-slate-400">
-                        {req.created_at ? new Date(req.created_at).toLocaleString() : ''}
-                      </span>
-                      <StatusBadge status={req.status} />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                    <div>
-                      <span className="text-slate-400 font-semibold block mb-1">Requester Contact</span>
-                      <p className="font-bold text-slate-800">{req.requester_email || 'None'}</p>
-
-                      <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-100 font-mono text-[11px] max-h-36 overflow-y-auto">
-                        <pre className="whitespace-pre-wrap">{JSON.stringify(parsedPayload, null, 2)}</pre>
-                      </div>
-
-                      {/* Side-by-Side Comparison for LINK_FAMILIES / MERGE_FAMILIES / DELINK_FAMILIES */}
-                      {(req.type === 'LINK_FAMILIES' || req.type === 'MERGE_FAMILIES' || req.type === 'DELINK_FAMILIES') && (
-                        <div className="mt-3 p-3 bg-blue-50/70 border border-blue-200 rounded-xl space-y-2 text-xs">
-                          <span className="font-bold text-blue-900 block">Link Comparison ({parsedPayload.link_type || req.type})</span>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <div className="p-2 bg-white rounded-lg border border-blue-100">
-                              <span className="font-bold text-slate-800 block">Family A</span>
-                              <p className="font-mono text-emerald-700 font-bold">{req.family_a_details?.surname_name || parsedPayload.family_a_ref_id} ({parsedPayload.family_a_ref_id})</p>
-                              {req.person_a_details && (
-                                <p className="text-slate-600">Person A: <strong>{req.person_a_details.name}</strong> ({req.person_a_details.member_ref_id})</p>
-                              )}
-                              <p className="text-[11px] text-slate-500">Registered: {req.requester_email || parsedPayload.party_a_email || 'Entered'}</p>
-                            </div>
-                            <div className="p-2 bg-white rounded-lg border border-blue-100">
-                              <span className="font-bold text-slate-800 block">Family B</span>
-                              <p className="font-mono text-emerald-700 font-bold">{req.family_b_details?.surname_name || parsedPayload.family_b_ref_id} ({parsedPayload.family_b_ref_id})</p>
-                              {req.person_b_details && (
-                                <p className="text-slate-600">Person B: <strong>{req.person_b_details.name}</strong> ({req.person_b_details.member_ref_id})</p>
-                              )}
-                              <p className="text-[11px] text-slate-500">Registered: {req.second_party_email || parsedPayload.party_b_email || 'Entered'}</p>
-                            </div>
-                          </div>
-                          {parsedPayload.relation_note && (
-                            <p className="text-slate-700 italic">Note: "{parsedPayload.relation_note}"</p>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Existing Families Sharing this Surname */}
-                      {req.type === 'ONBOARD_SURNAME' && req.existing_families?.length > 0 && (
-                        <div className="mt-3 p-3 bg-amber-50/90 border border-amber-200 rounded-xl space-y-2">
-                          <div className="flex items-center space-x-1.5 text-amber-900 font-bold text-xs">
-                            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                            <span>Existing Families with Surname "{parsedPayload.surname_name || parsedPayload.surname}" ({req.existing_families.length})</span>
-                          </div>
-                          <div className="space-y-1.5 max-h-36 overflow-y-auto">
-                            {req.existing_families.map(f => (
-                              <div key={f.surname_ref_id} className="p-2 bg-white rounded-lg border border-amber-100 text-[11px] space-y-0.5">
-                                <span className="font-mono font-bold text-emerald-700 block">{f.surname_ref_id}</span>
-                                <div className="text-slate-700">
-                                  <strong>Husband:</strong> {f.husband?.name || 'N/A'} ({f.husband?.member_ref_id || 'N/A'})
-                                </div>
-                                <div className="text-slate-700">
-                                  <strong>Wife:</strong> {f.wife?.name || 'N/A'} ({f.wife?.member_ref_id || 'N/A'})
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                          {isPending && (
-                            <label className="flex items-start space-x-2 pt-1 text-xs font-bold text-amber-950 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={Boolean(adminConfirmedDiffFamily[req.ticket_id])}
-                                onChange={(e) => setAdminConfirmedDiffFamily(prev => ({ ...prev, [req.ticket_id]: e.target.checked }))}
-                                className="w-4 h-4 text-emerald-600 rounded border-amber-300 focus:ring-emerald-500 mt-0.5"
-                              />
-                              <span>Admin Confirm: This is a DIFFERENT family branch with the same surname (required to approve)</span>
-                            </label>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Email Verification Box & Actions */}
-                    <div className="flex flex-col justify-between border-t md:border-t-0 md:border-l border-slate-100 pt-3 md:pt-0 md:pl-4 space-y-3">
-                      {/* Dual Email Verification when LINK or MERGE */}
-                      <div className="bg-amber-50/60 border border-amber-200 rounded-xl p-3 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <label className="flex items-center space-x-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              disabled={!isPending}
-                              checked={mv.verified}
-                              onChange={(e) => handleMailVerifyChange(req.ticket_id, 'verified', e.target.checked)}
-                              className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
-                            />
-                            <span className="font-bold text-slate-900 text-xs">
-                              {req.type === 'LINK_FAMILIES' || req.type === 'MERGE_FAMILIES' ? 'Party A Mail Verified (SPF/DKIM/DMARC)' : 'Mail verified (SPF/DKIM/DMARC pass)'}
-                            </span>
-                          </label>
-                        </div>
-                        <input
-                          type="text"
-                          disabled={!isPending}
-                          placeholder="Party A Verification note"
-                          value={mv.note}
-                          onChange={(e) => handleMailVerifyChange(req.ticket_id, 'note', e.target.value)}
-                          className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500"
-                        />
-
-                        {(req.type === 'LINK_FAMILIES' || req.type === 'MERGE_FAMILIES') && (
-                          <div className="pt-2 border-t border-amber-200/60 space-y-2">
-                            <label className="flex items-center space-x-2 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                disabled={!isPending}
-                                checked={mv.second_verified}
-                                onChange={(e) => handleMailVerifyChange(req.ticket_id, 'second_verified', e.target.checked)}
-                                className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
-                              />
-                              <span className="font-bold text-slate-900 text-xs">
-                                Party B Mail Verified (SPF/DKIM/DMARC)
-                              </span>
-                            </label>
-                            <input
-                              type="text"
-                              disabled={!isPending}
-                              placeholder="Party B Verification note"
-                              value={mv.second_note}
-                              onChange={(e) => handleMailVerifyChange(req.ticket_id, 'second_note', e.target.value)}
-                              className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500"
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      {isPending ? (
-                        <div className="flex items-center space-x-2 pt-2">
-                          <button
-                            onClick={() => handleApprove(req)}
-                            disabled={actionLoading || !mv.verified || ((req.type === 'LINK_FAMILIES' || req.type === 'MERGE_FAMILIES') && !mv.second_verified)}
-                            className={`flex-1 py-2 rounded-xl text-xs font-bold text-white transition-all flex items-center justify-center space-x-1 ${
-                              mv.verified && ((req.type !== 'LINK_FAMILIES' && req.type !== 'MERGE_FAMILIES') || mv.second_verified)
-                                ? 'bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20'
-                                : 'bg-slate-300 cursor-not-allowed'
-                              }`}
-                          >
-                            <CheckCircle2 className="w-4 h-4" />
-                            <span>Approve & Generate ID</span>
-                          </button>
-                          <button
-                            onClick={() => {
-                              setRejectModalTicket(req);
-                              const defFamily = req.existing_families?.[0]?.surname_ref_id;
-                              setRejectRemarks(
-                                defFamily
-                                  ? `Existing family branch (${defFamily}) already exists with this surname. Please submit a LINK_MEMBERS ticket to link your record to this family.`
-                                  : ''
-                              );
-                            }}
-                            disabled={actionLoading}
-                            className="px-4 py-2 rounded-xl text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors"
-                          >
-                            Reject...
-                          </button>
-                        </div>
-                      ) : (
-                        req.status === 'Approved' && (req.type === 'LINK_FAMILIES' || req.type === 'MERGE_FAMILIES') && (
-                          <div className="pt-2">
-                            <button
-                              type="button"
-                              onClick={() => handleUndoMerge(req.ticket_id)}
-                              disabled={actionLoading}
-                              className="w-full py-1.5 px-3 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold text-xs rounded-xl transition-all"
-                            >
-                              Undo Merge / Revert Link
-                            </button>
-                          </div>
-                        )
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
+        <AdminRequestManagement
+          requests={requests}
+          loading={loading}
+          error={error}
+          onRefresh={loadAllData}
+          onApprove={handleApprove}
+          onReject={handleRejectDirect}
+          actionLoading={actionLoading}
+        />
       )}
 
       {/* TAB CONTENT 2: Duplicate Flags */}

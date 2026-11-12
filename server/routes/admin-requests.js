@@ -123,6 +123,11 @@ export default async function handler(req, res) {
       const reqRow = requests.find(r => r.ticket_id === ticket_id);
       if (!reqRow && upperAction !== 'UNDO_MERGE') return sendError(res, 404, 'Ticket not found');
 
+      // Prevent duplicate processing if request is already finalized
+      if (reqRow && (reqRow.status === 'Approved' || reqRow.status === 'Rejected' || reqRow.status === 'Delinked') && upperAction !== 'UNDO_MERGE' && upperAction !== 'UPDATE_VERIFICATION' && upperAction !== 'RECORD_PHONE_VERIFICATION') {
+        return sendError(res, 400, 'This request has already been processed.');
+      }
+
       // ACTION 1: UPDATE_VERIFICATION
       if (upperAction === 'UPDATE_VERIFICATION') {
         const updateData = {};
@@ -854,6 +859,90 @@ export default async function handler(req, res) {
           });
 
           return sendJson(res, 200, { success: true, message: 'Families successfully delinked' });
+        }
+
+        // -------------------------------------------------------
+        // APPROVE: EDIT_UPDATE_MEMBER / EDIT_MEMBER / UPDATE_MEMBER
+        // -------------------------------------------------------
+        if (reqRow.type === 'EDIT_MEMBER' || reqRow.type === 'UPDATE_MEMBER' || reqRow.type === 'EDIT_UPDATE_MEMBER') {
+          const { member_ref_id, person_id, updated_details = {}, requested_changes = {} } = payload;
+          const targetRef = member_ref_id || payload.member_ref;
+          const targetId = person_id || payload.person_id;
+
+          const allPersons = await sheetsClient.getRows(TABS.PERSONS);
+          const personRow = allPersons.find(p =>
+            (targetRef && String(p.member_ref_id || '').toUpperCase() === String(targetRef).toUpperCase()) ||
+            (targetId && p.person_id === targetId)
+          );
+
+          if (!personRow) {
+            return sendError(res, 404, 'Member record not found to update');
+          }
+
+          // Allowed updatable fields - Member Reference ID is STRICTLY PERMANENT
+          const changes = { ...requested_changes, ...updated_details };
+          const updateData = {};
+          if (changes.first_name) updateData.first_name = changes.first_name;
+          if (changes.middle_name !== undefined) updateData.middle_name = changes.middle_name;
+          if (changes.last_name) updateData.last_name = changes.last_name;
+          if (changes.first_name || changes.last_name) {
+            const m = changes.middle_name ? ` ${changes.middle_name}` : '';
+            updateData.full_name = `${changes.first_name || personRow.first_name}${m} ${changes.last_name || personRow.last_name}`;
+            updateData.name_norm = normalizeName(updateData.full_name);
+          }
+          if (changes.dob) updateData.dob = changes.dob;
+          if (changes.gender) updateData.gender = changes.gender;
+          if (changes.phone) {
+            updateData.phone = changes.phone;
+            updateData.phone_norm = normalizePhone(changes.phone);
+          }
+          if (changes.email) {
+            updateData.email = changes.email;
+            updateData.email_norm = normalizeEmail(changes.email);
+          }
+          if (changes.occupation) updateData.occupation = changes.occupation;
+          if (changes.location) updateData.location = changes.location;
+          if (changes.marital_status) updateData.marital_status = changes.marital_status;
+
+          // Apply update to person
+          await sheetsClient.updateRow(TABS.PERSONS, personRow.__rowIndex, updateData);
+
+          // Update request status
+          await sheetsClient.updateRow(TABS.REQUESTS, reqRow.__rowIndex, {
+            status: 'Approved',
+            decided_at: now,
+            admin_remarks: admin_remarks || 'Approved member update'
+          });
+
+          // Audit log
+          await logAuditEvent(sheetsClient, {
+            admin: admin.sub || 'admin',
+            action: 'APPROVE_EDIT_MEMBER',
+            entity: 'Persons',
+            entity_id: personRow.person_id,
+            previous_value: { full_name: personRow.full_name, phone: personRow.phone, email: personRow.email, member_ref_id: personRow.member_ref_id },
+            updated_value: { ...updateData, member_ref_id: personRow.member_ref_id },
+            ticket_id
+          });
+
+          if (reqRow.requester_email || personRow.email) {
+            try {
+              await sendApprovalEmail({
+                toEmail: reqRow.requester_email || personRow.email,
+                fullName: personRow.full_name,
+                ticketId: ticket_id,
+                memberRefId: personRow.member_ref_id
+              });
+            } catch (mErr) {
+              console.warn('[Admin] Approval email note:', mErr.message);
+            }
+          }
+
+          return sendJson(res, 200, {
+            success: true,
+            member_ref_id: personRow.member_ref_id,
+            message: 'Member details successfully updated'
+          });
         }
       }
 
