@@ -158,11 +158,21 @@ export default function AdminRequestManagement({
   // Open View Modal
   const handleOpenView = (req) => {
     setSelectedRequest(req);
-    setMailVerified(Boolean(req.mail_verified === true || req.mail_verified === 'true'));
-    setMailNote(req.mail_verified_note || '');
-    setSecondMailVerified(Boolean(req.second_party_mail_verified === true || req.second_party_mail_verified === 'true'));
-    setSecondMailNote(req.second_party_mail_note || '');
-    setDiffFamilyConfirmed(false);
+    const isPrimaryV = Boolean(
+      req.mail_verified === true ||
+      req.mail_verified === 'true' ||
+      req.phone_verified === true ||
+      req.phone_verified === 'true'
+    );
+    setMailVerified(isPrimaryV);
+    setMailNote(req.mail_verified_note || (isPrimaryV ? 'Verified by OTP or admin review' : ''));
+    const isSecondV = Boolean(
+      req.second_party_mail_verified === true ||
+      req.second_party_mail_verified === 'true'
+    );
+    setSecondMailVerified(isSecondV);
+    setSecondMailNote(req.second_party_mail_note || (isSecondV ? 'Verified by OTP or dual confirmation' : ''));
+    setDiffFamilyConfirmed(Boolean(req.admin_confirmed_different_family));
     setIsViewModalOpen(true);
   };
 
@@ -826,7 +836,21 @@ export default function AdminRequestManagement({
                       className="w-4 h-4 text-emerald-600 rounded border-amber-300 focus:ring-emerald-500"
                     />
                     <span>Primary Party Mail Verified (SPF/DKIM/DMARC / OTP Confirmed)</span>
+                    {mailVerified ? (
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full ml-auto">
+                        VERIFIED
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full ml-auto">
+                        PENDING VERIFICATION
+                      </span>
+                    )}
                   </label>
+                  {!mailVerified && isPending && (
+                    <p className="text-[11px] text-amber-700 bg-amber-100/60 p-2 rounded-lg">
+                      Email OTP was not verified at submission. Check this box to confirm identity ownership and enable approval.
+                    </p>
+                  )}
                   <input
                     type="text"
                     disabled={!isPending}

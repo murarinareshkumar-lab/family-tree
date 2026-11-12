@@ -1,0 +1,75 @@
+[
+  {
+    "op": "write",
+    "range": "FT_Surname_Details!A1",
+    "data": [
+      ["surname_ref_id", "surname_name", "surname_norm", "branch_no", "merged_into_surname_ref_id", "status", "last_seq", "created_at"]
+    ]
+  },
+  {
+    "op": "write",
+    "range": "FT_User_Details!A1",
+    "data": [
+      [
+        "person_id", "member_ref_id", "surname_ref_id", "first_name", "middle_name", "last_name",
+        "full_name", "former_name", "name_norm", "gender", "founding_role", "dob", "dob_precision",
+        "is_deceased", "date_of_death", "marital_status", "surname_before_marriage", "surname_after_marriage",
+        "occupation", "location", "email", "email_norm", "phone", "phone_norm",
+        "father_person_id", "mother_person_id", "status", "merged_into_person_id",
+        "verified_by_admin", "photo_url", "created_at"
+      ]
+    ]
+  },
+  {
+    "op": "write",
+    "range": "FT_Relationships!A1",
+    "data": [
+      ["rel_id", "person_a_id", "person_b_id", "type", "start_date", "spouse_status", "verified_by", "status", "created_at"]
+    ]
+  },
+  {
+    "op": "write",
+    "range": "FT_Requests!A1",
+    "data": [
+      [
+        "ticket_id", "type", "payload_json", "requester_email", "status",
+        "mail_verified", "mail_verified_note", "second_party_email", "second_party_mail_verified", "second_party_mail_note",
+        "phone_verified", "phone_verified_by", "phone_verified_at", "phone_verified_note",
+        "created_at", "decided_at", "admin_remarks"
+      ]
+    ]
+  },
+  {
+    "op": "write",
+    "range": "FamilyLinks!A1",
+    "data": [
+      [
+        "link_id", "link_type", "family_a_ref_id", "family_b_ref_id", "person_a_id", "person_b_id",
+        "relation_note", "ticket_id", "status", "created_at", "decided_at", "admin_remarks"
+      ]
+    ]
+  },
+  {
+    "op": "write",
+    "range": "Otp!A1",
+    "data": [
+      ["otp_id", "purpose", "email_norm", "request_ref", "code_hash", "expires_at", "attempts", "resends", "last_sent_at", "status"]
+    ]
+  },
+  {
+    "op": "write",
+    "range": "FT_Admin!A1",
+    "data": [
+      ["log_id", "timestamp", "admin", "action", "entity", "entity_id", "previous_value", "updated_value", "ticket_id"]
+    ]
+  },
+  {
+    "op": "write",
+    "range": "FT_Admin_Meta!A1",
+    "data": [
+      ["key", "value", "updated_at", "notes"],
+      ["ID_LOCK", "UNLOCKED", "2026-11-12T00:00:00.000Z", "Mutex lock for atomic ID generation"],
+      ["SCHEMA_VERSION", "4.0", "2026-11-12T00:00:00.000Z", "Family Tree database schema version"]
+    ]
+  }
+]

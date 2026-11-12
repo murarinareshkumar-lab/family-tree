@@ -275,6 +275,24 @@ export default async function handler(req, res) {
         const payload = JSON.parse(reqRow.payload_json || '{}');
         const now = new Date().toISOString();
 
+        // If admin confirms/updates verification during approval, persist to Google Sheets
+        const updatesToReq = {};
+        if (mail_verified === true || mail_verified === 'true') {
+          updatesToReq.mail_verified = 'true';
+          updatesToReq.mail_verified_note = mail_verified_note || 'Verified by admin during approval';
+          reqRow.mail_verified = 'true';
+          reqRow.mail_verified_note = updatesToReq.mail_verified_note;
+        }
+        if (second_party_mail_verified === true || second_party_mail_verified === 'true') {
+          updatesToReq.second_party_mail_verified = 'true';
+          updatesToReq.second_party_mail_note = second_party_mail_note || 'Verified by admin during approval';
+          reqRow.second_party_mail_verified = 'true';
+          reqRow.second_party_mail_note = updatesToReq.second_party_mail_note;
+        }
+        if (Object.keys(updatesToReq).length > 0) {
+          await sheetsClient.updateRow(TABS.REQUESTS, reqRow.__rowIndex, updatesToReq);
+        }
+
         // -------------------------------------------------------
         // APPROVE: ONBOARD_SURNAME
         // -------------------------------------------------------

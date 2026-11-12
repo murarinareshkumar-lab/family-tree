@@ -377,26 +377,39 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
                 <input
                   type="tel"
                   required
-                  placeholder="9876543210"
+                  placeholder="9876543210 (10 digits starting with 9, 8, 7, 6)"
                   maxLength={14}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:border-blue-500"
                 />
+                {!phoneVal.valid && phone ? (
+                  <p className="text-[11px] text-rose-600 mt-1">{phoneVal.error}</p>
+                ) : (
+                  <p className="text-[10px] text-slate-400 mt-0.5">10 digits starting with 9, 8, 7, or 6</p>
+                )}
               </div>
             </div>
 
             {/* Email OTP Verification */}
-            {emailVal.valid && (
-              <div className="pt-2">
-                <EmailOtpVerification
-                  email={email}
-                  purpose="NEW_PERSON_EMAIL_VERIFICATION"
-                  label="Verify Your Email Address"
-                  onVerified={(token) => setOtpToken(token)}
-                />
-              </div>
-            )}
+            <div className="pt-2">
+              <EmailOtpVerification
+                email={email}
+                purpose="NEW_PERSON_EMAIL_VERIFICATION"
+                label="Verify Your Email Address"
+                disabled={!emailVal.valid || !phoneVal.valid}
+                disabledReason={
+                  !emailVal.valid && !phoneVal.valid
+                    ? 'Enter a valid email address and a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
+                    : !phoneVal.valid
+                    ? 'Enter a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
+                    : !emailVal.valid
+                    ? 'Enter a valid email address to enable email verification.'
+                    : ''
+                }
+                onVerified={(token) => setOtpToken(token)}
+              />
+            </div>
           </div>
 
           {/* Bot Protection */}

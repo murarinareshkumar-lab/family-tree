@@ -385,19 +385,60 @@ router.post('/', async (req, res, next) => {
 
     if (flags.length > 0) payload.duplicate_flags = flags;
 
-    const finalRequesterEmail = requester_email || payload.requester_email || payload.party_a_email || payload.person?.email || '';
-    const secondPartyEmail = payload.party_b_email || payload.second_party_email || '';
+    const finalRequesterEmail = requester_email || payload.requester_email || payload.party_a_email || payload.person?.email || payload.husband?.email || payload.wife?.email || '';
+    const secondPartyEmail = payload.party_b_email || payload.second_party_email || payload.wife?.email || '';
 
     // Check if OTP was verified for requester or parties
     let isMailVerified = false;
     let mailVerifiedNote = '';
 
-    const reqToken = payload.otp_token || payload.requester_otp_token || req.body.otp_token;
-    if (reqToken && finalRequesterEmail) {
-      const chk = verifyVerificationToken(reqToken, type, finalRequesterEmail);
-      if (chk.valid) {
+    const reqToken = payload.otp_token ||
+      payload.requester_otp_token ||
+      payload.husband_otp_token ||
+      payload.husband?.otp_token ||
+      payload.wife_otp_token ||
+      payload.wife?.otp_token ||
+      req.body.otp_token;
+
+    if (reqToken) {
+      const possibleEmails = [
+        finalRequesterEmail,
+        payload.husband?.email,
+        payload.wife?.email,
+        payload.person?.email,
+        payload.party_a_email
+      ].filter(Boolean);
+
+      let tokenValid = false;
+      for (const testEmail of possibleEmails) {
+        const chk = verifyVerificationToken(reqToken, type, testEmail);
+        if (chk.valid) {
+          tokenValid = true;
+          break;
+        }
+      }
+
+      if (!tokenValid) {
+        const fallbackChk = verifyVerificationToken(reqToken, type, null);
+        if (fallbackChk.valid) {
+          tokenValid = true;
+        }
+      }
+
+      if (tokenValid) {
         isMailVerified = true;
         mailVerifiedNote = 'Verified by OTP at submission';
+      }
+    }
+
+    let isSecondMailVerified = false;
+    let secondMailNote = '';
+    const secondToken = payload.second_party_otp_token || payload.party_b_otp_token || payload.wife_otp_token || payload.wife?.otp_token;
+    if (secondToken) {
+      const chk2 = verifyVerificationToken(secondToken, type, secondPartyEmail || null);
+      if (chk2.valid) {
+        isSecondMailVerified = true;
+        secondMailNote = 'Verified by OTP at submission';
       }
     }
 
@@ -410,8 +451,8 @@ router.post('/', async (req, res, next) => {
       mail_verified: isMailVerified ? 'true' : 'false',
       mail_verified_note: mailVerifiedNote,
       second_party_email: secondPartyEmail,
-      second_party_mail_verified: 'false',
-      second_party_mail_note: '',
+      second_party_mail_verified: isSecondMailVerified ? 'true' : 'false',
+      second_party_mail_note: secondMailNote,
       created_at: now
     });
 

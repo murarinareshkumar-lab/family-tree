@@ -411,11 +411,13 @@ export default function OnboardSurnamePage({ onNavigate }) {
       type: 'ONBOARD_SURNAME',
       requester_email: hEmailVal.value,
       captcha_token: 'valid',
+      otp_token: husbandOtpToken || wifeOtpToken || '',
       payload: {
         surname_name: surnameName.trim(),
         surname_searched: lastSearchedSurname,
         surname_ref_ids_shown: searchResults.map(f => f.surname_ref_id),
         different_family_confirmed: Boolean(confirmedDifferentFamily),
+        otp_token: husbandOtpToken || wifeOtpToken || '',
         husband_otp_token: husbandOtpToken || '',
         wife_otp_token: wifeOtpToken || '',
         proceed_anyway: proceedAnyway,
@@ -827,7 +829,7 @@ export default function OnboardSurnamePage({ onNavigate }) {
                     <input
                       type="tel"
                       required
-                      placeholder="9876543210"
+                      placeholder="9876543210 (10 digits starting with 9, 8, 7, 6)"
                       maxLength={14}
                       value={husbandPhone}
                       onBlur={() => markTouched('hPhone')}
@@ -836,21 +838,31 @@ export default function OnboardSurnamePage({ onNavigate }) {
                         touched.hPhone && !hPhoneVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
                       }`}
                     />
-                    {touched.hPhone && !hPhoneVal.valid && (
+                    {touched.hPhone && !hPhoneVal.valid ? (
                       <p className="text-[11px] text-rose-600 mt-1">{hPhoneVal.error}</p>
+                    ) : (
+                      <p className="text-[10px] text-slate-400 mt-0.5">10 digits starting with 9, 8, 7, or 6</p>
                     )}
                   </div>
 
-                  {hEmailVal.valid && (
-                    <div className="col-span-1 sm:col-span-3 pt-2">
-                      <EmailOtpVerification
-                        email={husbandEmail}
-                        purpose="NEW_PERSON_EMAIL_VERIFICATION"
-                        label="Verify Founding Husband Email"
-                        onVerified={(token) => setHusbandOtpToken(token)}
-                      />
-                    </div>
-                  )}
+                  <div className="col-span-1 sm:col-span-3 pt-2">
+                    <EmailOtpVerification
+                      email={husbandEmail}
+                      purpose="NEW_PERSON_EMAIL_VERIFICATION"
+                      label="Verify Founding Husband Email"
+                      disabled={!hEmailVal.valid || !hPhoneVal.valid}
+                      disabledReason={
+                        !hEmailVal.valid && !hPhoneVal.valid
+                          ? 'Enter a valid email address and a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
+                          : !hPhoneVal.valid
+                          ? 'Enter a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
+                          : !hEmailVal.valid
+                          ? 'Enter a valid email address to enable email verification.'
+                          : ''
+                      }
+                      onVerified={(token) => setHusbandOtpToken(token)}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -967,7 +979,7 @@ export default function OnboardSurnamePage({ onNavigate }) {
                     <input
                       type="tel"
                       required
-                      placeholder="9876543210"
+                      placeholder="9876543210 (10 digits starting with 9, 8, 7, 6)"
                       maxLength={14}
                       value={wifePhone}
                       onBlur={() => markTouched('wPhone')}
@@ -976,21 +988,31 @@ export default function OnboardSurnamePage({ onNavigate }) {
                         touched.wPhone && !wPhoneVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
                       }`}
                     />
-                    {touched.wPhone && !wPhoneVal.valid && (
+                    {touched.wPhone && !wPhoneVal.valid ? (
                       <p className="text-[11px] text-rose-600 mt-1">{wPhoneVal.error}</p>
+                    ) : (
+                      <p className="text-[10px] text-slate-400 mt-0.5">10 digits starting with 9, 8, 7, or 6</p>
                     )}
                   </div>
 
-                  {wEmailVal.valid && (
-                    <div className="col-span-1 sm:col-span-3 pt-2">
-                      <EmailOtpVerification
-                        email={wifeEmail}
-                        purpose="NEW_PERSON_EMAIL_VERIFICATION"
-                        label="Verify Founding Wife Email"
-                        onVerified={(token) => setWifeOtpToken(token)}
-                      />
-                    </div>
-                  )}
+                  <div className="col-span-1 sm:col-span-3 pt-2">
+                    <EmailOtpVerification
+                      email={wifeEmail}
+                      purpose="NEW_PERSON_EMAIL_VERIFICATION"
+                      label="Verify Founding Wife Email"
+                      disabled={!wEmailVal.valid || !wPhoneVal.valid}
+                      disabledReason={
+                        !wEmailVal.valid && !wPhoneVal.valid
+                          ? 'Enter a valid email address and a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
+                          : !wPhoneVal.valid
+                          ? 'Enter a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
+                          : !wEmailVal.valid
+                          ? 'Enter a valid email address to enable email verification.'
+                          : ''
+                      }
+                      onVerified={(token) => setWifeOtpToken(token)}
+                    />
+                  </div>
                 </div>
               </div>
 

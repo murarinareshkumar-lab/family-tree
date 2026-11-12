@@ -392,3 +392,122 @@ test('ARM-006: Unauthorized request without Admin key/token is blocked with 401'
   assert.strictEqual(mockRes.statusCode, 401);
   assert.match(mockRes.data.error, /Unauthorized/);
 });
+
+test('ARM-007: Admin can approve Onboard Surname with mail_verified: true, updating sheet and creating records', async () => {
+  const sheets = new InMemorySheetsProvider();
+  setSheetsClient(sheets);
+  process.env.ADMIN_SECRET_KEY = 'admin123';
+
+  const ticketId = 'TKT-SRN-TEST-VERIFY';
+  await sheets.appendRow(TABS.REQUESTS, {
+    ticket_id: ticketId,
+    type: 'ONBOARD_SURNAME',
+    status: 'Pending',
+    mail_verified: 'false',
+    mail_verified_note: '',
+    requester_email: 'naresh.murari@example.com',
+    payload_json: JSON.stringify({
+      surname_name: 'Murari',
+      husband: {
+        first_name: 'Naresh',
+        last_name: 'Murari',
+        full_name: 'Naresh Kumar Murari',
+        email: 'naresh.murari@example.com',
+        phone: '9876543210',
+        dob: '1980-05-15',
+        gender: 'Male'
+      },
+      wife: {
+        first_name: 'Lakshmi',
+        last_name: 'Murari',
+        full_name: 'Lakshmi Murari',
+        email: 'lakshmi.murari@example.com',
+        phone: '8765432109',
+        dob: '1984-08-20',
+        gender: 'Female'
+      }
+    }),
+    created_at: new Date().toISOString()
+  });
+
+  const mockRes = createMockRes();
+  await adminRequestsHandler(
+    {
+      method: 'POST',
+      headers: { 'x-admin-key': 'admin123' },
+      body: {
+        ticket_id: ticketId,
+        action: 'APPROVE',
+        mail_verified: true,
+        mail_verified_note: 'Verified by admin in portal'
+      }
+    },
+    mockRes
+  );
+
+  assert.strictEqual(mockRes.statusCode, 200);
+  assert.strictEqual(mockRes.data.success, true);
+  assert.ok(mockRes.data.surname_ref_id, 'Must generate surname_ref_id');
+
+  const reqs = await sheets.getRows(TABS.REQUESTS);
+  const updatedReq = reqs.find(r => r.ticket_id === ticketId);
+  assert.strictEqual(updatedReq.status, 'Approved');
+  assert.strictEqual(updatedReq.mail_verified, 'true');
+
+  const surnames = await sheets.getRows(TABS.SURNAMES);
+  const fam = surnames.find(s => s.surname_ref_id === mockRes.data.surname_ref_id);
+  assert.ok(fam, 'Family record must exist in FT_Surname_Details');
+  assert.strictEqual(fam.surname_name, 'Murari');
+
+  const persons = await sheets.getRows(TABS.PERSONS);
+  const h = persons.find(p => p.member_ref_id === mockRes.data.husband_member_ref_id);
+  const w = persons.find(p => p.member_ref_id === mockRes.data.wife_member_ref_id);
+  assert.ok(h && w, 'Both husband and wife records must be created');
+  assert.strictEqual(h.full_name, 'Naresh Kumar Murari');
+  assert.strictEqual(w.full_name, 'Lakshmi Murari');
+});
+
+test('ARM-008: Phone number validation strictly enforces 10 digits starting with 6, 7, 8, 9 only', async () => {
+  const { validatePhone } = await import('../lib/validation.js');
+
+  // Valid starting digits 9, 8, 7, 6
+  assert.strictEqual(validatePhone('9876543210').valid, true);
+  assert.strictEqual(validatePhone('8876543210').valid, true);
+  assert.strictEqual(validatePhone('7876543210').valid, true);
+  assert.strictEqual(validatePhone('6876543210').valid, true);
+
+  // Valid with +91 and spaces (cleans to 10 digits)
+  assert.strictEqual(validatePhone('+91 98765 43210').valid, true);
+  assert.strictEqual(validatePhone('+91 9876543210').value, '9876543210');
+
+  // Invalid: starts with 5, 4, 3, 2, 1, 0
+  assert.strictEqual(validatePhone('5876543210').valid, false);
+  assert.strictEqual(validatePhone('4876543210').valid, false);
+  assert.strictEqual(validatePhone('3876543210').valid, false);
+  assert.strictEqual(validatePhone('2876543210').valid, false);
+  assert.strictEqual(validatePhone('1876543210').valid, false);
+  assert.strictEqual(validatePhone('0876543210').valid, false);
+
+  // Invalid: less than 10 or more than 10 digits
+  assert.strictEqual(validatePhone('987654321').valid, false); // 9 digits
+  assert.strictEqual(validatePhone('98765432100').valid, false); // 11 digits
+});
+
+test('ARM-009: Verification token issued for NEW_PERSON_EMAIL_VERIFICATION is valid for ONBOARD_SURNAME', async () => {
+  const { verifyVerificationToken } = await import('../lib/otp.js');
+  const jwt = (await import('jsonwebtoken')).default;
+
+  const validToken = jwt.sign(
+    {
+      email_norm: 'naresh@murari.org',
+      purpose: 'NEW_PERSON_EMAIL_VERIFICATION',
+      verified: true
+    },
+    process.env.JWT_SECRET || 'dev-secret-key-at-least-32-characters-long',
+    { expiresIn: '15m' }
+  );
+
+  const res = verifyVerificationToken(validToken, 'ONBOARD_SURNAME', 'naresh@murari.org');
+  assert.strictEqual(res.valid, true);
+  assert.strictEqual(res.decoded.verified, true);
+});

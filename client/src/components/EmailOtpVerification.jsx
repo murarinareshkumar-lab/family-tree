@@ -8,7 +8,8 @@ export default function EmailOtpVerification({
   person_id = '',
   onVerified,
   label = 'Email Verification',
-  disabled = false
+  disabled = false,
+  disabledReason = ''
 }) {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -127,15 +128,23 @@ export default function EmailOtpVerification({
       </div>
 
       {!codeSent ? (
-        <button
-          type="button"
-          onClick={handleSendCode}
-          disabled={disabled || loading || !email}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white text-xs font-semibold rounded-xl shadow-sm transition"
-        >
-          <Send className="w-3.5 h-3.5" />
-          {loading ? 'Sending Code...' : 'Send Verification Code'}
-        </button>
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={handleSendCode}
+            disabled={disabled || loading || !email}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-xl shadow-sm transition"
+          >
+            <Send className="w-3.5 h-3.5" />
+            {loading ? 'Sending Code...' : 'Send Verification Code'}
+          </button>
+          {disabled && disabledReason && (
+            <div className="flex items-start gap-1.5 p-2.5 bg-amber-50/90 border border-amber-200/70 rounded-xl text-amber-900 text-[11px] leading-relaxed">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <span>{disabledReason}</span>
+            </div>
+          )}
+        </div>
       ) : (
         <div className="space-y-2">
           <div className="flex gap-2">

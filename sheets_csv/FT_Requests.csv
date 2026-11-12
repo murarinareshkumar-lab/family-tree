@@ -1,0 +1,1 @@
+ticket_id,type,payload_json,requester_email,status,mail_verified,mail_verified_note,second_party_email,second_party_mail_verified,second_party_mail_note,phone_verified,phone_verified_by,phone_verified_at,phone_verified_note,created_at,decided_at,admin_remarks

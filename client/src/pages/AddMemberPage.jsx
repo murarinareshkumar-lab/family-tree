@@ -527,7 +527,7 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                   <input
                     type="tel"
                     required
-                    placeholder="9876543210"
+                    placeholder="9876543210 (10 digits starting with 9, 8, 7, 6)"
                     maxLength={14}
                     value={phone}
                     onBlur={() => markTouched('phone')}
@@ -536,21 +536,31 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                       touched.phone && !phoneVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
                     }`}
                   />
-                  {touched.phone && !phoneVal.valid && (
+                  {touched.phone && !phoneVal.valid ? (
                     <p className="text-[11px] text-rose-600 mt-1">{phoneVal.error}</p>
+                  ) : (
+                    <p className="text-[10px] text-slate-400 mt-0.5">10 digits starting with 9, 8, 7, or 6</p>
                   )}
                 </div>
 
-                {emailVal.valid && (
-                  <div className="col-span-1 sm:col-span-2 pt-2">
-                    <EmailOtpVerification
-                      email={email}
-                      purpose="NEW_PERSON_EMAIL_VERIFICATION"
-                      label="Verify Member Email"
-                      onVerified={(token) => setMemberOtpToken(token)}
-                    />
-                  </div>
-                )}
+                <div className="col-span-1 sm:col-span-2 pt-2">
+                  <EmailOtpVerification
+                    email={email}
+                    purpose="NEW_PERSON_EMAIL_VERIFICATION"
+                    label="Verify Member Email"
+                    disabled={!emailVal.valid || !phoneVal.valid}
+                    disabledReason={
+                      !emailVal.valid && !phoneVal.valid
+                        ? 'Enter a valid email address and a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
+                        : !phoneVal.valid
+                        ? 'Enter a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
+                        : !emailVal.valid
+                        ? 'Enter a valid email address to enable email verification.'
+                        : ''
+                    }
+                    onVerified={(token) => setMemberOtpToken(token)}
+                  />
+                </div>
               </div>
             </div>
           ) : (
@@ -644,7 +654,7 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                 <input
                   type="tel"
                   required
-                  placeholder="9876543210"
+                  placeholder="9876543210 (10 digits starting with 9, 8, 7, 6)"
                   maxLength={14}
                   value={submitterPhone}
                   onBlur={() => markTouched('subPhone')}
@@ -653,21 +663,31 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                     touched.subPhone && !subPhoneVal.valid ? 'border-rose-400 bg-rose-50/30' : 'border-slate-200'
                   }`}
                 />
-                {touched.subPhone && !subPhoneVal.valid && (
+                {touched.subPhone && !subPhoneVal.valid ? (
                   <p className="text-[11px] text-rose-600 mt-1">{subPhoneVal.error}</p>
+                ) : (
+                  <p className="text-[10px] text-slate-400 mt-0.5">10 digits starting with 9, 8, 7, or 6</p>
                 )}
               </div>
 
-              {subEmailVal.valid && (
-                <div className="col-span-1 sm:col-span-3 pt-2">
-                  <EmailOtpVerification
-                    email={submitterEmail}
-                    purpose="ADD_MEMBER"
-                    label="Verify Submitter Email"
-                    onVerified={(token) => setSubmitterOtpToken(token)}
-                  />
-                </div>
-              )}
+              <div className="col-span-1 sm:col-span-3 pt-2">
+                <EmailOtpVerification
+                  email={submitterEmail}
+                  purpose="ADD_MEMBER"
+                  label="Verify Submitter Email"
+                  disabled={!subEmailVal.valid || !subPhoneVal.valid}
+                  disabledReason={
+                    !subEmailVal.valid && !subPhoneVal.valid
+                      ? 'Enter a valid email address and a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
+                      : !subPhoneVal.valid
+                      ? 'Enter a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
+                      : !subEmailVal.valid
+                      ? 'Enter a valid email address to enable email verification.'
+                      : ''
+                  }
+                  onVerified={(token) => setSubmitterOtpToken(token)}
+                />
+              </div>
             </div>
           </div>
 
