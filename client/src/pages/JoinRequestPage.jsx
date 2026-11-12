@@ -54,16 +54,15 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
       .then(res => {
         const list = res.surnames || [];
         setSurnames(list);
-        if (list.length > 0) {
-          const preselected = initialParams?.surname_ref_id
-            ? list.find(s => s.surname_ref_id === initialParams.surname_ref_id)
-            : null;
-          const chosen = preselected || list[0];
-          setSelectedSurnameId(chosen.surname_ref_id);
-          if (chosen.surname_name) {
-            setLastName(chosen.surname_name);
+        if (list.length > 0 && initialParams?.surname_ref_id) {
+          const preselected = list.find(s => s.surname_ref_id === initialParams.surname_ref_id);
+          if (preselected) {
+            setSelectedSurnameId(preselected.surname_ref_id);
+            if (preselected.surname_name) {
+              setLastName(preselected.surname_name);
+            }
+            loadFamilyMembers(preselected.surname_ref_id);
           }
-          loadFamilyMembers(chosen.surname_ref_id);
         }
       })
       .catch(err => setError(err.message || 'Failed to load lineages'));
@@ -82,13 +81,12 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
         members = res2.members || [];
       }
       setFamilyMembers(members);
-      if (members.length > 0) {
-        setTargetPersonId(members[0].person_id || members[0].id);
-      }
+      setTargetPersonId('');
       setParentVerified(false);
       setParentVerificationError('');
     } catch (_) {
       setFamilyMembers([]);
+      setTargetPersonId('');
     } finally {
       setLoadingMembers(false);
     }
@@ -126,6 +124,14 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
 
   const handleSurnameChange = (newSurnameId) => {
     setSelectedSurnameId(newSurnameId);
+    setParentEmail('');
+    setParentVerificationError('');
+    setParentVerified(false);
+    if (!newSurnameId) {
+      setFamilyMembers([]);
+      setTargetPersonId('');
+      return;
+    }
     const s = surnames.find(x => x.surname_ref_id === newSurnameId);
     if (s && s.surname_name) {
       setLastName(s.surname_name);
@@ -150,6 +156,7 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
   const maidenVal = validateName(beforeMarriageSurname, false);
 
   const isFormValid =
+    Boolean(selectedSurnameId) &&
     firstVal.valid &&
     midVal.valid &&
     lastVal.valid &&
@@ -230,7 +237,7 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
   if (ticketResult) {
     if (ticketResult.direct_linked) {
       return (
-        <div className="max-w-2xl mx-auto bg-white rounded-3xl border border-emerald-200 p-8 shadow-sm">
+        <div className="max-w-4xl mx-auto bg-white rounded-3xl border border-emerald-200 p-8 shadow-sm">
           <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 border border-emerald-100">
             <CheckCircle2 className="w-8 h-8" />
           </div>
@@ -278,7 +285,7 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
     }
 
     return (
-      <div className="max-w-2xl mx-auto bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+      <div className="max-w-4xl mx-auto bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
         <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-4 border border-amber-100">
           <Clock className="w-8 h-8" />
         </div>
@@ -328,7 +335,7 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm">
         <div className="flex items-center space-x-3 mb-6">
           <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-700 border border-blue-100 flex items-center justify-center">
@@ -350,56 +357,63 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Step 1: Select Family Lineage */}
-          <div className="space-y-2">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-              Select Family Lineage *
-            </label>
-            <select
-              value={selectedSurnameId}
-              onChange={(e) => handleSurnameChange(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:bg-white focus:outline-none focus:border-blue-500"
-            >
-              {surnames.map(s => (
-                <option key={s.surname_ref_id} value={s.surname_ref_id}>
-                  {s.surname_name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Step 2: Select Listed Relative and Relationship */}
-          <div className="border border-slate-200 bg-slate-50/60 rounded-2xl p-4 space-y-4">
+          {/* Step 1: Lineage & Relative Connection */}
+          <div className="border border-slate-200 bg-slate-50/60 rounded-2xl p-5 space-y-3">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
-              Your Relative in the Tree
+              Family Connection
             </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Select Relative *</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                  Select Family Lineage *
+                </label>
+                <select
+                  value={selectedSurnameId}
+                  onChange={(e) => handleSurnameChange(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-blue-500"
+                >
+                  <option value="">-- Select Family Lineage --</option>
+                  {surnames.map(s => (
+                    <option key={s.surname_ref_id} value={s.surname_ref_id}>
+                      {s.surname_name}{s.branch_no ? ` - Family ${s.branch_no}` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1.5">Select Relative *</label>
                 <select
                   value={targetPersonId}
                   onChange={(e) => setTargetPersonId(e.target.value)}
-                  disabled={loadingMembers}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-blue-500 font-medium"
+                  disabled={!selectedSurnameId || loadingMembers}
+                  className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-blue-500 font-medium disabled:bg-slate-100 disabled:cursor-not-allowed"
                 >
-                  {familyMembers.length === 0 ? (
-                    <option value="">{loadingMembers ? 'Loading members...' : 'No members found'}</option>
+                  {!selectedSurnameId ? (
+                    <option value="">-- Select a family lineage first --</option>
+                  ) : loadingMembers ? (
+                    <option value="">Loading members...</option>
+                  ) : familyMembers.length === 0 ? (
+                    <option value="">No members found in this family</option>
                   ) : (
-                    familyMembers.map(m => (
-                      <option key={m.person_id || m.id} value={m.person_id || m.id}>
-                        {formatMemberDropdownLabel(m, familyMembers)}
-                      </option>
-                    ))
+                    <>
+                      <option value="">-- Select Relative --</option>
+                      {familyMembers.map(m => (
+                        <option key={m.person_id || m.id} value={m.person_id || m.id}>
+                          {formatMemberDropdownLabel(m, familyMembers)}
+                        </option>
+                      ))}
+                    </>
                   )}
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Your Relationship to Relative *</label>
+                <label className="block text-xs font-medium text-slate-600 mb-1.5">Your Relationship to Relative *</label>
                 <select
                   value={relationshipType}
                   onChange={(e) => setRelationshipType(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-blue-500 font-medium"
+                  className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-blue-500 font-medium"
                 >
                   <option value="CHILD_OF">Child of this person (Son/Daughter)</option>
                   <option value="SPOUSE_OF">Spouse of this person (Husband/Wife)</option>
@@ -579,15 +593,6 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
                       purpose="NEW_PERSON_EMAIL_VERIFICATION"
                       label="Verify Your Email Address"
                       disabled={!emailVal.valid || !phoneVal.valid}
-                      disabledReason={
-                        !emailVal.valid && !phoneVal.valid
-                          ? 'Enter a valid email address and a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
-                          : !phoneVal.valid
-                          ? 'Enter a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
-                          : !emailVal.valid
-                          ? 'Enter a valid email address to enable email verification.'
-                          : ''
-                      }
                       onVerified={(token) => setOtpToken(token)}
                     />
                   </div>
@@ -597,18 +602,18 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
 
             {/* Step 2: Remaining All Details (Unlocked once email is verified or if deceased) */}
             {(isDeceased || otpToken) ? (
-              <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50/30 space-y-4 animate-in fade-in duration-200">
+              <div className="border border-slate-200 rounded-2xl p-5 bg-slate-50/40 space-y-4 animate-in fade-in duration-200">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
                   Remaining Personal Details
                 </span>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-slate-600 mb-1">Gender *</label>
                     <select
                       value={gender}
                       onChange={(e) => setGender(e.target.value)}
-                      className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500"
+                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500"
                     >
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
@@ -625,35 +630,32 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
                       maxLength={10}
                       value={dob}
                       onChange={(e) => setDob(formatDobMask(e.target.value))}
-                      className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:border-blue-500"
+                      className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:border-blue-500"
                     />
                   </div>
-                </div>
 
-                {gender === 'Female' && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                    {relationshipType !== 'SPOUSE_OF' && (
-                      <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">Marital Status *</label>
-                        <select
-                          value={maritalStatus}
-                          onChange={(e) => setMaritalStatus(e.target.value)}
-                          className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500"
-                        >
-                          <option value="Single">Single</option>
-                          <option value="Married">Married</option>
-                          <option value="Widowed">Widowed</option>
-                          <option value="Divorced">Divorced</option>
-                        </select>
-                      </div>
-                    )}
+                  {gender === 'Female' && relationshipType !== 'SPOUSE_OF' && (
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">Marital Status *</label>
+                      <select
+                        value={maritalStatus}
+                        onChange={(e) => setMaritalStatus(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500"
+                      >
+                        <option value="Single">Single</option>
+                        <option value="Married">Married</option>
+                        <option value="Widowed">Widowed</option>
+                        <option value="Divorced">Divorced</option>
+                      </select>
+                    </div>
+                  )}
 
-                    {(relationshipType === 'SPOUSE_OF' || maritalStatus === 'Married') && (
-                      <div className={relationshipType === 'SPOUSE_OF' ? 'col-span-1 sm:col-span-2' : ''}>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">
-                          Prior Marriage Surname (Maiden Name)
-                        </label>
-                        <input
+                  {gender === 'Female' && (relationshipType === 'SPOUSE_OF' || maritalStatus === 'Married') && (
+                    <div className={relationshipType === 'SPOUSE_OF' ? 'sm:col-span-2' : ''}>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">
+                        Prior Marriage Surname (Maiden Name)
+                      </label>
+                      <input
                           type="text"
                           placeholder="e.g. Kulkarni, Patil"
                           value={beforeMarriageSurname}
@@ -666,7 +668,6 @@ export default function JoinRequestPage({ onNavigate, initialParams = {} }) {
                       </div>
                     )}
                   </div>
-                )}
               </div>
             ) : (
               <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center space-x-3 text-slate-600 text-xs">

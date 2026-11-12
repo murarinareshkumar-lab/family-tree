@@ -138,12 +138,6 @@ export default function EmailOtpVerification({
             <Send className="w-3.5 h-3.5" />
             {loading ? 'Sending Code...' : 'Send Verification Code'}
           </button>
-          {disabled && disabledReason && (
-            <div className="flex items-start gap-1.5 p-2.5 bg-amber-50/90 border border-amber-200/70 rounded-xl text-amber-900 text-[11px] leading-relaxed">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
-              <span>{disabledReason}</span>
-            </div>
-          )}
         </div>
       ) : (
         <div className="space-y-2">

@@ -27,6 +27,19 @@ export default function AdminRequestManagement({
   const [familyFilter, setFamilyFilter] = useState('ALL');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+
+  // Status counts for quick filter pills
+  const statusCounts = useMemo(() => {
+    const counts = { ALL: requests.length, Pending: 0, Approved: 0, Rejected: 0 };
+    requests.forEach(r => {
+      const s = r.status || '';
+      if (s === 'Pending') counts.Pending++;
+      else if (s === 'Approved') counts.Approved++;
+      else if (s === 'Rejected') counts.Rejected++;
+    });
+    return counts;
+  }, [requests]);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -479,53 +492,68 @@ export default function AdminRequestManagement({
         </button>
       </div>
 
-      {/* FILTER CONTROLS AREA */}
-      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-emerald-600" />
-            <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">Filters</span>
-            {activeFilterCount > 0 && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                {activeFilterCount} Active
-              </span>
+      {/* CRISP & INTUITIVE ADMIN FILTER BAR */}
+      <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+        {/* Main Row: Search + Quick Status Pills + Type Selector + Action Buttons */}
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+          {/* Search Box with instant clear */}
+          <div className="relative flex-1 min-w-[240px]">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              placeholder="Search Ticket, Requester Name, Email, or Lineage..."
+              className="w-full pl-10 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => { setSearchTerm(''); setCurrentPage(1); }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-full"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             )}
           </div>
 
-          {activeFilterCount > 0 && (
-            <button
-              onClick={handleResetFilters}
-              className="text-xs font-semibold text-rose-600 hover:text-rose-800 flex items-center gap-1 transition"
-            >
-              <RotateCcw className="w-3 h-3" />
-              Reset Filters
-            </button>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-          {/* Search Field */}
-          <div>
-            <label className="block text-slate-600 font-semibold mb-1">Search</label>
-            <div className="relative">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                placeholder="Search Ticket / Requester..."
-                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-              />
-            </div>
+          {/* Quick Status Pills: All, Pending, Approved, Rejected */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 shrink-0">
+            {[
+              { id: 'ALL', label: 'All', count: statusCounts.ALL, badgeClass: 'bg-slate-200 text-slate-700' },
+              { id: 'Pending', label: 'Pending', count: statusCounts.Pending, badgeClass: 'bg-amber-100 text-amber-800' },
+              { id: 'Approved', label: 'Approved', count: statusCounts.Approved, badgeClass: 'bg-emerald-100 text-emerald-800' },
+              { id: 'Rejected', label: 'Rejected', count: statusCounts.Rejected, badgeClass: 'bg-rose-100 text-rose-800' }
+            ].map(pill => {
+              const isActive = statusFilter === pill.id;
+              return (
+                <button
+                  key={pill.id}
+                  type="button"
+                  onClick={() => { setStatusFilter(pill.id); setCurrentPage(1); }}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+                    isActive
+                      ? 'bg-slate-900 text-white shadow-sm'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                  }`}
+                >
+                  <span>{pill.label}</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                    isActive ? 'bg-white/20 text-white' : pill.badgeClass
+                  }`}>
+                    {pill.count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
-          {/* Request Type Dropdown */}
-          <div>
-            <label className="block text-slate-600 font-semibold mb-1">Request Type</label>
+          {/* Request Type Selector & Controls */}
+          <div className="flex items-center gap-2 shrink-0">
             <select
               value={typeFilter}
               onChange={(e) => { setTypeFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
             >
               {Object.keys(REQUEST_TYPE_CONFIG).map(k => (
                 <option key={k} value={REQUEST_TYPE_CONFIG[k].id}>
@@ -533,74 +561,88 @@ export default function AdminRequestManagement({
                 </option>
               ))}
             </select>
-          </div>
 
-          {/* Status Dropdown */}
-          <div>
-            <label className="block text-slate-600 font-semibold mb-1">Status</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+            {/* Toggle More Filters (Date / Family / Page Size) */}
+            <button
+              type="button"
+              onClick={() => setShowAdvancedFilters(prev => !prev)}
+              className={`p-2 rounded-xl border text-xs font-semibold flex items-center gap-1 transition ${
+                showAdvancedFilters || fromDate || toDate || familyFilter !== 'ALL'
+                  ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
+                  : 'border-slate-200 hover:bg-slate-50 text-slate-600'
+              }`}
+              title="More Filters"
             >
-              <option value="ALL">All Statuses</option>
-              <option value="Pending">Pending</option>
-              <option value="Approved">Approved</option>
-              <option value="Rejected">Rejected</option>
-            </select>
-          </div>
+              <Filter className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="hidden sm:inline">More</span>
+            </button>
 
-          {/* Family Dropdown */}
-          <div>
-            <label className="block text-slate-600 font-semibold mb-1">Family</label>
-            <select
-              value={familyFilter}
-              onChange={(e) => { setFamilyFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-            >
-              <option value="ALL">All Families</option>
-              {uniqueFamilies.map(fam => (
-                <option key={fam} value={fam}>{fam}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Date Range: From */}
-          <div>
-            <label className="block text-slate-600 font-semibold mb-1">From Date</label>
-            <input
-              type="date"
-              value={fromDate}
-              onChange={(e) => { setFromDate(e.target.value); setCurrentPage(1); }}
-              className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-xs"
-            />
-          </div>
-
-          {/* Date Range: To */}
-          <div>
-            <label className="block text-slate-600 font-semibold mb-1">To Date</label>
-            <input
-              type="date"
-              value={toDate}
-              onChange={(e) => { setToDate(e.target.value); setCurrentPage(1); }}
-              className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-xs"
-            />
-          </div>
-
-          {/* Page Size Selector */}
-          <div>
-            <label className="block text-slate-600 font-semibold mb-1">Rows per Page</label>
-            <select
-              value={pageSize}
-              onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-            >
-              <option value={10}>10 per page</option>
-              <option value={20}>20 per page</option>
-              <option value={50}>50 per page</option>
-            </select>
+            {/* Reset Button */}
+            {activeFilterCount > 0 && (
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="px-2.5 py-2 text-rose-600 hover:bg-rose-50 rounded-xl transition text-xs font-semibold flex items-center gap-1"
+                title="Reset Filters"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Reset</span>
+              </button>
+            )}
           </div>
         </div>
+
+        {/* Collapsible Secondary Row: Family, Date Range, Page Size (only when opened or active) */}
+        {(showAdvancedFilters || fromDate || toDate || familyFilter !== 'ALL') && (
+          <div className="pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs animate-in fade-in duration-150">
+            <div>
+              <label className="block text-slate-500 font-semibold mb-1">Family</label>
+              <select
+                value={familyFilter}
+                onChange={(e) => { setFamilyFilter(e.target.value); setCurrentPage(1); }}
+                className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none"
+              >
+                <option value="ALL">All Families</option>
+                {uniqueFamilies.map(fam => (
+                  <option key={fam} value={fam}>{fam}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-slate-500 font-semibold mb-1">From Date</label>
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => { setFromDate(e.target.value); setCurrentPage(1); }}
+                className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-slate-500 font-semibold mb-1">To Date</label>
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => { setToDate(e.target.value); setCurrentPage(1); }}
+                className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-slate-500 font-semibold mb-1">Rows per Page</label>
+              <select
+                value={pageSize}
+                onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}
+                className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none"
+              >
+                <option value={10}>10 per page</option>
+                <option value={20}>20 per page</option>
+                <option value={50}>50 per page</option>
+              </select>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* SINGLE CONSOLIDATED REQUEST TABLE */}

@@ -481,7 +481,7 @@ export default function OnboardSurnamePage({ onNavigate }) {
 
   if (ticketResult) {
     return (
-      <div className="max-w-2xl mx-auto bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+      <div className="max-w-4xl mx-auto bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
         <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 border border-emerald-100">
           <CheckCircle2 className="w-8 h-8" />
         </div>
@@ -535,7 +535,7 @@ export default function OnboardSurnamePage({ onNavigate }) {
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm">
         <div className="flex items-center space-x-3 mb-6">
           <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center">
@@ -731,8 +731,9 @@ export default function OnboardSurnamePage({ onNavigate }) {
           {/* Founding Member Forms (Hidden until search finishes AND [no family found OR confirmation checkbox ticked]) */}
           {showFoundingForms && (
             <div className="space-y-6 pt-2 animate-in fade-in duration-200">
-              {/* Husband Section */}
-              <div className="border border-slate-200/80 rounded-2xl p-5 bg-slate-50/50 space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Husband Section */}
+                <div className="border border-slate-200/80 rounded-2xl p-5 bg-slate-50/50 space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-200 pb-2">
                   <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">
                     Founding Member 1 (Husband)
@@ -853,15 +854,6 @@ export default function OnboardSurnamePage({ onNavigate }) {
                       purpose="NEW_PERSON_EMAIL_VERIFICATION"
                       label="Verify Founding Husband Email"
                       disabled={!hEmailVal.valid || !hPhoneVal.valid}
-                      disabledReason={
-                        !hEmailVal.valid && !hPhoneVal.valid
-                          ? 'Enter a valid email address and a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
-                          : !hPhoneVal.valid
-                          ? 'Enter a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
-                          : !hEmailVal.valid
-                          ? 'Enter a valid email address to enable email verification.'
-                          : ''
-                      }
                       onVerified={(token) => setHusbandOtpToken(token)}
                     />
                   </div>
@@ -1034,15 +1026,6 @@ export default function OnboardSurnamePage({ onNavigate }) {
                       purpose="NEW_PERSON_EMAIL_VERIFICATION"
                       label="Verify Founding Wife Email"
                       disabled={!wEmailVal.valid || !wPhoneVal.valid}
-                      disabledReason={
-                        !wEmailVal.valid && !wPhoneVal.valid
-                          ? 'Enter a valid email address and a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
-                          : !wPhoneVal.valid
-                          ? 'Enter a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
-                          : !wEmailVal.valid
-                          ? 'Enter a valid email address to enable email verification.'
-                          : ''
-                      }
                       onVerified={(token) => setWifeOtpToken(token)}
                     />
                   </div>
@@ -1100,6 +1083,7 @@ export default function OnboardSurnamePage({ onNavigate }) {
                   </div>
                 )}
               </div>
+            </div>
 
               {/* Submit Button */}
               <button

@@ -63,17 +63,15 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
       .then(res => {
         const list = res.surnames || [];
         setSurnames(list);
-        if (list.length > 0) {
-          const preselected = initialParams?.surname_ref_id
-            ? list.find(s => s.surname_ref_id === initialParams.surname_ref_id)
-            : null;
-          const chosen = preselected || list[0];
-
-          setSelectedSurnameId(chosen.surname_ref_id);
-          if (!lastNameManuallyEdited && chosen.surname_name) {
-            setLastName(chosen.surname_name);
+        if (list.length > 0 && initialParams?.surname_ref_id) {
+          const preselected = list.find(s => s.surname_ref_id === initialParams.surname_ref_id);
+          if (preselected) {
+            setSelectedSurnameId(preselected.surname_ref_id);
+            if (!lastNameManuallyEdited && preselected.surname_name) {
+              setLastName(preselected.surname_name);
+            }
+            loadFamilyMembers(preselected.surname_ref_id);
           }
-          loadFamilyMembers(chosen.surname_ref_id);
         }
       })
       .catch(err => setError(err.message || 'Failed to load lineages'));
@@ -184,6 +182,14 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
 
   const handleSurnameSelect = (id) => {
     setSelectedSurnameId(id);
+    setParentEmail('');
+    setParentVerificationError('');
+    setParentVerified(false);
+    if (!id) {
+      setFamilyMembers([]);
+      setTargetPersonId('');
+      return;
+    }
     const found = surnames.find(s => s.surname_ref_id === id);
     if (found && !lastNameManuallyEdited && found.surname_name) {
       setLastName(found.surname_name);
@@ -326,7 +332,7 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
   if (ticketResult) {
     if (ticketResult.direct_linked) {
       return (
-        <div className="max-w-2xl mx-auto bg-white rounded-3xl border border-emerald-200 p-8 shadow-sm">
+        <div className="max-w-4xl mx-auto bg-white rounded-3xl border border-emerald-200 p-8 shadow-sm">
           <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 border border-emerald-100">
             <CheckCircle2 className="w-8 h-8" />
           </div>
@@ -374,7 +380,7 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
     }
 
     return (
-      <div className="max-w-2xl mx-auto bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+      <div className="max-w-4xl mx-auto bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
         <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-4 border border-amber-100">
           <Clock className="w-8 h-8" />
         </div>
@@ -422,7 +428,7 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm">
         <div className="flex items-center space-x-3 mb-6">
           <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center">
@@ -444,65 +450,70 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Lineage selector */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-              Select Family Lineage *
-            </label>
-            <select
-              value={selectedSurnameId}
-              onChange={(e) => handleSurnameSelect(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-            >
-              {surnames.map((s, idx) => (
-                <option key={s.surname_ref_id} value={s.surname_ref_id}>
-                  {s.surname_name} - Family {s.branch_no || (idx + 1)} ({s.surname_ref_id})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Top Dropdowns: Related to & Relationship */}
-          <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50/50 space-y-3">
+          {/* Family Connection Grid: Lineage, Related To, Relationship */}
+          <div className="border border-slate-200 rounded-2xl p-5 bg-slate-50/50 space-y-3">
             <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">
               Family Connection
             </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                  Select Family Lineage *
+                </label>
+                <select
+                  value={selectedSurnameId}
+                  onChange={(e) => handleSurnameSelect(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                >
+                  <option value="">-- Select Family Lineage --</option>
+                  {surnames.map((s, idx) => (
+                    <option key={s.surname_ref_id} value={s.surname_ref_id}>
+                      {s.surname_name}{s.branch_no ? ` - Family ${s.branch_no}` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1.5">
                   Related To (Existing Member) *
                 </label>
                 <select
                   value={targetPersonId}
                   onChange={(e) => handleTargetPersonChange(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-500"
+                  disabled={!selectedSurnameId || loadingMembers}
+                  className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-500 disabled:bg-slate-100 disabled:cursor-not-allowed"
                 >
-                  {loadingMembers ? (
+                  {!selectedSurnameId ? (
+                    <option value="">-- Select a family lineage first --</option>
+                  ) : loadingMembers ? (
                     <option value="">Loading family members...</option>
                   ) : familyMembers.length === 0 ? (
                     <option value="">No existing members found in this family</option>
                   ) : (
-                    familyMembers.map(m => {
-                      const pId = m.person_id || m.member_ref_id || m.id;
-                      return (
-                        <option key={pId} value={pId}>
-                          {formatMemberDropdownLabel(m, familyMembers)}
-                        </option>
-                      );
-                    })
+                    <>
+                      <option value="">-- Select Family Member --</option>
+                      {familyMembers.map(m => {
+                        const pId = m.person_id || m.member_ref_id || m.id;
+                        return (
+                          <option key={pId} value={pId}>
+                            {formatMemberDropdownLabel(m, familyMembers)}
+                          </option>
+                        );
+                      })}
+                    </>
                   )}
                 </select>
-                <p className="text-[10px] text-slate-400 mt-0.5">Select the family member this person is related to (defaults to founding husband).</p>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">
+                <label className="block text-xs font-medium text-slate-600 mb-1.5">
                   Your Relationship to Relative *
                 </label>
                 <select
                   value={relationshipType}
                   onChange={(e) => handleRelationshipChange(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-emerald-800 focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-emerald-800 focus:outline-none focus:border-emerald-500"
                 >
                   <option value="SON">SON</option>
                   <option value="DAUGHTER">DAUGHTER</option>
@@ -713,15 +724,6 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                       purpose="NEW_PERSON_EMAIL_VERIFICATION"
                       label="Verify Member Email"
                       disabled={!emailVal.valid || !phoneVal.valid}
-                      disabledReason={
-                        !emailVal.valid && !phoneVal.valid
-                          ? 'Enter a valid email address and a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
-                          : !phoneVal.valid
-                          ? 'Enter a valid 10-digit phone number (starting with 6, 7, 8, or 9) to enable email verification.'
-                          : !emailVal.valid
-                          ? 'Enter a valid email address to enable email verification.'
-                          : ''
-                      }
                       onVerified={(token) => setMemberOtpToken(token)}
                     />
                   </div>
@@ -731,12 +733,12 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
 
             {/* Step 2: Remaining All Details (Unlocked once email is verified or if deceased) */}
             {(isDeceased || memberOtpToken) ? (
-              <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50/30 space-y-4 animate-in fade-in duration-200">
+              <div className="border border-slate-200 rounded-2xl p-5 bg-slate-50/40 space-y-4 animate-in fade-in duration-200">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
                   Remaining Member Details
                 </span>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-slate-600 mb-1">Gender *</label>
                     <select
@@ -768,45 +770,41 @@ export default function AddMemberPage({ onNavigate, initialParams = {} }) {
                       <p className="text-[11px] text-rose-600 mt-1">{dobVal.error}</p>
                     )}
                   </div>
+
+                  {gender === 'Female' && relationshipType !== 'SPOUSE' && (
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">Marital Status *</label>
+                      <select
+                        value={maritalStatus}
+                        onChange={(e) => setMaritalStatus(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                      >
+                        <option value="Single">Single</option>
+                        <option value="Married">Married</option>
+                        <option value="Widowed">Widowed</option>
+                        <option value="Divorced">Divorced</option>
+                      </select>
+                    </div>
+                  )}
+
+                  {gender === 'Female' && (relationshipType === 'SPOUSE' || maritalStatus === 'Married') && (
+                    <div className={relationshipType === 'SPOUSE' ? 'sm:col-span-2' : ''}>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">
+                        Prior Marriage Surname (Maiden Name)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Kulkarni, Patil"
+                        value={beforeMarriageSurname}
+                        onChange={(e) => setBeforeMarriageSurname(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                      />
+                      <p className="text-[10px] text-slate-400 mt-0.5">
+                        Maiden surname before marriage for maternal lineage preservation. Stored in Google Sheets under prior_marriage_surname.
+                      </p>
+                    </div>
+                  )}
                 </div>
-
-                {gender === 'Female' && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                    {relationshipType !== 'SPOUSE' && (
-                      <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">Marital Status *</label>
-                        <select
-                          value={maritalStatus}
-                          onChange={(e) => setMaritalStatus(e.target.value)}
-                          className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
-                        >
-                          <option value="Single">Single</option>
-                          <option value="Married">Married</option>
-                          <option value="Widowed">Widowed</option>
-                          <option value="Divorced">Divorced</option>
-                        </select>
-                      </div>
-                    )}
-
-                    {(relationshipType === 'SPOUSE' || maritalStatus === 'Married') && (
-                      <div className={relationshipType === 'SPOUSE' ? 'col-span-1 sm:col-span-2' : ''}>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">
-                          Prior Marriage Surname (Maiden Name)
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Kulkarni, Patil"
-                          value={beforeMarriageSurname}
-                          onChange={(e) => setBeforeMarriageSurname(e.target.value)}
-                          className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
-                        />
-                        <p className="text-[10px] text-slate-400 mt-0.5">
-                          Maiden surname before marriage for maternal lineage preservation. Stored in Google Sheets under prior_marriage_surname.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
 
                 {/* Minor / Deceased Parent Linking */}
                 {(!isAdult || isDeceased) && (
